@@ -1,0 +1,81 @@
+.section {
+    margin-bottom: 48px;
+}
+
+.title {
+    font-family: var(--heading);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-h);
+    margin: 0 0 6px;
+}
+
+.desc {
+    font-size: 14px;
+    color: var(--text);
+    margin: 0 0 20px;
+}
+
+/* Grid de variantes */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* Card de cada variante */
+.card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow);
+}
+
+.cardHeader {
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid var(--border);
+}
+
+.cardName {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-h);
+    margin: 0 0 2px;
+}
+
+.cardDesc {
+    font-size: 12px;
+    color: var(--text);
+    margin: 0;
+}
+
+/* Zona de preview */
+.preview {
+    padding: 24px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-height: 80px;
+    background: var(--code-bg);
+}
+
+/* Código del componente */
+.code {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre;
+    overflow-x: auto;
+    margin: 0;
+}

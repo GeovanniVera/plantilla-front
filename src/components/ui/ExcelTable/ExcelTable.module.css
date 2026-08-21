@@ -1,0 +1,188 @@
+/* ================================
+   EXCEL TABLE — Wrapper
+   ================================ */
+.wrapper {
+    width: 100%;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    outline: none;
+    max-height: 480px;
+}
+
+.wrapper:focus-visible {
+    border-color: var(--accent);
+}
+
+/* ================================
+   TABLE — Estructura densa
+   ================================ */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: fixed;
+}
+
+/* ================================
+   THEAD — Cabeceras estilo Excel
+   ================================ */
+.th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text);
+    background: var(--code-bg);
+    border-bottom: 2px solid var(--border);
+    border-right: 1px solid var(--border);
+    text-align: left;
+    white-space: nowrap;
+    user-select: none;
+    cursor: default;
+}
+
+.th:last-child {
+    border-right: none;
+}
+
+/* ================================
+   ROW HEADER — Números de fila
+   ================================ */
+.rowHeader {
+    width: 44px;
+    min-width: 44px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--mono);
+    color: var(--text);
+    background: var(--code-bg);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    user-select: none;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+thead .rowHeader {
+    z-index: 3;
+}
+
+/* ================================
+   TD — Celdas de datos
+   ================================ */
+.td {
+    padding: 0;
+    height: 32px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+    cursor: cell;
+    transition: background 0.08s ease;
+    position: relative;
+}
+
+.td:last-child {
+    border-right: none;
+}
+
+.td:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* Contenido de la celda */
+.cellContent {
+    display: block;
+    padding: 4px 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-height: 24px;
+    line-height: 24px;
+}
+
+/* ================================
+   SELECCIÓN — Borde de acento
+   ================================ */
+.selected {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    z-index: 1;
+}
+
+.selected::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent-bg);
+    pointer-events: none;
+}
+
+/* ================================
+   EDICIÓN — Input inline
+   ================================ */
+.editing {
+    padding: 0;
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    z-index: 2;
+    box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.input {
+    width: 100%;
+    height: 100%;
+    min-height: 32px;
+    padding: 4px 12px;
+    border: none;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+/* ================================
+   EMPTY STATE
+   ================================ */
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    text-align: center;
+}
+
+.emptyIcon {
+    font-size: 36px;
+    color: var(--border);
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.emptyTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-h);
+    margin: 0 0 4px;
+}
+
+.emptyDesc {
+    font-size: 13px;
+    color: var(--text);
+    margin: 0;
+}

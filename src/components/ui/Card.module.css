@@ -1,0 +1,24 @@
+.card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow);
+}
+
+.header {
+    padding: 14px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-h);
+    border-bottom: 1px solid var(--border);
+}
+
+.body {
+    padding: 18px;
+}

@@ -1,0 +1,71 @@
+.bar {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 80;
+        height: 56px;
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+        align-items: center;
+        justify-content: space-around;
+        padding: 0 24px;
+        -webkit-tap-highlight-color: transparent;
+        animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        border: none;
+        background: none;
+        color: var(--text);
+        cursor: pointer;
+        text-decoration: none;
+        transition: background 0.15s ease, color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .item:hover {
+        background: var(--accent-bg);
+        color: var(--accent);
+    }
+
+    /* Activo — ruta actual */
+    .active {
+        background: var(--accent-bg);
+        color: var(--accent);
+    }
+
+    /* Danger — logout */
+    .danger {
+        color: #dc2626;
+    }
+
+    .danger:hover {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+    }
+
+    /* Animación slide-up */
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+}

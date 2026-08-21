@@ -1,0 +1,49 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#123526"/>
+      <stop offset="100%" stop-color="#08170F"/>
+    </linearGradient>
+    <linearGradient id="seedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3AA968"/>
+      <stop offset="100%" stop-color="#6EE7A8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- app icon background -->
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="url(#bgGrad)"/>
+
+  <!-- root system rendered as circuit traces, growing from the seed -->
+  <g stroke="#4ADE94" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85">
+    <path d="M256,338 L256,368 L190,368 L190,414"/>
+    <path d="M256,338 L256,368 L322,368 L322,414"/>
+    <path d="M256,338 L256,414"/>
+  </g>
+  <g fill="#4ADE94" opacity="0.9">
+    <circle cx="190" cy="414" r="9"/>
+    <circle cx="256" cy="414" r="9"/>
+    <circle cx="322" cy="414" r="9"/>
+  </g>
+
+  <!-- seed body -->
+  <path d="M256,90
+           C300,110 330,150 330,196
+           C330,252 300,312 256,342
+           C212,312 182,252 182,196
+           C182,150 212,110 256,90 Z"
+        fill="url(#seedGrad)"/>
+
+  <!-- facet line for a cut / faceted look -->
+  <path d="M256,90 L256,342" stroke="#154C33" stroke-width="3" opacity="0.45"/>
+  <path d="M256,150 C280,165 296,180 296,196 C296,225 278,255 256,275"
+        fill="none" stroke="#8CF0B4" stroke-width="3" opacity="0.55"/>
+
+  <!-- spark / bud: the "technology" pulse feeding the seed -->
+  <line x1="256" y1="72" x2="256" y2="90" stroke="#FFC069" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="256" cy="60" r="11" fill="#FFC069"/>
+  <g stroke="#FFC069" stroke-width="5" stroke-linecap="round" opacity="0.75">
+    <line x1="230" y1="48" x2="238" y2="56"/>
+    <line x1="282" y1="48" x2="274" y2="56"/>
+    <line x1="256" y1="30" x2="256" y2="40"/>
+  </g>
+</svg>

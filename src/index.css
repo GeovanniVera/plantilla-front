@@ -1,0 +1,138 @@
+/* ==========================================
+   1. CONFIGURACIÓN BASE Y TEMA CLARO (:root)
+   ================================---------- */
+:root {
+  /* --- Variables de colores (Tokens de diseño) --- */
+  --primary: #0d9488;
+  --secondary: #6366f1;
+  --text: #5a5565;
+  /* Color principal para párrafos y textos */
+  --text-h: #1a1525;
+  /* Color para títulos (mayor contraste) */
+  --bg: #f6f5f1;
+  /* Color de fondo general — blanco cálido, sin brillo */
+  --border: #e4e2dc;
+  /* Color para líneas y bordes */
+  --code-bg: #edecea;
+  --accent: #0d9488;
+  /* Color de acento principal */
+  --accent-bg: rgba(13, 148, 136, 0.1);
+  /* Acento translúcido para fondos */
+  --accent-border: rgba(13, 148, 136, 0.35);
+  /* Acento translúcido para bordes */
+  --social-bg: rgba(228, 226, 220, 0.5);
+  /* Fondo para elementos sociales */
+  --shadow:
+    /* Sombra suave y realista para tarjetas o menús */
+    rgba(26, 21, 37, 0.06) 0 10px 15px -3px, rgba(26, 21, 37, 0.03) 0 4px 6px -2px;
+
+  /* --- Pilas de fuentes tipográficas --- */
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --heading: 'Fraunces', serif;
+  /* Títulos usando Fraunces */
+  --mono: ui-monospace, Consolas, monospace;
+
+  /* --- Estilos tipográficos y visuales globales --- */
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: light dark;
+  /* Habilita gestión nativa de temas claros/oscuros */
+  color: var(--text);
+  background: var(--bg);
+
+  /* Optimizaciones para que las fuentes se vean nítidas */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Diseño adaptable: Reduce el tamaño de fuente en pantallas pequeñas */
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+
+/* ==========================================
+   2. TEMA OSCURO AUTOMÁTICO (Dark Mode)
+   ================================---------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Sobrescribimos las variables con tonos oscuros */
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #16171d;
+    --border: #2e303a;
+    --code-bg: #1f2028;
+    --accent: #2dd4bf;
+    --accent-bg: rgba(45, 212, 191, 0.12);
+    --accent-border: rgba(45, 212, 191, 0.35);
+    --social-bg: rgba(47, 48, 58, 0.5);
+    --shadow:
+      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  }
+
+  /* Ajuste específico para que los iconos se inviertan y se vean en modo oscuro */
+  #social .button-icon {
+    filter: invert(1) brightness(2);
+  }
+}
+
+
+/* ==========================================
+   3. RESETEO GLOBAL DE CAJAS
+   ================================---------- */
+html {
+  box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  /* Elimina el margen por defecto del navegador en el cuerpo */
+  padding: 0;
+  /* Elimina el padding por defecto del navegador en el cuerpo */
+}
+
+
+/* ==========================================
+   4. ESTILOS DE TIPOGRAFÍA (Títulos y Párrafos)
+   ================================---------- */
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.68px;
+  margin: 32px 0;
+
+  @media (max-width: 1024px) {
+    font-size: 36px;
+    margin: 20px 0;
+  }
+}
+
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+
+  @media (max-width: 1024px) {
+    font-size: 20px;
+  }
+}
+
+p {
+  margin: 0;
+  /* Limpia los márgenes predeterminados de los párrafos */
+}
