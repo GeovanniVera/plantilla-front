@@ -1,0 +1,373 @@
+/* ================================
+   OVERLAY
+   ================================ */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: overlayFadeIn 0.2s ease;
+}
+
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ================================
+   WINDOW
+   ================================ */
+
+.window {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    animation: windowSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes windowSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* ================================
+   HEADER
+   ================================ */
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--code-bg);
+    flex-shrink: 0;
+}
+
+.headerTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-h);
+    font-family: var(--sans);
+}
+
+.headerChildren {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.closeBtn {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.closeBtn:hover {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+/* ================================
+   BODY (scrollable)
+   ================================ */
+
+.body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+}
+
+.body::-webkit-scrollbar {
+    width: 6px;
+}
+.body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.body::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+/* ================================
+   FOOTER
+   ================================ */
+
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--code-bg);
+    flex-shrink: 0;
+}
+
+/* ================================
+   DRAWER — Right-side slide-in panel
+   ================================ */
+
+.drawerOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: overlayFadeIn 0.2s ease;
+}
+
+.drawerWindow {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--bg);
+    border-left: 1px solid var(--border);
+    box-shadow:
+        -25px 0 50px -12px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    animation: drawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes drawerSlideIn {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* Drawer header: title left-aligned instead of centered */
+.drawerHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--code-bg);
+    flex-shrink: 0;
+    gap: 12px;
+    min-height: 64px;
+}
+
+.drawerTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-h);
+    font-family: var(--sans);
+    line-height: 1.3;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.drawerCloseBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+
+.drawerCloseBtn:hover {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+/* ─── Drawer Back Button ─── */
+
+.drawerBackBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.drawerBackBtn:hover {
+    background: var(--accent-bg);
+}
+
+/* ─── Drawer Breadcrumbs ─── */
+
+.drawerBreadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+    padding: 0 4px;
+}
+
+.drawerCrumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.drawerCrumbSep {
+    color: var(--text);
+    opacity: 0.3;
+    flex-shrink: 0;
+}
+
+.drawerCrumbLink {
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--sans);
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.drawerCrumbLink:hover {
+    background: var(--accent-bg);
+}
+
+.drawerCrumbCurrent {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-h);
+    padding: 2px 4px;
+    white-space: nowrap;
+}
+
+/* ─── Level Indicator ─── */
+
+.levelIndicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--code-bg);
+}
+
+.levelDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.2s, transform 0.2s;
+}
+
+.levelDotActive {
+    background: var(--accent);
+    transform: scale(1.3);
+}
+
+/* ─── Drawer Content Animation ─── */
+
+.drawerContent {
+    overflow: hidden;
+    position: relative;
+}
+
+.drawerContentInner {
+    width: 100%;
+}
+
+.slide_forward {
+    animation: slideForward 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide_back {
+    animation: slideBack 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideForward {
+    from {
+        opacity: 0;
+        transform: translateX(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideBack {
+    from {
+        opacity: 0;
+        transform: translateX(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Drawer responsive */
+@media (max-width: 480px) {
+    .drawerOverlay {
+        align-items: flex-end;
+    }
+
+    .drawerWindow {
+        width: 100% !important;
+        max-width: 100%;
+        border-left: none;
+        border-radius: 16px 16px 0 0;
+        max-height: 85vh;
+        height: auto;
+    }
+}

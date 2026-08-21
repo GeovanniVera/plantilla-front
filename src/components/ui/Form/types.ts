@@ -112,13 +112,20 @@ export interface FormFieldProps {
     className?: string
 }
 
-// ─── Validation ──────────────────────────────────────────
-export interface ValidationRule {
-    required?: boolean | string
-    minLength?: { value: number; message: string }
-    maxLength?: { value: number; message: string }
-    pattern?: { value: RegExp; message: string }
-    min?: { value: number; message: string }
-    max?: { value: number; message: string }
-    custom?: (value: string) => string | null
+// ─── Field Config (Form Builder) ─────────────────────────
+export type FieldType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'textarea' | 'select' | 'checkbox' | 'radio'
+
+export interface FieldConfig {
+    type: FieldType
+    label: string
+    placeholder: string
+    required: boolean
+    minLength?: number
+    maxLength?: number
+    pattern?: string
+    options?: string[]
+    helperText?: string
+    defaultValue?: string
+    layoutSpan?: 1 | 2 | 3
 }
+

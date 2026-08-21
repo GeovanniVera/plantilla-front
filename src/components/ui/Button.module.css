@@ -64,3 +64,89 @@
     background: var(--accent-bg);
     color: var(--accent);
 }
+
+/* Danger */
+.danger {
+    background: rgba(220, 38, 38, 0.08);
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.2);
+}
+
+.danger:hover {
+    background: rgba(220, 38, 38, 0.15);
+    border-color: rgba(220, 38, 38, 0.35);
+}
+
+/* ================================
+   SHAPES
+   ================================ */
+
+.rounded {
+    border-radius: 999px;
+}
+
+.square {
+    border-radius: 0;
+}
+
+/* ================================
+   ANIMATIONS
+   ================================ */
+
+.anim_pulse:hover {
+    animation: btnPulse 0.4s ease;
+}
+
+@keyframes btnPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.anim_bounce:hover {
+    animation: btnBounce 0.5s ease;
+}
+
+@keyframes btnBounce {
+    0%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-4px); }
+    60% { transform: translateY(-2px); }
+}
+
+.anim_shake:hover {
+    animation: btnShake 0.4s ease;
+}
+
+@keyframes btnShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-3px); }
+    40% { transform: translateX(3px); }
+    60% { transform: translateX(-2px); }
+    80% { transform: translateX(2px); }
+}
+
+/* ================================
+   LOADING
+   ================================ */
+
+.loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.spinner {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: btnSpin 0.6s linear infinite;
+}
+
+.primary .spinner { border-color: rgba(255,255,255,0.3); border-right-color: transparent; }
+
+@keyframes btnSpin {
+    to { transform: rotate(360deg); }
+}

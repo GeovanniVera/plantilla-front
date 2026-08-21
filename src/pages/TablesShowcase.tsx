@@ -100,15 +100,22 @@ function ConfiguratorPanel({
     onChange: (patch: Partial<BuilderConfig>) => void
     onReset: () => void
 }) {
+    const [collapsed, setCollapsed] = useState(false)
     return (
         <div className={styles.configurator}>
             <div className={styles.configHeader}>
                 <span className={styles.configIcon}><LuSettings2 size={18} /></span>
                 <span className={styles.configTitle}>Configurador</span>
+                <button className={`${styles.collapseBtn} ${collapsed ? styles.collapseBtnCollapsed : ''}`} onClick={() => setCollapsed(!collapsed)} title={collapsed ? 'Expandir' : 'Colapsar'}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
                 <button className={styles.resetBtn} onClick={onReset} title="Restaurar valores por defecto">
                     <LuRotateCcw size={14} />
                 </button>
             </div>
+
+            {!collapsed && (
+            <>
 
             <div className={styles.configGroup}>
                 <label className={styles.configLabel}>Tipo de tabla</label>
@@ -216,6 +223,8 @@ function ConfiguratorPanel({
                     {config.pagination && <span className={styles.flagBadge}>pagination</span>}
                 </div>
             </div>
+            </>
+            )}
         </div>
     )
 }
@@ -607,12 +616,6 @@ export default function TablesShowcase() {
         <div className={styles.page}>
             {/* Header */}
             <div className={styles.header}>
-                <h1 className={styles.title}>Tablas</h1>
-                <p className={styles.subtitle}>
-                    Configura y personaliza tablas reutilizables. Selecciona el tipo, activa
-                    características y preview el resultado en tiempo real.
-                </p>
-
                 <div className={styles.toggleBar}>
                     <button
                         className={`${styles.toggleBtn} ${view === 'preview' ? styles.toggleActive : ''}`}

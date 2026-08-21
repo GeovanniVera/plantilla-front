@@ -1,0 +1,229 @@
+/* ================================
+   FIELD CARD — Compact chip for sidebar
+   ================================ */
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.card:hover {
+    border-color: var(--accent-border);
+}
+
+.dragHandle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 20px;
+    cursor: grab;
+    color: var(--text);
+    opacity: 0.3;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+}
+
+.dragHandle:hover {
+    opacity: 0.6;
+}
+
+.typeBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    line-height: 1.4;
+}
+
+.cardDragging {
+    opacity: 0.4;
+    border-style: dashed;
+}
+
+.label {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-h);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.requiredDot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #dc2626;
+    flex-shrink: 0;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.card:hover .actions {
+    opacity: 1;
+}
+
+.actionBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.actionBtn:hover {
+    background: var(--code-bg);
+    color: var(--accent);
+}
+
+.actionBtnDanger:hover {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+/* ================================
+   EMPTY SLOT (dashed placeholder)
+   ================================ */
+
+.emptySlot {
+    height: 42px;
+    border-radius: 8px;
+    border: 1.5px dashed var(--border);
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text);
+    opacity: 0.35;
+    font-size: 11px;
+    font-family: var(--sans);
+    transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.emptySlot:hover {
+    opacity: 0.7;
+    border-color: var(--accent-border);
+    color: var(--accent);
+}
+
+.emptySlotActive {
+    opacity: 0.8;
+    border-color: var(--accent);
+    border-style: solid;
+    background: var(--accent-bg);
+    color: var(--accent);
+}
+
+/* ================================
+   ROW HEADER (layout selector + controls)
+   ================================ */
+
+.rowHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: var(--code-bg);
+    border-radius: 8px 8px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+}
+
+.rowLabel {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-h);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rowControls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.colBtn {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--sans);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.colBtnActive {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+}
+
+.colBtn:hover:not(.colBtnActive) {
+    border-color: var(--accent-border);
+}
+
+.rowBody {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 0 0 8px 8px;
+    background: var(--code-bg);
+    margin-bottom: 8px;
+    min-height: 20px;
+}
+
+.dropIndicator {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--accent);
+    margin: 2px 0;
+    animation: dropPulse 0.8s ease infinite;
+}
+
+@keyframes dropPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}

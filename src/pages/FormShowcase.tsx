@@ -9,23 +9,20 @@ import Select from '../components/ui/Form/Select'
 import Checkbox from '../components/ui/Form/Checkbox'
 import { RadioGroup } from '../components/ui/Form/Radio'
 import FormField from '../components/ui/Form/FormField'
-import type { InputVariant } from '../components/ui/Form/types'
+import { RowBlock } from '../components/ui/Form/FormBuilder/FieldCard'
+import type { DragData } from '../components/ui/Form/FormBuilder/FieldCard'
+import { FieldConfigModal } from '../components/ui/Form/FormBuilder/FieldConfigModal'
+import type { InputVariant, FieldConfig } from '../components/ui/Form/types'
 
 // ─── Types ───────────────────────────────────────────────
-type FieldType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'textarea' | 'select' | 'checkbox' | 'radio'
 type LabelMode = 'above' | 'placeholder' | 'none'
 type ViewMode = 'preview' | 'code'
 type ConfigTab = 'variants' | 'fields' | 'validation' | 'sections'
 
-interface FieldConfig {
-    type: FieldType
-    label: string
-    placeholder: string
-    required: boolean
-    minLength?: number
-    maxLength?: number
-    pattern?: string
-    options?: string[]
+interface EditingField {
+    sectionIndex: number
+    rowIndex: number
+    fieldIndex: number
 }
 
 interface RowConfig {
@@ -74,18 +71,6 @@ const DEFAULT_SECTIONS: SectionConfig[] = [
             ]},
         ],
     },
-]
-
-const FIELD_TYPES: { value: FieldType; label: string }[] = [
-    { value: 'text', label: 'Texto' },
-    { value: 'email', label: 'Email' },
-    { value: 'password', label: 'Password' },
-    { value: 'number', label: 'Number' },
-    { value: 'tel', label: 'Teléfono' },
-    { value: 'textarea', label: 'Textarea' },
-    { value: 'select', label: 'Select' },
-    { value: 'checkbox', label: 'Checkbox' },
-    { value: 'radio', label: 'Radio' },
 ]
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -251,7 +236,7 @@ function LivePreview({ config }: { config: FormConfig }) {
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {section.rows.map((row, rIdx) => (
-                                <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: `repeat(${row.columns}, 1fr)`, gap: '16px' }}>
+                                <div key={rIdx} className={styles.responsiveGrid} style={{ gridTemplateColumns: `repeat(${row.columns}, 1fr)` }}>
                                     {row.fields.map((field) => renderField(field))}
                                 </div>
                             ))}
@@ -293,6 +278,9 @@ function ConfiguratorPanel({
     onReset: () => void
 }) {
     const [tab, setTab] = useState<ConfigTab>('fields')
+    const [editingField, setEditingField] = useState<EditingField | null>(null)
+    const [activeDrag, setActiveDrag] = useState<DragData | null>(null)
+    const [collapsed, setCollapsed] = useState(false)
     const allFields = config.sections.flatMap((s) => s.rows.flatMap((r) => r.fields))
 
     const updateSection = (sIdx: number, patch: Partial<SectionConfig>) => {
@@ -326,15 +314,6 @@ function ConfiguratorPanel({
         onChange({ sections: next })
     }
 
-    const updateField = (sIdx: number, rIdx: number, fIdx: number, patch: Partial<FieldConfig>) => {
-        const next = [...config.sections]
-        next[sIdx] = {
-            ...next[sIdx],
-            rows: next[sIdx].rows.map((r, i) => i === rIdx ? { ...r, fields: r.fields.map((f, j) => j === fIdx ? { ...f, ...patch } : f) } : r),
-        }
-        onChange({ sections: next })
-    }
-
     const removeField = (sIdx: number, rIdx: number, fIdx: number) => {
         const next = [...config.sections]
         next[sIdx] = {
@@ -357,14 +336,59 @@ function ConfiguratorPanel({
         { key: 'sections', label: 'Secciones' },
     ]
 
+    const handleFieldDrop = (source: DragData, target: DragData) => {
+        // Same position — no-op
+        if (source.sectionIndex === target.sectionIndex && source.rowIndex === target.rowIndex && source.fieldIndex === target.fieldIndex) return
+
+        const next = [...config.sections]
+
+        // Remove from source
+        const srcRow = next[source.sectionIndex].rows[source.rowIndex]
+        const srcField = srcRow.fields[source.fieldIndex]
+        if (!srcField) return
+
+        const newSrcFields = srcRow.fields.filter((_, i) => i !== source.fieldIndex)
+        next[source.sectionIndex] = {
+            ...next[source.sectionIndex],
+            rows: next[source.sectionIndex].rows.map((r, i) =>
+                i === source.rowIndex ? { ...r, fields: newSrcFields } : r
+            ),
+        }
+
+        // Insert at target
+        const tgtRow = next[target.sectionIndex].rows[target.rowIndex]
+        if (!tgtRow) return
+
+        const tgtIdx = Math.min(target.fieldIndex, tgtRow.fields.length)
+        const newTgtFields = [...tgtRow.fields]
+        newTgtFields.splice(tgtIdx, 0, srcField)
+
+        // Trim to column limit
+        const trimmedFields = newTgtFields.slice(0, tgtRow.columns)
+
+        next[target.sectionIndex] = {
+            ...next[target.sectionIndex],
+            rows: next[target.sectionIndex].rows.map((r, i) =>
+                i === target.rowIndex ? { ...r, fields: trimmedFields } : r
+            ),
+        }
+
+        onChange({ sections: next })
+    }
+
     return (
         <div className={styles.configurator}>
             <div className={styles.configHeader}>
                 <span className={styles.configIcon}><LuSettings2 size={18} /></span>
                 <span className={styles.configTitle}>Configurador</span>
+                <button className={`${styles.collapseBtn} ${collapsed ? styles.collapseBtnCollapsed : ''}`} onClick={() => setCollapsed(!collapsed)} title={collapsed ? 'Expandir' : 'Colapsar'}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
                 <button className={styles.resetBtn} onClick={onReset} title="Restaurar"><LuRotateCcw size={14} /></button>
             </div>
 
+            {!collapsed && (
+            <>
             {/* Tabs */}
             <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
                 {tabs.map((t) => (
@@ -468,44 +492,26 @@ function ConfiguratorPanel({
 
                             {/* Rows in section */}
                             {section.rows.map((row, rIdx) => (
-                                <div key={rIdx} style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', marginBottom: '8px', background: 'var(--bg)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', background: 'var(--code-bg)', borderBottom: '1px solid var(--border)' }}>
-                                        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-h)' }}>Fila {rIdx + 1} · {row.columns} col · {row.fields.length}/{row.columns}</span>
-                                        <div style={{ display: 'flex', gap: '4px' }}>
-                                            {([1, 2, 3] as const).map((n) => (
-                                                <button key={n} onClick={() => {
-                                                    const next = [...config.sections]
-                                                    next[sIdx] = { ...next[sIdx], rows: next[sIdx].rows.map((r, i) => i === rIdx ? { columns: n, fields: r.fields.slice(0, n) } : r) }
-                                                    onChange({ sections: next })
-                                                }} style={{ width: '22px', height: '22px', borderRadius: '4px', border: `1px solid ${row.columns === n ? 'var(--accent)' : 'var(--border)'}`, background: row.columns === n ? 'var(--accent)' : 'var(--bg)', color: row.columns === n ? '#fff' : 'var(--text)', fontSize: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--sans)' }}>{n}</button>
-                                            ))}
-                                            <button onClick={() => removeRow(sIdx, rIdx)} style={{ width: '22px', height: '22px', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg)', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LuTrash2 size={11} /></button>
-                                        </div>
-                                    </div>
-                                    <div style={{ padding: '8px', display: 'grid', gridTemplateColumns: `repeat(${row.columns}, 1fr)`, gap: '6px' }}>
-                                        {Array.from({ length: row.columns }).map((_, cIdx) => {
-                                            const field = row.fields[cIdx]
-                                            if (!field) return (
-                                                <button key={cIdx} onClick={() => addFieldToRow(sIdx, rIdx)} style={{ height: '56px', borderRadius: '6px', border: '1.5px dashed var(--border)', background: 'transparent', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', color: 'var(--text)', opacity: 0.4, fontSize: '11px', fontFamily: 'var(--sans)' }}>
-                                                    <LuPlus size={14} /> Agregar
-                                                </button>
-                                            )
-                                            return (
-                                                <div key={cIdx} style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '6px', background: 'var(--code-bg)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                    <div style={{ display: 'flex', gap: '3px' }}>
-                                                        <select value={field.type} onChange={(e) => updateField(sIdx, rIdx, cIdx, { type: e.target.value as FieldType })} style={{ flex: 1, padding: '3px', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '10px', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--sans)' }}>
-                                                            {FIELD_TYPES.map((ft) => <option key={ft.value} value={ft.value}>{ft.label}</option>)}
-                                                        </select>
-                                                        <button onClick={() => updateField(sIdx, rIdx, cIdx, { required: !field.required })} style={{ width: '22px', height: '22px', borderRadius: '4px', border: `1px solid ${field.required ? '#dc2626' : 'var(--border)'}`, background: field.required ? 'rgba(220,38,38,0.1)' : 'var(--bg)', color: field.required ? '#dc2626' : 'var(--text)', fontSize: '10px', fontWeight: 700, cursor: 'pointer' }} title="Requerido">*</button>
-                                                        <button onClick={() => removeField(sIdx, rIdx, cIdx)} style={{ width: '22px', height: '22px', borderRadius: '4px', border: 'none', background: 'transparent', color: '#dc2626', cursor: 'pointer', fontSize: '12px' }}>×</button>
-                                                    </div>
-                                                    <input type="text" value={field.label} onChange={(e) => updateField(sIdx, rIdx, cIdx, { label: e.target.value })} placeholder="Label" style={{ padding: '3px 6px', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '11px', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--sans)' }} />
-                                                    <input type="text" value={field.placeholder} onChange={(e) => updateField(sIdx, rIdx, cIdx, { placeholder: e.target.value })} placeholder="Placeholder" style={{ padding: '3px 6px', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '10px', background: 'var(--bg)', color: 'var(--text)', fontFamily: 'var(--sans)', opacity: 0.7 }} />
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
+                                <RowBlock
+                                    key={rIdx}
+                                    sectionIndex={sIdx}
+                                    rowIndex={rIdx}
+                                    columns={row.columns}
+                                    fields={row.fields}
+                                    activeDrag={activeDrag}
+                                    onColumnsChange={(cols) => {
+                                        const next = [...config.sections]
+                                        next[sIdx] = { ...next[sIdx], rows: next[sIdx].rows.map((r, i) => i === rIdx ? { columns: cols, fields: r.fields.slice(0, cols) } : r) }
+                                        onChange({ sections: next })
+                                    }}
+                                    onRemoveRow={() => removeRow(sIdx, rIdx)}
+                                    onAddField={() => addFieldToRow(sIdx, rIdx)}
+                                    onEditField={(fIdx) => setEditingField({ sectionIndex: sIdx, rowIndex: rIdx, fieldIndex: fIdx })}
+                                    onRemoveField={(fIdx) => removeField(sIdx, rIdx, fIdx)}
+                                    onFieldDragStart={setActiveDrag}
+                                    onFieldDragEnd={() => setActiveDrag(null)}
+                                    onFieldDrop={handleFieldDrop}
+                                />
                             ))}
 
                             {/* Add row to section */}
@@ -633,6 +639,31 @@ function ConfiguratorPanel({
                     <span className={styles.flagBadge}>{config.labelMode}</span>
                 </div>
             </div>
+            </>
+            )}
+
+            {/* Field Config Modal */}
+            <FieldConfigModal
+                isOpen={editingField !== null}
+                field={editingField ? config.sections[editingField.sectionIndex]?.rows[editingField.rowIndex]?.fields[editingField.fieldIndex] ?? null : null}
+                onClose={() => setEditingField(null)}
+                onSave={(updated) => {
+                    if (!editingField) return
+                    const { sectionIndex, rowIndex, fieldIndex } = editingField
+                    const next = [...config.sections]
+                    next[sectionIndex] = {
+                        ...next[sectionIndex],
+                        rows: next[sectionIndex].rows.map((r, i) =>
+                            i === rowIndex ? { ...r, fields: r.fields.map((f, j) => j === fieldIndex ? updated : f) } : r
+                        ),
+                    }
+                    onChange({ sections: next })
+                }}
+                onRemove={() => {
+                    if (!editingField) return
+                    removeField(editingField.sectionIndex, editingField.rowIndex, editingField.fieldIndex)
+                }}
+            />
         </div>
     )
 }
@@ -787,10 +818,6 @@ export default function FormShowcase() {
     return (
         <div className={styles.page}>
             <div className={styles.header}>
-                <h1 className={styles.title}>Formularios</h1>
-                <p className={styles.subtitle}>
-                    Configura formularios por secciones, con validación por campo y modo multi-paso.
-                </p>
                 <div className={styles.toggleBar}>
                     <button className={`${styles.toggleBtn} ${view === 'preview' ? styles.toggleActive : ''}`} onClick={() => setView('preview')}>
                         <span className={styles.toggleIcon}><LuEye size={16} /></span>

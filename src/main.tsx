@@ -4,12 +4,15 @@ import './index.css'
 import App from './App.tsx'
 import { BrowserRouter } from 'react-router'
 import { ThemeProvider } from './theme/ThemeProvider'
+import { ToastProvider } from './components/ui/Toast'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <App />
+        <ToastProvider position="top-right" maxVisible={3}>
+          <App />
+        </ToastProvider>
       </ThemeProvider>
     </BrowserRouter>
   </StrictMode>,

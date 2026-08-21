@@ -57,6 +57,14 @@ export default function Table<T extends object>({
                             key={keyExtractor(row, rowIndex)}
                             className={`${styles.tr} ${onRowClick ? styles.clickable : ''}`}
                             onClick={() => onRowClick?.(row, rowIndex)}
+                            onKeyDown={onRowClick ? (e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault()
+                                    onRowClick(row, rowIndex)
+                                }
+                            } : undefined}
+                            role={onRowClick ? 'button' : undefined}
+                            tabIndex={onRowClick ? 0 : undefined}
                         >
                             {columns.map((col) => (
                                 <td

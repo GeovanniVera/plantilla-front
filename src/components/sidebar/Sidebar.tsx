@@ -9,13 +9,11 @@ import NavItem from './NavItem'
 import NavGroup from './NavGroup'
 import MobileBottomBar from './MobileBottomBar'
 import {
-    LuFolder, LuSettings, LuHouse,
-    LuBlocks, LuFileText, LuChartBar, LuUsers, LuMail,
-    LuCalendar, LuImage, LuMusic, LuVideo,
-    LuShoppingCart, LuHeart, LuStar, LuBookmark,
-    LuLogOut, LuLayoutGrid, LuPalette, LuPlug, LuShield,
+    LuSettings, LuHouse,
+    LuBlocks,
     LuPanelLeftClose, LuPanelLeftOpen,
-    LuMousePointerClick, LuTable2, LuCreditCard, LuMonitor, LuTextCursorInput
+    LuMousePointerClick, LuTable2, LuCreditCard, LuTextCursorInput,
+    LuPanelRightOpen, LuBell, LuNavigation
 } from "react-icons/lu"
 import type { NavItem as NavItemType, GroupItem } from './types'
 
@@ -25,19 +23,6 @@ const MOBILE_BREAKPOINT = '(max-width: 768px)'
 // --- Datos de navegación ---
 const navItems: NavItemType[] = [
     { to: '/', icon: LuHouse, label: 'Inicio' },
-    { to: '/proyectos', icon: LuFolder, label: 'Proyectos' },
-    { to: '/documentos', icon: LuFileText, label: 'Documentos' },
-    { to: '/analytics', icon: LuChartBar, label: 'Analytics' },
-    { to: '/equipo', icon: LuUsers, label: 'Equipo' },
-    { to: '/mensajes', icon: LuMail, label: 'Mensajes' },
-    { to: '/calendario', icon: LuCalendar, label: 'Calendario' },
-    { to: '/galeria', icon: LuImage, label: 'Galería' },
-    { to: '/musica', icon: LuMusic, label: 'Música' },
-    { to: '/videos', icon: LuVideo, label: 'Videos' },
-    { to: '/tienda', icon: LuShoppingCart, label: 'Tienda' },
-    { to: '/favoritos', icon: LuHeart, label: 'Favoritos' },
-    { to: '/destacados', icon: LuStar, label: 'Destacados' },
-    { to: '/guardados', icon: LuBookmark, label: 'Guardados' },
 ]
 
 const groups: GroupItem[] = [
@@ -51,49 +36,15 @@ const groups: GroupItem[] = [
             { to: '/componentes/cards', icon: LuCreditCard, label: 'Cards' },
             { to: '/componentes/tablas', icon: LuTable2, label: 'Tablas' },
             { to: '/componentes/formularios', icon: LuTextCursorInput, label: 'Formularios' },
-        ],
-    },
-    {
-        id: 'diseno',
-        icon: LuPalette,
-        label: 'Diseño',
-        basePath: '/diseno',
-        children: [
-            { to: '/diseno/colores', icon: LuPalette, label: 'Colores' },
-            { to: '/diseno/tipografia', icon: LuFileText, label: 'Tipografía' },
-            { to: '/diseno/iconos', icon: LuImage, label: 'Iconos' },
-            { to: '/diseno/espaciado', icon: LuLayoutGrid, label: 'Espaciado' },
-        ],
-    },
-    {
-        id: 'integraciones',
-        icon: LuPlug,
-        label: 'Integraciones',
-        basePath: '/integraciones',
-        children: [
-            { to: '/integraciones/api', icon: LuPlug, label: 'API' },
-            { to: '/integraciones/webhooks', icon: LuMail, label: 'Webhooks' },
-            { to: '/integraciones/auth', icon: LuShield, label: 'Auth' },
-        ],
-    },
-    {
-        id: 'herramientas',
-        icon: LuSettings,
-        label: 'Herramientas',
-        basePath: '/herramientas',
-        children: [
-            { to: '/herramientas/consola', icon: LuMonitor, label: 'Consola' },
-            { to: '/herramientas/logs', icon: LuFileText, label: 'Logs' },
-            { to: '/herramientas/monitor', icon: LuChartBar, label: 'Monitor' },
-            { to: '/herramientas/deploy', icon: LuFolder, label: 'Deploy' },
-            { to: '/herramientas/backup', icon: LuBookmark, label: 'Backup' },
+            { to: '/componentes/modales', icon: LuPanelRightOpen, label: 'Modales' },
+            { to: '/componentes/notificaciones', icon: LuBell, label: 'Notificaciones' },
+            { to: '/componentes/navegacion', icon: LuNavigation, label: 'Navegación' },
         ],
     },
 ]
 
 const footerItems: NavItemType[] = [
     { to: '/ajustes', icon: LuSettings, label: 'Ajustes' },
-    { to: '/logout', icon: LuLogOut, label: 'Cerrar sesión', danger: true },
 ]
 
 // --- Componente ---

@@ -161,6 +161,29 @@
     color: var(--accent);
 }
 
+.collapseBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, transform 0.2s;
+}
+
+.collapseBtn:hover {
+    border-color: var(--accent-border);
+    color: var(--accent);
+}
+
+.collapseBtnCollapsed {
+    transform: rotate(-90deg);
+}
+
 /* ─── Config Groups ─── */
 .configGroup {
     padding: 16px 20px;
@@ -501,9 +524,17 @@
 }
 
 /* ================================
+   RESPONSIVE FORM GRID
+   ================================ */
+.responsiveGrid {
+    display: grid;
+    gap: 16px;
+}
+
+/* ================================
    RESPONSIVE
    ================================ */
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
     .builderLayout {
         grid-template-columns: 1fr;
     }
@@ -514,5 +545,11 @@
 
     .page {
         padding: 24px 20px;
+    }
+}
+
+@media (max-width: 640px) {
+    .responsiveGrid {
+        grid-template-columns: 1fr !important;
     }
 }

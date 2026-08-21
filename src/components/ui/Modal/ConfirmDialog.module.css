@@ -1,0 +1,126 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    padding: 8px 0;
+}
+
+/* ─── Icon ─── */
+
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 24px;
+    transition: transform 0.2s ease;
+}
+
+.icon:hover {
+    transform: scale(1.05);
+}
+
+.iconDefault {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.iconDestructive {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+.iconWarning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.iconInfo {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.message {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    margin: 0;
+    max-width: 340px;
+}
+
+/* ─── Buttons ─── */
+
+.btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btnSecondary {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+}
+
+.btnSecondary:hover {
+    border-color: var(--accent-border);
+    color: var(--text-h);
+}
+
+/* Default — green accent */
+.btnDefault {
+    border: none;
+    background: #22c55e;
+    color: #fff;
+}
+
+.btnDefault:hover {
+    background: #16a34a;
+}
+
+/* Destructive — red */
+.btnDestructive {
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    background: rgba(220, 38, 38, 0.08);
+    color: #dc2626;
+}
+
+.btnDestructive:hover {
+    background: #dc2626;
+    color: #fff;
+    border-color: #dc2626;
+}
+
+/* Warning — amber */
+.btnWarning {
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    background: rgba(245, 158, 11, 0.08);
+    color: #d97706;
+}
+
+.btnWarning:hover {
+    background: #f59e0b;
+    color: #fff;
+    border-color: #f59e0b;
+}
+
+/* Info — blue */
+.btnInfo {
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.08);
+    color: #2563eb;
+}
+
+.btnInfo:hover {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}

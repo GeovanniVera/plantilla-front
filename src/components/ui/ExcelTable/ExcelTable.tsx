@@ -194,7 +194,7 @@ export default function ExcelTable<T extends object>({
                 </div>
             )}
 
-            <div className={styles.wrapper} onKeyDown={handleKeyDown} tabIndex={0}>
+            <div className={styles.wrapper} onKeyDown={handleKeyDown} tabIndex={0} role="grid" aria-label="Tabla de datos">
                 <table ref={tableRef} className={styles.table}>
                     <thead>
                         <tr>
@@ -231,6 +231,9 @@ export default function ExcelTable<T extends object>({
                                                 isEditing ? styles.editing : '',
                                             ].filter(Boolean).join(' ')}
                                             style={{ textAlign: col.align ?? 'left' }}
+                                            role="gridcell"
+                                            tabIndex={isSelected ? 0 : -1}
+                                            aria-selected={isSelected}
                                             onClick={() => handleCellClick(rowIndex, colIndex)}
                                             onDoubleClick={() => handleCellDoubleClick(rowIndex, colIndex, value)}
                                         >
