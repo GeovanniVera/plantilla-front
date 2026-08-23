@@ -12,6 +12,12 @@ const config: StorybookConfig = {
     "@storybook/addon-docs",
     "@storybook/addon-mcp"
   ],
-  "framework": "@storybook/react-vite"
+  "framework": "@storybook/react-vite",
+  async viteFinal(config) {
+    return {
+      ...config,
+      plugins: [...(config.plugins ?? []), (await import('@tailwindcss/vite')).default()],
+    };
+  },
 };
 export default config;
