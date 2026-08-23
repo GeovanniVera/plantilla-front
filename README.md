@@ -1,278 +1,266 @@
 # Semilla Tecnológica — React Design System
 
-Plantilla modular de diseño para proyectos React + TypeScript + Vite. Incluye componentes UI reutilizables, sistema de theming de marca, sidebar configurable y showcases interactivos para documentación y demostración a stakeholders.
+Plantilla personal reusable construida con **React + TypeScript**, orientada a la
+composición y a la creación de componentes reutilizables. Incluye un design system
+organizado por familias, sistema de theming de marca, sidebar configurable y
+showcases interactivos para probar y demostrar los componentes.
 
 ---
 
 ## Stack
 
 | Tecnología | Versión | Propósito |
-|------------|---------|-----------|
-| React | 19.x | Framework UI |
-| TypeScript | 6.x | Tipado estático |
-| Vite | 8.x | Build tool y dev server |
-| React Router | 8.x | Enrutamiento SPA |
-| react-icons | 5.x | Iconografía (Lucide) |
-| Storybook | 10.x | Documentación de componentes |
-| Oxlint | 1.x | Linting rápido |
-| Vitest | latest | Testing |
-| Playwright | latest | E2E testing |
-
----
-
-## Estructura del proyecto
-
-```
-src/
-├── components/
-│   ├── sidebar/                    # Sidebar configurable
-│   │   ├── Sidebar.tsx             # Contenedor principal (toggle, mobile, desktop)
-│   │   ├── Sidebar.module.css
-│   │   ├── NavItem.tsx             # Link de navegación individual
-│   │   ├── NavGroup.tsx            # Grupo desplegable con sub-items
-│   │   ├── SidebarLogo.tsx         # Logo + nombre de empresa
-│   │   ├── UserAvatar.tsx          # Card de perfil (relieve neumórfico)
-│   │   ├── UserClock.tsx           # Reloj en tiempo real
-│   │   ├── MobileBottomBar.tsx     # Barra inferior para mobile
-│   │   └── types.ts                # Tipos compartidos
-│   │
-│   └── ui/                         # Design System
-│       ├── Button.tsx              # Botón (primary, secondary, ghost)
-│       ├── Badge.tsx               # Badge (default, success, warning, info)
-│       ├── Card.tsx                # Card con header + body
-│       ├── CategorySection.tsx     # Sección agrupadora para showcases
-│       │
-│       ├── Table/                  # Tabla base y variante DataTable
-│       │   ├── Table.tsx           # BaseTable — estructura genérica tipada
-│       │   ├── DataTable.tsx       # DataTable — filtros + paginación
-│       │   ├── FilterDropdown.tsx   # Dropdown de filtros por columna
-│       │   ├── hooks/
-│       │   │   ├── useTableFilters.ts
-│       │   │   └── useTablePagination.ts
-│       │   └── types.ts
-│       │
-│       ├── ExcelTable/             # Tabla estilo hoja de cálculo
-│       │   ├── ExcelTable.tsx      # Celdas editables, navegación por teclado
-│       │   └── types.ts
-│       │
-│       ├── Pagination/             # Paginador genérico
-│       │   ├── Pagination.tsx
-│       │   └── Pagination.module.css
-│       │
-│       └── Form/                   # Sistema de formularios
-│           ├── Input.tsx           # Input genérico (text, email, password, number, tel)
-│           ├── Textarea.tsx        # Textarea auto-resize
-│           ├── Select.tsx          # Select con icono chevron
-│           ├── Checkbox.tsx        # Checkbox custom animado
-│           ├── Radio.tsx           # Radio + RadioGroup
-│           ├── FormField.tsx       # Wrapper: label + input + error + helper
-│           ├── FormLayout.tsx      # Grid: 1, 2, 3 o 4 columnas
-│           ├── Form.module.css     # Estilos con 3 variantes (default, filled, outlined)
-│           └── types.ts
-│
-├── theme/                          # Sistema de theming de marca
-│   ├── tokens.ts                   # Tokens de color por defecto
-│   ├── ThemeProvider.tsx           # Context + aplicación en vivo
-│   ├── theme-context.ts            # React Context definition
-│   ├── persistence.ts              # Capa de persistencia (localStorage → API)
-│   ├── useTheme.ts                 # Hook para consumir el theme
-│   ├── BrandColorSettings.tsx       # Panel de configuración en /ajustes
-│   ├── ContrastChecker.tsx          # Validador WCAG de contraste
-│   └── ThemePreview.tsx             # Preview en vivo de componentes
-│
-├── hooks/
-│   └── useMediaQuery.ts            # Hook reutilizable para breakpoints
-│
-├── layouts/
-│   └── MainLayout.tsx              # Layout: sidebar + contenido principal
-│
-├── pages/                          # Páginas y showcases
-│   ├── ComponentesBotones.tsx      # Showcase de botones
-│   ├── ComponentesCards.tsx         # Showcase de cards
-│   ├── TablesShowcase.tsx           # Configurador interactivo de tablas
-│   ├── FormShowcase.tsx             # Configurador interactivo de formularios
-│   └── components-data/            # Datos de ejemplo para showcases
-│
-├── App.tsx                         # Definición de rutas
-├── main.tsx                        # Entry point (StrictMode, Router, ThemeProvider)
-└── index.css                       # Variables globales + temas light/dark
-```
-
----
-
-## Arquitectura del Design System
-
-### Principios de diseño
-
-1. **Composición sobre configuración** — Los componentes se componen entre sí, no se configuran con docenas de props booleanas
-2. **Separación de concerns** — Lógica de negocio separada de la vista
-3. **Tipado genérico** — Componentes como `BaseTable<T>` funcionan con cualquier tipo de dato
-4. **Variantes por CSS** — Cada componente soporta variantes visuales (`default`, `filled`, `outlined`)
-5. **Theming de marca** — Tokens de color configurables en vivo que persisten entre sesiones
-
-### Patrón de composición (ejemplo: Tablas)
-
-```
-BaseTable<T>           → Estructura genérica (columnas + filas + empty state)
-  ├── DataTable       → + filtros + paginación (client-side)
-  └── ExcelTable      → + celdas editables + navegación por teclado
-
-Uso en producción:
-<DataTable
-    columns={userColumns}
-    data={users}
-    keyExtractor={(u) => u.id}
-    filters
-    pagination
-/>
-```
-
-### Patrón de composición (ejemplo: Formularios)
-
-```
-FormLayout             → Grid responsive (1-4 columnas)
-  └── FormField        → Label + input + error + helper text
-       └── Input       → Input con variantes (default, filled, outlined)
-
-Uso en producción:
-<FormLayout columns={2}>
-    <FormField label="Email" required error={errors.email}>
-        <Input type="email" variant="filled" value={data.email} onChange={...} />
-    </FormField>
-</FormLayout>
-```
-
----
-
-## Variantes visuales
-
-### Componentes de formulario
-
-| Variante | Estilo | Uso recomendado |
-|----------|--------|-----------------|
-| `default` | Bordes sutiles, esquinas redondeadas 8px | Apps web generales |
-| `filled` | Fondo relleno, borde inferior | Apps mobile / Material Design |
-| `outlined` | Bordes prominentes 2px, sin relleno | Formularios densos / Dashboards |
-
-### Sidebar
-
-| Comportamiento | Desktop | Mobile |
-|----------------|---------|--------|
-| Colapsado | 80px con solo iconos centrados | — |
-| Expandido | 240px con icono + texto | 280px slide-in |
-| Toggle | Botón fijo en el nav | Bottom bar (56px) |
-| Animación | CSS grid-template-rows (0fr → 1fr) | transform: translateX + backdrop |
-
----
-
-## Sistema de theming
-
-### Tokens disponibles
-
-| Token | CSS Variable | Default Light | Default Dark |
-|-------|-------------|---------------|--------------|
-| `primary` | `--primary` | `#0d9488` | `#2dd4bf` |
-| `secondary` | `--secondary` | `#6366f1` | `#818cf8` |
-| `accent` | `--accent` | `#0d9488` | `#2dd4bf` |
-| `background` | `--bg` | `#f6f5f1` | `#16171d` |
-| `surface` | `--code-bg` | `#edecea` | `#1f2028` |
-| `text` | `--text` | `#5a5565` | `#9ca3af` |
-| `text-h` | `--text-h` | `#1a1525` | `#f3f4f6` |
-| `border` | `--border` | `#e4e2dc` | `#2e303a` |
-
-### Persistencia
-
-```typescript
-// Cambiar adaptador de localStorage a API
-import { setStorageAdapter } from './theme/persistence'
-
-setStorageAdapter({
-    load: () => fetch('/api/theme').then(r => r.json()),
-    save: (theme) => fetch('/api/theme', { method: 'PUT', body: JSON.stringify(theme) }),
-    reset: () => fetch('/api/theme', { method: 'DELETE' }),
-})
-```
-
----
-
-## Rutas
-
-| Ruta | Componente | Descripción |
-|------|-----------|-------------|
-| `/` | — | Inicio (placeholder) |
-| `/proyectos` | — | Proyectos (placeholder) |
-| `/componentes/botones` | `ComponentesBotones` | Showcase de botones reutilizables |
-| `/componentes/cards` | `ComponentesCards` | Showcase de cards y badges |
-| `/componentes/tablas` | `TablesShowcase` | Configurador interactivo de tablas |
-| `/componentes/formularios` | `FormShowcase` | Configurador interactivo de formularios |
-| `/ajustes` | `BrandColorSettings` | Configuración de theming de marca |
-
----
+|------------|---------------|--------------------------------------|
+| React | ^19.2.8 | Framework UI |
+| TypeScript | ~6.0.2 | Tipado estático |
+| Vite | ^8.2.0 | Build tool y dev server |
+| React Router | ^8.3.0 | Enrutamiento SPA |
+| react-icons | ^5.7.0 | Iconografía (Lucide) |
+| date-fns | ^4.4.0 | Utilidades de fechas |
+| react-day-picker | ^10.0.1 | Calendario / selección de rango |
+| Storybook | ^10.5.10 | Documentación y desarrollo de componentes |
+| Oxlint | ^1.75.0 | Linting |
+| Vitest + Playwright | latest | Testing (configuración base vía Storybook addon) |
 
 ## Scripts
 
 ```bash
-npm run dev          # Dev server con HMR
-npm run build        # TypeScript check + Vite build
-npm run lint         # Oxlint
-npm run preview      # Preview del build
-npm run storybook    # Storybook en puerto 6006
+npm run dev              # Dev server (Vite)
+npm run build            # tsc -b && vite build
+npm run lint             # oxlint
+npm run preview          # Sirve el build de producción
+npm run storybook        # Storybook en http://localhost:6006
+npm run build-storybook  # Build estático de Storybook
 ```
 
 ---
 
-## Componentes incluidos
+## Filosofía
 
-### UI Core
+- **Composition over configuration**: los componentes se arman combinando piezas
+  más pequeñas en lugar de acumular props de configuración.
+- **Reutilización**: cada pieza está pensada para salir de su página de origen y
+  vivir como parte de una plantilla.
+- **Separación de responsabilidades**: cada familia tiene un rol claro y las
+  herramientas de demo viven separadas del código reusable.
+- **Bajo acoplamiento**: los estilos son CSS Modules por componente; ninguna
+  familia importa los estilos de otra.
+- **TypeScript primero**: contratos explícitos (`Props`, tipos exportados) antes
+  que inferencia silenciosa.
 
-- **Button** — Primary, secondary, ghost | sm, md, lg
-- **Badge** — Default, success, warning, info
-- **Card** — Header + body con hover effect
-- **CategorySection** — Contenedor agrupador para showcases
+### Modelo conceptual
 
-### Tablas
+```
+Primitive     pieza atómica sin opinión de negocio (Button, Badge, Input)
+   ↓
+Base          núcleo de renderizado compartido entre variantes
+   ↓
+Parts         piezas de comportamiento/toolbar reutilizables
+   ↓
+Variant       componente completo que agrega comportamiento (DataTable)
+   ↓
+Composition   páginas que combinan variantes y parts
+```
 
-- **BaseTable\<T\>** — Estructura genérica tipada con empty state
-- **DataTable** — Filtros desplegables + paginador con configurable rows per page
-- **ExcelTable** — Celdas editables en línea, navegación por teclado (arrow keys, Tab, Enter)
-- **Pagination** — Paginador standalone con navegación por página
-
-### Formularios
-
-- **Input** — Text, email, password, number, tel | 3 variantes
-- **Textarea** — Auto-resize con min/max height
-- **Select** — Select custom con icono chevron | 3 variantes
-- **Checkbox** — Checkbox animado con icono de check
-- **Radio** — Radio + RadioGroup
-- **FormField** — Wrapper label + input + error + helper
-- **FormLayout** — Grid responsive 1-4 columnas
-
-### Sidebar
-
-- **Sidebar** — Contenedor principal con toggle, mobile drawer, backdrop
-- **NavItem** — Link con icono + texto, active state, danger variant
-- **NavGroup** — Grupo desplegable con animación grid-template-rows
-- **SidebarLogo** — Logo SVG + nombre de empresa
-- **UserAvatar** — Card de perfil con relieve neumórfico
-- **UserClock** — Reloj actualizado en tiempo real
-- **MobileBottomBar** — Barra de navegación inferior para mobile
+No todos los componentes necesitan todas las capas: un `Badge` es solo primitive;
+la familia de tablas usa las cinco.
 
 ---
 
-## Checklist de calidad
+## Arquitectura
 
-- [x] Tipado TypeScript estricto (sin `any`)
-- [x] CSS Modules sin `!important`
-- [x] Transiciones con propiedades específicas (sin `transition: all`)
-- [x] Responsive design (desktop + mobile)
-- [x] Theming en vivo con persistencia
-- [x] Storybook para documentación de componentes
-- [x] React Doctor para auditoría de calidad
-- [x] Empty states en todos los componentes de datos
-- [x] Empty states personalizables
+```
+src/
+├── components/
+│   ├── primitives/          # Átomos: Button, Badge, Input, Select, Checkbox,
+│   │                        # Radio, Textarea, StatusDot
+│   ├── layout/              # Estructura de contenido: Card, StatCard, FormLayout
+│   ├── forms/               # Captura de datos: FormField + tipos compartidos
+│   ├── data-display/        # Datos: calendar/, table/
+│   │   ├── calendar/        # Calendar, CalendarView
+│   │   └── table/           # BaseTable, DataTable, ExcelTable + hooks/ + parts/
+│   ├── navigation/          # Tabs, Breadcrumb, sidebar/
+│   ├── feedback/            # ToastProvider, Toast, useToast
+│   └── overlays/            # Modal, Drawer, ConfirmDialog, DrawerStack
+├── dev/                     # Herramientas de demo (NO forman parte de la librería)
+│   ├── form-builder/        # Constructor de formularios del showcase
+│   ├── showcase/            # CodeBlock / ExampleCard reutilizados por demos
+│   └── theme-tools/         # BrandColorSettings, ContrastChecker, ThemePreview
+├── theme/                   # Infraestructura de theming (reusable)
+├── hooks/                   # useIsMobile, useMediaQuery
+├── layouts/                 # MainLayout (sidebar + outlet)
+├── pages/                   # Showcases, demos y app de auditoría
+└── main.tsx                 # Providers: BrowserRouter → ThemeProvider → ToastProvider
+```
 
----
+Cada familia expone sus exports públicos mediante un barrel `index.ts`.
 
-## Licencia
+## Responsabilidad por familia
 
-MIT
+| Familia | Pregunta que responde | Contenido actual |
+|---|---|---|
+| `primitives` | ¿Es una pieza universal sin opinión de negocio? | Button, Badge, Input, Select, Checkbox, Radio/RadioGroup, Textarea, StatusDot |
+| `layout` | ¿Estructura o agrupa contenido? | Card, StatCard, FormLayout |
+| `forms` | ¿Captura datos del usuario? | FormField, tipos compartidos del dominio formulario |
+| `data-display` | ¿Muestra datos? | `calendar/` y `table/` |
+| `navigation` | ¿Ayuda a navegar? | Tabs, Breadcrumb, familia sidebar |
+| `feedback` | ¿Comunica estado al usuario? | ToastProvider / Toast / useToast |
+| `overlays` | ¿Aparece sobre el contenido? | Modal, Drawer, ConfirmDialog, DrawerStack |
+
+## Composición de tablas
+
+Caso real de base + variantes + parts:
+
+```
+BaseTable            núcleo de renderizado (named export)
+├── DataTable        tabla de lectura: filtros y paginación
+└── ExcelTable       grilla editable: editores de celda y columna líder
+```
+
+- `BaseTable` aporta el render compartido del `<table>` y expone slots de
+  composición: `styles` (inyección del módulo CSS de la variante),
+  `composeCell`, `composeHeader`, `leadingColumn`, `wrapperProps` y `tableRef`.
+  No sabe nada de filtros, edición ni paginación.
+- `DataTable` y `ExcelTable` componen ese núcleo y agregan su comportamiento:
+  filtros y paginación (`useTableFilters`, `useTablePagination`) en ambas;
+  edición con `CellEditors` y columna numérica (`leadingColumn`) en ExcelTable.
+- Las piezas de toolbar (`FilterBar`, `Pagination`, `ColumnToggle`,
+  `DensitySelector`, `BulkActionsBar`, `SearchHighlight`) viven en `parts/` y
+  son parte de la API componible pública.
+
+## Imports y exports
+
+Política vigente:
+
+- **Barrels por familia** (`primitives/index.ts`, `layout/index.ts`,
+  `forms/index.ts`, etc.). El punto de entrada preferido de cada familia es su
+  barrel.
+- **Sin barrel raíz** de `components/`: no existe un `components/index.ts`.
+- **Exports explícitos** en cada barrel (sin `export *`).
+- **Aliases** configurados en `tsconfig.app.json` y `vite.config.ts`:
+  `@components/*`, `@hooks/*`, `@theme/*`, `@dev/*`.
+- **Imports relativos locales** dentro de una misma familia cuando son más
+  claros (por ejemplo, dentro de `data-display/table/`).
+
+```tsx
+// Barrel de familia (preferido)
+import { Input, Select, Checkbox } from '@components/primitives'
+import { Card, StatCard } from '@components/layout'
+
+// Deep import válido cuando hace falta precisión
+import { type Column } from '@components/data-display/table/types'
+
+// Fuera de components/
+import { useTheme } from '@theme/useTheme'
+import { CodeBlock } from '@dev/showcase/Showcase'
+import { useMediaQuery } from '@hooks/useMediaQuery'
+```
+
+## Cómo crear un nuevo componente
+
+1. Elegí familia según la pregunta clave:
+
+| Si el componente… | Va a |
+|---|---|
+| es una pieza universal | `primitives` |
+| estructura contenido | `layout` |
+| captura datos | `forms` |
+| muestra datos | `data-display` |
+| navega | `navigation` |
+| comunica estado | `feedback` |
+| aparece sobre contenido | `overlays` |
+
+2. Creamos el `.tsx` + `.module.css`, tipamos las Props y las exportamos desde
+   el barrel de la familia con export explícito.
+3. Si necesita lógica reutilizable, extraé hooks o parts antes de duplicar.
+4. Agregá una story si la pieza es visualmente demostrable.
+
+> En una plantilla reusable, "0 consumidores internos" **no** significa código
+> muerto: puede ser contrato deliberado para consumidores futuros. Antes de
+> eliminar un export, preguntate si es implementación interna o API pública.
+
+## Storybook
+
+Storybook sirve para desarrollar y documentar componentes de forma aislada.
+Las stories viven junto a sus componentes (co-locadas):
+
+- `src/components/primitives/*.stories.tsx` (Badge, Button)
+- `src/components/navigation/sidebar/*.stories.tsx` (NavGroup, NavItem, SidebarLogo, UserAvatar, UserClock)
+- `src/components/layout/Card.stories.tsx`
+- `src/components/data-display/table/stories/` (DataTable, ExcelTable + dataset compartido)
+
+```bash
+npm run storybook   # http://localhost:6006
+# Smoke test headless:
+npx storybook dev --ci --smoke-test
+```
+
+La config vive en `.storybook/main.ts` (glob: `../src/**/*.stories.*`) e incluye
+addons de docs, a11y y vitest.
+
+## Instalación y ejecución
+
+```bash
+npm install
+npm run dev          # App de demos en desarrollo
+npm run storybook    # Documentación aislada de componentes
+npm run lint         # Lint
+npm run build        # Verificación de tipos + bundle de producción
+npm run preview      # Servir el build
+```
+
+Requisito: Node.js con soporte para Vite 8.
+
+## Theming
+
+Infraestructura reusable en `src/theme/`:
+
+- `tokens.ts` — tokens de diseño (colores, tipografía, espaciados).
+- `ThemeProvider.tsx` + `theme-context.ts` — contexto de tema de marca.
+- `persistence.ts` — persistencia del tema.
+- `contrast.ts` — utilidades de contraste.
+- `useTheme.ts` — hook público de consumo.
+
+Las herramientas de demo viven aparte, en `src/dev/theme-tools/`
+(`BrandColorSettings`, `ContrastChecker`, `ThemePreview`): consumen la
+infraestructura pero no forman parte de la librería de componentes.
+
+## Rutas / demos
+
+| Ruta | Renderiza |
+|---|---|
+| `/`, `/componentes` | Índice de componentes |
+| `/componentes/botones` | Showcase de botones |
+| `/componentes/cards` | Showcase de cards |
+| `/componentes/tablas` | TablesShowcase (DataTable / ExcelTable) |
+| `/componentes/formularios` | FormShowcase (form builder dinámico) |
+| `/componentes/modales` | Showcase de modales |
+| `/componentes/notificaciones` | Showcase de toasts |
+| `/componentes/navegacion` | Showcase de tabs/breadcrumbs/sidebar |
+| `/componentes/calendario` | Showcase de calendario |
+| `/calendario` | Demo de calendario docente |
+| `/ajustes` | Índice de ajustes |
+| `/ajustes/colores` | Editor de colores de marca (`@dev/theme-tools/BrandColorSettings`) |
+| `/auditoria` | App de ejemplo con DataTable sobre logs de auditoría |
+
+## Extensibilidad
+
+La taxonomía está preparada para crecer sin reestructurar:
+
+- **data-display**: KPIs, Charts, Progress, Status y otros visualizadores
+  entrarían como nuevas familias/carpetas dentro de `data-display/`.
+- **parts**: nuevas toolbars o piezas de composición junto a las existentes de
+  `table/parts/`.
+- **primitives/layout**: nuevos átomos y contenedores siguen el mismo patrón
+  archivo + CSS Module + barrel.
+
+Estas extensiones aún no existen; la estructura solo garantiza que tengan un
+lugar natural.
+
+## Deuda conocida relevante para consumidores
+
+- El prop `loading` de `DataTable`/ExcelTable se acepta pero hoy no dispara
+  ningún estado de carga visual.
+- `ExcelTable` ignora `column.align` en los encabezados.
+
+Deuda interna completa y roadmap en [PENDIENTES.md](./PENDIENTES.md).
