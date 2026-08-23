@@ -152,6 +152,16 @@
         to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
+    /* Drawer slide-in (migrated from Modal.module.css, phase 6F.3B).
+     * Single side (right) exists today; add per-position tokens only
+     * when other sides become real API. */
+    --animate-drawer-slide-in: drawer-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    @keyframes drawer-slide-in {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+    }
+
     @keyframes btn-pulse {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.05); }
