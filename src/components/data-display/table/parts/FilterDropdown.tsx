@@ -87,13 +87,10 @@ export default function FilterDropdown({
         return () => document.removeEventListener('keydown', handleEscape)
     }, [isOpen])
 
+    // Opening the dropdown is a UI action only — it must NOT mutate logical
+    // filter state. An empty selection means "no filter" (see useTableFilters);
+    // the user activates a filter by checking values explicitly.
     const handleOpen = () => {
-        if (!isOpen) {
-            // Al abrir por primera vez sin selección → seleccionar todos (text/select)
-            if (filterType !== 'number' && selectedValues.size === 0) {
-                onChange(new Set(uniqueValues))
-            }
-        }
         setIsOpen((p) => !p)
         setSearch('')
     }

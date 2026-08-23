@@ -32,7 +32,9 @@ const gridColumns: Column<EmployeeRow>[] = [
 /**
  * Stateful wrapper so edits actually persist: ExcelTable does not mutate its own
  * data — commit flows through onDataChange(rowIndex, columnKey, value) and the
- * parent is responsible for updating state.
+ * parent is responsible for updating state. rowIndex is the index in the ORIGINAL
+ * data array (ExcelTable resolves it internally via keyExtractor), so this handler
+ * is safe with filters and pagination active.
  */
 function EditableGrid({
     columns,
@@ -120,22 +122,53 @@ export const Filtering: Story = {
     },
 }
 
+/**
+ * Editable + paginated grid. Demonstrates the onDataChange index fix: edit a
+ * cell on page 2+ and the correct underlying row updates (verify by paging
+ * back — the edited value persists on its original row).
+ */
+function PaginatedEditableGrid() {
+    const [rows, setRows] = useState(employeeRows)
+    return (
+        <ExcelTable
+            columns={gridColumns}
+            data={rows}
+            keyExtractor={(row) => row.id}
+            pagination
+            pageSize={5}
+            onDataChange={(rowIndex, columnKey, value) => {
+                setRows((prev) =>
+                    prev.map((row, i) => {
+                        if (i !== rowIndex) return row
+                        if (columnKey === 'salary') return { ...row, salary: Number(value) }
+                        if (columnKey === 'active') return { ...row, active: value === 'true' }
+                        return { ...row, [columnKey]: value }
+                    }),
+                )
+            }}
+        />
+    )
+}
+
 export const PaginationStory: Story = {
     name: 'Pagination',
     parameters: {
         docs: {
             description: {
-                story: '15 rows with pageSize 5 gives 3 pages.',
+                story:
+                    '15 rows with pageSize 5 gives 3 pages. This story now includes a stateful edit ' +
+                    'handler to prove the index fix.\n\n' +
+                    '**ANTES:** onDataChange received a PAGE-relative row index — editing a cell on page 2 ' +
+                    'patched the wrong row of the underlying dataset. This story deliberately omitted the ' +
+                    'handler to hide that bug.\n' +
+                    '**DESPUÉS:** ExcelTable resolves the display index to the ORIGINAL props.data index via ' +
+                    'keyExtractor before invoking onDataChange, so this story ships a real handler: go to ' +
+                    'page 2, edit a Name/Salary cell, page away and back — the change sticks to the right row.\n' +
+                    '**MOTIVO:** parents patching state by index must target the row the user actually edited.',
             },
         },
     },
-    args: {
-        columns: gridColumns,
-        data: employeeRows,
-        keyExtractor: (row) => row.id,
-        pagination: true,
-        pageSize: 5,
-    },
+    render: () => <PaginatedEditableGrid />,
 }
 
 export const CellEditorVariants: Story = {

@@ -137,35 +137,3 @@ export function SearchHighlight({
         </div>
     )
 }
-
-/**
- * Resalta un texto dado un término de búsqueda.
- * Uso: <Highlight text={cellValue} search={searchTerm} />
- */
-export function Highlight({ text, search }: { text: string; search: string }) {
-    if (!search || !text) return <>{text}</>
-
-    const parts = text.split(new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'))
-
-    return (
-        <>
-            {parts.map((part, i) =>
-                part.toLowerCase() === search.toLowerCase() ? (
-                    <mark
-                        key={i}
-                        style={{
-                            background: 'rgba(245, 158, 11, 0.3)',
-                            color: 'inherit',
-                            borderRadius: '2px',
-                            padding: '0 1px',
-                        }}
-                    >
-                        {part}
-                    </mark>
-                ) : (
-                    <span key={i}>{part}</span>
-                ),
-            )}
-        </>
-    )
-}

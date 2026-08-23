@@ -1,14 +1,15 @@
-import type { Column } from './types'
+import type { BaseTableProps } from './types'
 
 /** Props del componente ExcelTable */
-export interface ExcelTableProps<T extends object> {
-    /** Definición de columnas */
-    columns: Column<T>[]
-    /** Arreglo de datos a mostrar */
-    data: T[]
-    /** Función para obtener un identificador único por fila */
-    keyExtractor: (row: T, index: number) => string | number
-    /** Callback cuando se edita una celda — recibe el índice de fila, key de columna y nuevo valor */
+export interface ExcelTableProps<T extends object>
+    extends Pick<BaseTableProps<T>, 'columns' | 'data' | 'keyExtractor' | 'rowClassName' | 'rowStyle'> {
+    /**
+     * Callback when a cell edit is committed. `rowIndex` is the index in the
+     * ORIGINAL `data` array (resolved internally by matching row identity via
+     * keyExtractor), NOT the page-relative display index — so parents patching
+     * state by index stay correct even with filters + pagination active.
+     * Edits on rows whose key cannot be matched (missing/duplicate) are dropped.
+     */
     onDataChange?: (rowIndex: number, columnKey: string, value: string) => void
     /** Si la tabla es de solo lectura (deshabilita edición) */
     readOnly?: boolean
@@ -18,10 +19,6 @@ export interface ExcelTableProps<T extends object> {
     pagination?: boolean
     /** Items por página (default 10) */
     pageSize?: number
-    /** Clase CSS condicional para filas — formato condicional */
-    rowClassName?: (row: T, index: number) => string | undefined
-    /** Estilo inline condicional para filas */
-    rowStyle?: (row: T, index: number) => React.CSSProperties | undefined
 }
 
 /** Posición de una celda en la grilla */

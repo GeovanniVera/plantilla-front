@@ -25,6 +25,10 @@ export interface UseTableFiltersReturn<T> {
  * Hook que encapsula la lógica de filtrado por columnas.
  * Soporta: text, number, boolean, select
  *
+ * Filter semantics: an empty selection (Set with no values) or a numeric
+ * range without bounds means NO active filter for that key — all rows stay
+ * visible and the key is not counted by hasActiveFilters.
+ *
  * @param columns - Definición de columnas
  * @param data - Datos originales
  * @param onFilterChange - Callback al cambiar filtros
@@ -83,13 +87,16 @@ export function useTableFilters<T extends object>(
     }, [columns, data, columnTypes])
 
     // Datos filtrados
+    // Semantics: an EMPTY selection (or a numeric range with no bounds) means
+    // NO active filter for that key — rows stay visible. The setters normalize
+    // this by deleting such entries, so state never holds inert filters.
     const filteredData = useMemo(() => {
         return data.filter((row) => {
             for (const [key, selected] of Object.entries(filters)) {
                 const type = columnTypes[key]
                 if (type === 'number') continue // Se filtra por numericFilters
 
-                if (selected.size === 0) return false
+                if (selected.size === 0) continue // Empty selection = no filter
                 const cellValue = String((row as Record<string, unknown>)[key] ?? '')
                 if (!selected.has(cellValue)) return false
             }
@@ -108,14 +115,26 @@ export function useTableFilters<T extends object>(
         })
     }, [data, filters, numericFilters, columnTypes])
 
-    // Handlers
+    // Handlers — entries whose selection is empty (or range unbounded) are
+    // REMOVED instead of stored, keeping hasActiveFilters and the FilterBar
+    // consistent with "empty selection = no active filter".
     const setFilter = useCallback((columnKey: string, selected: Set<string>) => {
-        setFilters((prev) => ({ ...prev, [columnKey]: selected }))
+        setFilters((prev) => {
+            const next = { ...prev }
+            if (selected.size === 0) delete next[columnKey]
+            else next[columnKey] = selected
+            return next
+        })
         onFilterChange?.()
     }, [onFilterChange])
 
     const setNumericFilter = useCallback((columnKey: string, range: { min?: number; max?: number }) => {
-        setNumericFilters((prev) => ({ ...prev, [columnKey]: range }))
+        setNumericFilters((prev) => {
+            const next = { ...prev }
+            if (range.min == null && range.max == null) delete next[columnKey]
+            else next[columnKey] = range
+            return next
+        })
         onFilterChange?.()
     }, [onFilterChange])
 
@@ -140,6 +159,8 @@ export function useTableFilters<T extends object>(
     }, [onFilterChange])
 
     // Filtro activo = la key existe en filters o numericFilters
+    // (setters normalize away empty selections / unbounded ranges, so every
+    // stored entry IS an active filter)
     const hasActiveFilters = useMemo(
         () => Object.keys(filters).length > 0 || Object.keys(numericFilters).length > 0,
         [filters, numericFilters],

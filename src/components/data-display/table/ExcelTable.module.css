@@ -1,4 +1,13 @@
 /* ================================
+   EXCEL TABLE — Container (FilterBar / Pagination layout)
+   ================================ */
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* ================================
    EXCEL TABLE — Wrapper
    ================================ */
 .wrapper {
@@ -185,6 +194,41 @@ thead .rowHeader {
     font-size: 13px;
     color: var(--text);
     margin: 0;
+}
+
+/* ================================
+   ROW CONDITIONAL FORMATTING
+   ================================ */
+.rowDanger {
+    background: rgba(239, 68, 68, 0.06);
+}
+
+.rowDanger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.rowWarning {
+    background: rgba(245, 158, 11, 0.06);
+}
+
+.rowWarning:hover {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.rowSuccess {
+    background: rgba(34, 197, 94, 0.06);
+}
+
+.rowSuccess:hover {
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.rowInfo {
+    background: rgba(59, 130, 246, 0.06);
+}
+
+.rowInfo:hover {
+    background: rgba(59, 130, 246, 0.1);
 }
 
 /* ================================

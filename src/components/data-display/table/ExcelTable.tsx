@@ -1,22 +1,29 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { BaseTable } from './BaseTable'
 import type { ExcelTableProps, CellPosition } from './excel-types'
-import type { Column } from './types'
+import type { BaseTableStyles, TableCellContext } from './types'
+import { useFilterableColumns } from './hooks/useFilterableColumns'
 import { useTableFilters } from './hooks/useTableFilters'
 import { useTablePagination } from './hooks/useTablePagination'
-import FilterDropdown from './parts/FilterDropdown'
 import { FilterBar } from './parts/FilterBar'
 import Pagination from './parts/Pagination'
 import { SelectEditor, BooleanEditor } from './parts/CellEditors'
 import styles from './ExcelTable.module.css'
-import composeStyles from './DataTable.module.css'
-import tableStyles from './Table.module.css'
 
-/** Mapping de nombres de clase a CSS module classes */
-const ROW_CLASS_MAP: Record<string, string> = {
-    rowDanger: tableStyles.rowDanger,
-    rowWarning: tableStyles.rowWarning,
-    rowSuccess: tableStyles.rowSuccess,
-    rowInfo: tableStyles.rowInfo,
+/** Structural classes BaseTable consumes — all owned by this component's stylesheet */
+const excelStyles: BaseTableStyles = {
+    wrapper: styles.wrapper,
+    table: styles.table,
+    th: styles.th,
+    td: styles.td,
+    empty: styles.empty,
+    emptyIcon: styles.emptyIcon,
+    emptyTitle: styles.emptyTitle,
+    emptyDesc: styles.emptyDesc,
+    rowDanger: styles.rowDanger,
+    rowWarning: styles.rowWarning,
+    rowSuccess: styles.rowSuccess,
+    rowInfo: styles.rowInfo,
 }
 
 export default function ExcelTable<T extends object>({
@@ -60,33 +67,7 @@ export default function ExcelTable<T extends object>({
         : baseData
 
     // Columnas con filtro inyectado
-    const composedColumns: Column<T>[] = useMemo(() => {
-        if (!enableFilters) return columns
-
-        return columns.map((col) => ({
-            ...col,
-            renderHeader: () => {
-                const fProps = filterHeaderProps[col.key]
-                if (!fProps) return col.header
-                return (
-                    <div className={composeStyles.filterHeader}>
-                        <span>{col.header}</span>
-                        <FilterDropdown
-                            header={col.header}
-                            filterType={fProps.filterType}
-                            uniqueValues={fProps.uniqueValues}
-                            selectedValues={fProps.selectedValues}
-                            numericRange={fProps.numericRange}
-                            hasFilter={fProps.hasFilter}
-                            onChange={fProps.onFilterChange}
-                            onNumericChange={fProps.onNumericChange}
-                            onClear={fProps.onFilterClear}
-                        />
-                    </div>
-                )
-            },
-        }))
-    }, [columns, enableFilters, filterHeaderProps])
+    const composedColumns = useFilterableColumns(columns, enableFilters, filterHeaderProps)
 
     // ─── Edit logic ───────────────────────────────────
     useEffect(() => {
@@ -111,15 +92,33 @@ export default function ExcelTable<T extends object>({
         setEditValue(value)
     }, [readOnly])
 
+    /**
+     * Resolves a display-relative row index to the ORIGINAL props.data index
+     * by matching row identity via keyExtractor. Display order differs from
+     * props.data whenever filters and/or pagination are active, so committing
+     * an edit against the display index would patch the wrong row.
+     * Returns -1 when unresolvable (missing or duplicate keys) — the edit is
+     * dropped rather than applied to a guessed row.
+     */
+    const resolveOriginalRowIndex = useCallback((displayIndex: number): number => {
+        const row = displayData[displayIndex]
+        if (!row) return -1
+        const targetKey = String(keyExtractor(row, displayIndex))
+        return data.findIndex((candidate, i) => String(keyExtractor(candidate, i)) === targetKey)
+    }, [data, displayData, keyExtractor])
+
     const commitEdit = useCallback(() => {
         if (editing && displayData[editing.row]) {
             const colKey = composedColumns[editing.col]?.key
             if (colKey) {
-                onDataChange?.(editing.row, colKey, editValue)
+                const originalIndex = resolveOriginalRowIndex(editing.row)
+                if (originalIndex >= 0) {
+                    onDataChange?.(originalIndex, colKey, editValue)
+                }
             }
         }
         setEditing(null)
-    }, [editing, editValue, composedColumns, displayData, onDataChange])
+    }, [editing, editValue, composedColumns, displayData, onDataChange, resolveOriginalRowIndex])
 
     const cancelEdit = useCallback(() => {
         setEditing(null)
@@ -185,118 +184,93 @@ export default function ExcelTable<T extends object>({
         }
     }, [selected, editing, displayData, composedColumns, readOnly, commitEdit, cancelEdit, handleCellDoubleClick, getCellValue])
 
+    // ─── Cell composition on BaseTable ────────────────
+    const composeCell = useCallback(({
+        row,
+        rowIndex,
+        column,
+        columnIndex,
+    }: TableCellContext<T>) => {
+        const isSelected = selected?.row === rowIndex && selected?.col === columnIndex
+        const isEditing = editing?.row === rowIndex && editing?.col === columnIndex
+        const value = getCellValue(row, column.key)
+
+        return {
+            className: [
+                isSelected && !isEditing ? styles.selected : '',
+                isEditing ? styles.editing : '',
+            ].filter(Boolean).join(' ') || undefined,
+            props: {
+                role: 'gridcell',
+                tabIndex: isSelected ? 0 : -1,
+                'aria-selected': isSelected,
+                onClick: () => handleCellClick(rowIndex, columnIndex),
+                onDoubleClick: () => handleCellDoubleClick(rowIndex, columnIndex, value),
+            },
+            content: isEditing ? (
+                column.filterType === 'select' && column.filterOptions ? (
+                    <SelectEditor
+                        value={value}
+                        options={column.filterOptions}
+                        onChange={setEditValue}
+                        onCommit={commitEdit}
+                        onCancel={cancelEdit}
+                    />
+                ) : column.filterType === 'boolean' ? (
+                    <BooleanEditor
+                        value={value}
+                        onChange={setEditValue}
+                        onCommit={commitEdit}
+                        onCancel={cancelEdit}
+                    />
+                ) : (
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        className={styles.input}
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={commitEdit}
+                    />
+                )
+            ) : (
+                <span className={styles.cellContent}>
+                    {column.render
+                        ? column.render(value, row, rowIndex)
+                        : value}
+                </span>
+            ),
+        }
+    }, [selected, editing, editValue, getCellValue, handleCellClick, handleCellDoubleClick, commitEdit, cancelEdit])
+
     // ─── Render ───────────────────────────────────────
     return (
-        <div className={composeStyles.container}>
+        <div className={styles.container}>
             <FilterBar
                 hasActiveFilters={enableFilters && hasActiveFilters}
                 onClearAll={clearAllFilters}
             />
 
-            <div className={styles.wrapper} onKeyDown={handleKeyDown} tabIndex={0} role="grid" aria-label="Tabla de datos">
-                <table ref={tableRef} className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th className={styles.rowHeader}></th>
-                            {composedColumns.map((col) => (
-                                <th
-                                    key={col.key}
-                                    className={styles.th}
-                                    style={{
-                                        minWidth: col.minWidth,
-                                        width: col.width,
-                                    }}
-                                >
-                                    {col.renderHeader ? col.renderHeader() : col.header}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {displayData.length === 0 ? (
-                            <tr>
-                                <td colSpan={composedColumns.length + 1} className={styles.td}>
-                                    <div className={styles.empty}>
-                                        <div className={styles.emptyIcon}>∅</div>
-                                        <p className={styles.emptyTitle}>Sin datos</p>
-                                        <p className={styles.emptyDesc}>No hay registros para mostrar.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        ) : displayData.map((row, rowIndex) => {
-                            const rawClass = rowClassName?.(row, rowIndex)
-                            const conditionalClass = rawClass ? ROW_CLASS_MAP[rawClass] ?? rawClass : undefined
-                            const conditionalStyle = rowStyle?.(row, rowIndex)
-
-                            return (
-                                <tr
-                                    key={keyExtractor(row, rowIndex)}
-                                    className={conditionalClass}
-                                    style={conditionalStyle}
-                                >
-                                    <td className={styles.rowHeader}>{rowIndex + 1}</td>
-                                    {composedColumns.map((col, colIndex) => {
-                                        const isSelected = selected?.row === rowIndex && selected?.col === colIndex
-                                        const isEditing = editing?.row === rowIndex && editing?.col === colIndex
-                                        const value = getCellValue(row, col.key)
-
-                                        return (
-                                            <td
-                                                key={col.key}
-                                                className={[
-                                                    styles.td,
-                                                    isSelected && !isEditing ? styles.selected : '',
-                                                    isEditing ? styles.editing : '',
-                                                ].filter(Boolean).join(' ')}
-                                                style={{ textAlign: col.align ?? 'left' }}
-                                                role="gridcell"
-                                                tabIndex={isSelected ? 0 : -1}
-                                                aria-selected={isSelected}
-                                                onClick={() => handleCellClick(rowIndex, colIndex)}
-                                                onDoubleClick={() => handleCellDoubleClick(rowIndex, colIndex, value)}
-                                            >
-                                                {isEditing ? (
-                                                    col.filterType === 'select' && col.filterOptions ? (
-                                                        <SelectEditor
-                                                            value={value}
-                                                            options={col.filterOptions}
-                                                            onChange={setEditValue}
-                                                            onCommit={commitEdit}
-                                                            onCancel={cancelEdit}
-                                                        />
-                                                    ) : col.filterType === 'boolean' ? (
-                                                        <BooleanEditor
-                                                            value={value}
-                                                            onChange={setEditValue}
-                                                            onCommit={commitEdit}
-                                                            onCancel={cancelEdit}
-                                                        />
-                                                    ) : (
-                                                        <input
-                                                            ref={inputRef}
-                                                            type="text"
-                                                            className={styles.input}
-                                                            value={editValue}
-                                                            onChange={(e) => setEditValue(e.target.value)}
-                                                            onBlur={commitEdit}
-                                                        />
-                                                    )
-                                                ) : (
-                                                    <span className={styles.cellContent}>
-                                                        {col.render
-                                                            ? col.render(value, row, rowIndex)
-                                                            : value}
-                                                    </span>
-                                                )}
-                                            </td>
-                                        )
-                                    })}
-                                </tr>
-                            )
-                        })}
-                    </tbody>
-                </table>
-            </div>
+            <BaseTable<T>
+                columns={composedColumns}
+                data={displayData}
+                keyExtractor={keyExtractor}
+                rowClassName={rowClassName}
+                rowStyle={rowStyle}
+                styles={excelStyles}
+                leadingColumn={{
+                    className: styles.rowHeader,
+                    cell: (rowIndex) => rowIndex + 1,
+                }}
+                composeCell={composeCell}
+                wrapperProps={{
+                    onKeyDown: handleKeyDown,
+                    tabIndex: 0,
+                    role: 'grid',
+                    'aria-label': 'Tabla de datos',
+                }}
+                tableRef={tableRef}
+            />
 
             {enablePagination && (
                 <Pagination

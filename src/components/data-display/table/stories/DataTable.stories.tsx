@@ -57,8 +57,48 @@ export const Filtering: Story = {
         docs: {
             description: {
                 story:
-                    'Column filters driven by `filterType`: text inputs, select dropdowns, number inputs ' +
-                    'and boolean toggles render in the column headers when `filters` is enabled.',
+                    'Column filters driven by `filterType`. Opening a dropdown no longer mutates filter ' +
+                    'state — checkboxes start unchecked and the filter activates only when at least one ' +
+                    'value is selected.\n\n' +
+                    '**ANTES:** opening a dropdown auto-selected all values, marking the column as filtered ' +
+                    'without excluding anything; unchecking every value left an empty Set that hid ALL rows.\n' +
+                    '**DESPUÉS:** opening a dropdown is a pure UI action, and an empty selection means ' +
+                    '"no active filter" for that key — rows stay visible and "Filtros activos" clears.\n' +
+                    '**MOTIVO:** dropdown visibility must not be a side effect of logical filter state.',
+            },
+        },
+    },
+    args: {
+        ...defaultArgs,
+        columns: [
+            { key: 'name', header: 'Name', minWidth: '160px', filterType: 'text' },
+            {
+                key: 'department',
+                header: 'Department',
+                align: 'center',
+                filterType: 'select',
+                filterOptions: [...DEPARTMENTS],
+            },
+            { key: 'salary', header: 'Salary', align: 'right', filterType: 'number' },
+            { key: 'active', header: 'Active', align: 'center', filterType: 'boolean' },
+        ],
+        filters: true,
+    },
+}
+
+export const EmptyFilterKeepsRows: Story = {
+    name: 'Empty Filter Keeps Rows',
+    parameters: {
+        docs: {
+            description: {
+                story:
+                    'Documents the empty-filter fix in `useTableFilters`.\n\n' +
+                    '**ANTES:** unchecking every value in a column dropdown stored an empty Set, which ' +
+                    'filtered out ALL rows and kept "Filtros activos" lit with no way to see data.\n' +
+                    '**DESPUÉS:** an empty selection equals NO active filter — all rows remain visible ' +
+                    'and the "Filtros activos" chip clears once the last value is unchecked.\n' +
+                    '**MOTIVO:** consistent hook-level semantics; no per-table workarounds. Try it: open ' +
+                    'the Department filter, check one value, then uncheck it again — rows come back.',
             },
         },
     },
