@@ -1,5 +1,4 @@
 import type { ReactNode, ImgHTMLAttributes } from 'react'
-import styles from './Card.module.css'
 
 // ─── Types ────────────────────────────────────────────────
 export type CardVariant = 'default' | 'outlined' | 'elevated' | 'flat'
@@ -40,6 +39,32 @@ interface CardFooterProps {
     className?: string
 }
 
+// ─── Styling ──────────────────────────────────────────────
+/* Variant attributes resolved to one effective set per variant so border
+ * widths/backgrounds never compete with the base classes (6D.1 lesson).
+ * Clickable hover/focus classes attach only when onClick exists. */
+const CARD_BASE_CLASSES =
+    'flex flex-col overflow-hidden rounded-lg bg-background border-border-base transition-[border-color,box-shadow,transform] [transition-duration:200ms,200ms,150ms]'
+
+const VARIANT_CLASSES: Record<CardVariant, string> = {
+    default: 'border',
+    outlined: 'border-2 bg-transparent',
+    elevated: 'border shadow-(--shadow)',
+    flat: 'bg-surface',
+}
+
+const CLICKABLE_CLASSES =
+    'cursor-pointer hover:border-accent-line hover:shadow-(--shadow) hover:-translate-y-0.5 active:translate-y-0'
+
+const IMAGE_WRAPPER_CLASSES = 'w-full aspect-video overflow-hidden bg-surface'
+const IMAGE_CLASSES = 'w-full h-full object-cover block'
+
+const HEADER_CLASSES = 'pt-4 px-4.5'
+const TITLE_CLASSES = 'font-semibold text-[15px] text-heading'
+const DESCRIPTION_CLASSES = 'text-[13px] text-foreground mt-1 leading-[1.4]'
+const BODY_CLASSES = 'py-3.5 px-4.5 flex-1'
+const FOOTER_CLASSES = 'px-4.5 py-3 border-t border-border-base flex items-center gap-2'
+
 // ─── Card Root ────────────────────────────────────────────
 function CardRoot({ variant = 'default', onClick, children, className = '' }: CardRootProps) {
     const isClickable = !!onClick
@@ -47,9 +72,9 @@ function CardRoot({ variant = 'default', onClick, children, className = '' }: Ca
     return (
         <div
             className={[
-                styles.card,
-                styles[variant],
-                isClickable ? styles.clickable : '',
+                CARD_BASE_CLASSES,
+                VARIANT_CLASSES[variant],
+                isClickable ? CLICKABLE_CLASSES : '',
                 className,
             ]
                 .filter(Boolean)
@@ -76,8 +101,8 @@ function CardRoot({ variant = 'default', onClick, children, className = '' }: Ca
 // ─── Card.Image ───────────────────────────────────────────
 function CardImage({ className = '', ...props }: CardImageProps) {
     return (
-        <div className={`${styles.imageWrapper} ${className}`}>
-            <img className={styles.image} {...props} />
+        <div className={`${IMAGE_WRAPPER_CLASSES} ${className}`}>
+            <img className={IMAGE_CLASSES} {...props} />
         </div>
     )
 }
@@ -85,7 +110,7 @@ function CardImage({ className = '', ...props }: CardImageProps) {
 // ─── Card.Header ──────────────────────────────────────────
 function CardHeader({ children, className = '' }: CardHeaderProps) {
     return (
-        <div className={`${styles.header} ${className}`}>
+        <div className={`${HEADER_CLASSES} ${className}`}>
             {children}
         </div>
     )
@@ -94,7 +119,7 @@ function CardHeader({ children, className = '' }: CardHeaderProps) {
 // ─── Card.Title ───────────────────────────────────────────
 function CardTitle({ children, className = '' }: CardTitleProps) {
     return (
-        <div className={`${styles.title} ${className}`}>
+        <div className={`${TITLE_CLASSES} ${className}`}>
             {children}
         </div>
     )
@@ -103,7 +128,7 @@ function CardTitle({ children, className = '' }: CardTitleProps) {
 // ─── Card.Description ─────────────────────────────────────
 function CardDescription({ children, className = '' }: CardDescriptionProps) {
     return (
-        <div className={`${styles.description} ${className}`}>
+        <div className={`${DESCRIPTION_CLASSES} ${className}`}>
             {children}
         </div>
     )
@@ -112,7 +137,7 @@ function CardDescription({ children, className = '' }: CardDescriptionProps) {
 // ─── Card.Body ────────────────────────────────────────────
 function CardBody({ children, className = '' }: CardBodyProps) {
     return (
-        <div className={`${styles.body} ${className}`}>
+        <div className={`${BODY_CLASSES} ${className}`}>
             {children}
         </div>
     )
@@ -121,7 +146,7 @@ function CardBody({ children, className = '' }: CardBodyProps) {
 // ─── Card.Footer ──────────────────────────────────────────
 function CardFooter({ children, className = '' }: CardFooterProps) {
     return (
-        <div className={`${styles.footer} ${className}`}>
+        <div className={`${FOOTER_CLASSES} ${className}`}>
             {children}
         </div>
     )
