@@ -61,10 +61,12 @@ const LEVEL_DOT_BASE_CLASSES =
     'size-1.5 rounded-full bg-border-base transition-[background-color,transform] duration-200'
 const LEVEL_DOT_ACTIVE_CLASSES = 'bg-accent scale-[1.3]'
 
-/* Body replicates the legacy .body rule (scrollable + custom scrollbar).
- * The module rule stays only because Modal.Body still consumes it. */
+/* Body replicates the legacy combined .body + .drawerContent element:
+ * padding 20px/24px, scroll on Y with hidden X (the old cascade of
+ * overflow:hidden + overflow-y:auto), and custom scrollbar. The module
+ * rule stays only because Modal.Body still consumes it. */
 const BODY_CLASSES =
-    'relative overflow-hidden flex-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-sm [&::-webkit-scrollbar-thumb]:bg-border-base'
+    'relative flex-1 overflow-x-hidden overflow-y-auto px-6 py-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-sm [&::-webkit-scrollbar-thumb]:bg-border-base'
 
 const CONTENT_INNER_CLASSES = 'w-full'
 const SLIDE_ANIMATION_CLASSES = {
