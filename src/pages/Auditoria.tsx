@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react'
-import DataTable from '@components/data-display/table/DataTable'
-import { DensitySelector, type Density } from '@components/data-display/table/parts/DensitySelector'
-import { BulkActionsBar } from '@components/data-display/table/parts/BulkActionsBar'
-import { ColumnToggle } from '@components/data-display/table/parts/ColumnToggle'
-import { SearchHighlight } from '@components/data-display/table/parts/SearchHighlight'
+import {
+    DataTable,
+    DensitySelector,
+    type Density,
+    BulkActionsBar,
+    ColumnToggle,
+    SearchHighlight,
+} from '@components/data-display/table'
 import { Drawer } from '@components/overlays'
 import { LuCheck, LuDownload, LuEye, LuTriangleAlert, LuOctagonAlert, LuInfo } from 'react-icons/lu'
 import { StatCard, StatCardGroup } from '@components/layout/StatCard'

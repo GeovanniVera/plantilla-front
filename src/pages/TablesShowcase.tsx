@@ -4,12 +4,15 @@ import { CodeBlock } from '@dev/showcase/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Components ──────────────────────────────────────────
-import DataTable from '@components/data-display/table/DataTable'
-import ExcelTable from '@components/data-display/table/ExcelTable'
-import { DensitySelector, type Density } from '@components/data-display/table/parts/DensitySelector'
-import { SearchHighlight } from '@components/data-display/table/parts/SearchHighlight'
-import { ColumnToggle } from '@components/data-display/table/parts/ColumnToggle'
-import { BulkActionsBar } from '@components/data-display/table/parts/BulkActionsBar'
+import {
+    DataTable,
+    ExcelTable,
+    DensitySelector,
+    type Density,
+    SearchHighlight,
+    ColumnToggle,
+    BulkActionsBar,
+} from '@components/data-display/table'
 
 // ─── Data ────────────────────────────────────────────────
 import {

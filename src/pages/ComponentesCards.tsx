@@ -1,7 +1,6 @@
 import Button from '@components/primitives/Button'
 import { ExampleCard } from '@dev/showcase/Showcase'
-import Card from '@components/layout/Card'
-import { StatCard, StatCardGroup } from '@components/layout/StatCard'
+import { Card, StatCard, StatCardGroup } from '@components/layout'
 import { LuCalendar, LuCheck, LuX, LuClock, LuUsers, LuChartLine, LuZap, LuTarget } from 'react-icons/lu'
 import styles from './TablesShowcase.module.css'
 import gridStyles from './ComponentesCards.module.css'
