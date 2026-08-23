@@ -218,8 +218,8 @@ export const LoadingPropAcceptedButIgnored: Story = {
         docs: {
             description: {
                 story:
-                    'BASELINE ANOMALY: `loading` is declared in TableProps (types.ts) but never consumed by ' +
-                    'Table.tsx, so passing it changes nothing. Documented intentionally; no loading state exists.',
+                    'BASELINE ANOMALY: `loading` is declared in BaseTableProps (types.ts) but never consumed by ' +
+                    'BaseTable.tsx, so passing it changes nothing. Documented intentionally; no loading state exists.',
             },
         },
     },

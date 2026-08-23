@@ -6,9 +6,10 @@
  * remain the single source of truth — this barrel only re-exports them.
  *
  * Composition parts (FilterBar, Pagination, ColumnToggle, DensitySelector,
- * BulkActionsBar, SearchHighlight) are exported explicitly because pages and
- * stories import them directly to compose their own toolbars. Deep imports
- * keep working; the barrel is the preferred entry point going forward.
+ * BulkActionsBar, SearchHighlight) are part of the public composable API:
+ * they let consumers build custom toolbars on top of the same primitives the
+ * variants use internally. Deep imports keep working; the barrel is the
+ * preferred entry point going forward.
  *
  * NOT exported (internal composition details): hooks/*, FilterHeader,
  * FilterDropdown, CellEditors.

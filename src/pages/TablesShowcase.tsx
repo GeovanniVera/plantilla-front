@@ -518,7 +518,7 @@ export interface Item {
         },`
             return `// columns/userColumns.ts
 import { type Column } from '@components/data-display/table/types'
-import ${cf ? '{ StatusDot }' : 'Badge'} from '../components/ui/${cf ? 'StatusDot' : 'Badge'}'
+import ${cf ? '{ StatusDot }' : 'Badge'} from '@components/primitives/${cf ? 'StatusDot' : 'Badge'}'
 import type { User } from '../types/user'
 
 export const userColumns: Column<User>[] = [
@@ -562,7 +562,7 @@ ${statusRender}
         },`
             return `// columns/employeeColumns.ts
 import { type Column } from '@components/data-display/table/types'
-import ${cf ? '{ StatusDot }' : 'Badge'} from '../components/ui/${cf ? 'StatusDot' : 'Badge'}'
+import ${cf ? '{ StatusDot }' : 'Badge'} from '@components/primitives/${cf ? 'StatusDot' : 'Badge'}'
 import type { Employee } from '../types/employee'
 
 export const employeeColumns: Column<Employee>[] = [

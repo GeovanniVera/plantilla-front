@@ -28,11 +28,11 @@
 
 ### 2.1 Modal / Dialog / Drawer
 
-**Ubicación:** `src/components/ui/Modal/`
+**Ubicación:** `src/components/overlays/`
 
 **Componentes:**
 ```
-src/components/ui/Modal/
+src/components/overlays/
 ├── Modal.tsx              # Dialog centrado con backdrop
 ├── Modal.module.css
 ├── Drawer.tsx             # Panel lateral deslizante
@@ -70,11 +70,11 @@ src/components/ui/Modal/
 
 ### 2.2 Toast / Snackbar / Alerts
 
-**Ubicación:** `src/components/ui/Toast/`
+**Ubicación:** `src/components/feedback/`
 
 **Componentes:**
 ```
-src/components/ui/Toast/
+src/components/feedback/
 ├── ToastProvider.tsx       # Context provider para gestión global
 ├── Toast.tsx              # Toast individual
 ├── Toast.module.css
@@ -101,7 +101,7 @@ src/components/ui/Toast/
 </ThemeProvider>
 
 // En cualquier componente
-import { useToast } from '../ui/Toast'
+import { useToast } from '@components/feedback'
 
 function MyComponent() {
     const toast = useToast()
@@ -121,11 +121,11 @@ function MyComponent() {
 
 ### 2.3 Tabs y Breadcrumbs
 
-**Ubicación:** `src/components/ui/Navigation/`
+**Ubicación:** `src/components/navigation/`
 
 **Componentes:**
 ```
-src/components/ui/Navigation/
+src/components/navigation/
 ├── Tabs.tsx               # Navegación por pestañas
 ├── Tabs.module.css
 ├── Breadcrumb.tsx         # Migas de pan
@@ -171,11 +171,11 @@ src/components/ui/Navigation/
 
 ### 2.4 Stat Cards / Charts Wrapper
 
-**Ubicación:** `src/components/ui/Dashboard/`
+**Ubicación:** `src/components/layout/`
 
 **Componentes:**
 ```
-src/components/ui/Dashboard/
+src/components/layout/
 ├── StatCard.tsx           # Tarjeta de métrica con valor + tendencia
 ├── StatCard.module.css
 ├── ChartCard.tsx          # Contenedor para gráficos
@@ -213,11 +213,11 @@ src/components/ui/Dashboard/
 
 ### 2.5 DropdownMenu / Popover
 
-**Ubicación:** `src/components/ui/Dropdown/`
+**Ubicación:** `src/components/overlays/`
 
 **Componentes:**
 ```
-src/components/ui/Dropdown/
+src/components/overlays/
 ├── DropdownMenu.tsx       # Menú desplegable de acciones
 ├── DropdownMenu.module.css
 ├── Popover.tsx            # Contenido flotante genérico
@@ -368,7 +368,7 @@ Día 2 — Final:
 ### Estructura de archivos
 
 ```
-src/components/ui/{NombreComponente}/
+src/components/{familia}/{NombreComponente}/
 ├── {Componente}.tsx          # Componente principal
 ├── {Componente}.module.css   # Estilos CSS Modules
 ├── types.ts                  # Interfaces y tipos

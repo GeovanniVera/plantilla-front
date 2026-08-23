@@ -165,5 +165,3 @@ const Sidebar = Object.assign(SidebarRoot, {
 })
 
 export default Sidebar
-export { MobileBottomBar }
-export type { MobileBottomBarItem }

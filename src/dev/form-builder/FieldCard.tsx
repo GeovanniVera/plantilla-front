@@ -33,7 +33,7 @@ interface FieldCardProps {
     onDragEnd: () => void
 }
 
-export function FieldCard({ field, dragData, onEdit, onRemove, onDragStart, onDragEnd }: FieldCardProps) {
+function FieldCard({ field, dragData, onEdit, onRemove, onDragStart, onDragEnd }: FieldCardProps) {
     const [isDragging, setIsDragging] = useState(false)
 
     const handleDragStart = (e: React.DragEvent) => {
@@ -83,7 +83,7 @@ interface EmptySlotProps {
     isDropTarget?: boolean
 }
 
-export function EmptySlot({ onAdd, onDrop, onDragOver, isDropTarget }: EmptySlotProps) {
+function EmptySlot({ onAdd, onDrop, onDragOver, isDropTarget }: EmptySlotProps) {
     return (
         <button
             className={`${styles.emptySlot} ${isDropTarget ? styles.emptySlotActive : ''}`}
