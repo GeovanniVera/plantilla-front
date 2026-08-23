@@ -162,6 +162,22 @@
         to { transform: translateX(0); }
     }
 
+    /* DrawerStack level navigation (migrated from Modal.module.css,
+     * phase 6F.3C). Push and pop are different directions — kept as
+     * separate exclusive tokens, not unified. */
+    --animate-stack-slide-forward: stack-slide-forward 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --animate-stack-slide-back: stack-slide-back 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+    @keyframes stack-slide-forward {
+        from { opacity: 0; transform: translateX(40px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes stack-slide-back {
+        from { opacity: 0; transform: translateX(-40px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
     @keyframes btn-pulse {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.05); }

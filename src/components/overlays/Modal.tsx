@@ -86,9 +86,12 @@ Modal.Body = function ModalBody({ children, className }: ModalBodyProps) {
 }
 
 // ─── Modal.Footer ─────────────────────────────────────────
+const FOOTER_CLASSES =
+    'flex items-center justify-end gap-2.5 px-6 py-4 border-t border-border-base bg-surface shrink-0'
+
 Modal.Footer = function ModalFooter({ children, className }: ModalFooterProps) {
     return (
-        <div className={`${styles.footer} ${className ?? ''}`}>
+        <div className={`${FOOTER_CLASSES} ${className ?? ''}`}>
             {children}
         </div>
     )
