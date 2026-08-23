@@ -1,5 +1,5 @@
-import type { Column } from '../components/ui/Table/types'
-import { StatusDot } from '../components/ui/StatusDot'
+import type { Column } from '@components/data-display/table/types'
+import { StatusDot } from '@components/primitives/StatusDot'
 
 // ─── Types ──────────────────────────────────────────
 export interface AuditLog {

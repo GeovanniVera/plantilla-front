@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { LuCalendarDays } from 'react-icons/lu'
-import { Calendar, CalendarRange, DatePicker, DateRangePicker, CalendarView, type CalendarEvent } from '../components/ui/Calendar'
-import { ExampleCard } from '../components/ui/Showcase'
+import { Calendar, CalendarRange, DatePicker, DateRangePicker, CalendarView, type CalendarEvent } from '@components/data-display/calendar'
+import { ExampleCard } from '@dev/showcase/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Code Snippets ────────────────────────────────────────
 const CODE = {
-    calendar: `import { Calendar } from '../components/ui/Calendar'
+    calendar: `import { Calendar } from '@components/data-display/calendar'
 
 export default function MyComponent() {
     const [date, setDate] = useState<Date | undefined>()
@@ -19,7 +19,7 @@ export default function MyComponent() {
     )
 }`,
 
-    calendarRange: `import { CalendarRange } from '../components/ui/Calendar'
+    calendarRange: `import { CalendarRange } from '@components/data-display/calendar'
 
 export default function MyComponent() {
     const [from, setFrom] = useState<Date>()
@@ -37,7 +37,7 @@ export default function MyComponent() {
     )
 }`,
 
-    datePicker: `import { DatePicker } from '../components/ui/Calendar'
+    datePicker: `import { DatePicker } from '@components/data-display/calendar'
 
 export default function MyForm() {
     const [date, setDate] = useState<Date>()
@@ -51,7 +51,7 @@ export default function MyForm() {
     )
 }`,
 
-    datePickerMin: `import { DatePicker } from '../components/ui/Calendar'
+    datePickerMin: `import { DatePicker } from '@components/data-display/calendar'
 
 export default function MyForm() {
     const [date, setDate] = useState<Date>()
@@ -66,7 +66,7 @@ export default function MyForm() {
     )
 }`,
 
-    dateRange: `import { DateRangePicker } from '../components/ui/Calendar'
+    dateRange: `import { DateRangePicker } from '@components/data-display/calendar'
 
 export default function ReportFilter() {
     const [from, setFrom] = useState<Date>()
@@ -85,8 +85,8 @@ export default function ReportFilter() {
     )
 }`,
 
-    formIntegration: `import { DatePicker } from '../components/ui/Calendar'
-import Button from '../components/ui/Button'
+    formIntegration: `import { DatePicker } from '@components/data-display/calendar'
+import Button from '@components/primitives/Button'
 
 export default function EventForm() {
     const [title, setTitle] = useState('')

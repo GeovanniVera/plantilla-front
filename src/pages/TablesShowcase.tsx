@@ -1,15 +1,15 @@
 import { useState, useMemo, useCallback } from 'react'
 import { LuEye, LuCode, LuSettings2, LuRotateCcw } from 'react-icons/lu'
-import { CodeBlock } from '../components/ui/Showcase'
+import { CodeBlock } from '@dev/showcase/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Components ──────────────────────────────────────────
-import DataTable from '../components/ui/Table/DataTable'
-import ExcelTable from '../components/ui/ExcelTable/ExcelTable'
-import { DensitySelector, type Density } from '../components/ui/Table/DensitySelector'
-import { SearchHighlight } from '../components/ui/Table/SearchHighlight'
-import { ColumnToggle } from '../components/ui/Table/ColumnToggle'
-import { BulkActionsBar } from '../components/ui/Table/BulkActionsBar'
+import DataTable from '@components/data-display/table/DataTable'
+import ExcelTable from '@components/data-display/table/ExcelTable'
+import { DensitySelector, type Density } from '@components/data-display/table/parts/DensitySelector'
+import { SearchHighlight } from '@components/data-display/table/parts/SearchHighlight'
+import { ColumnToggle } from '@components/data-display/table/parts/ColumnToggle'
+import { BulkActionsBar } from '@components/data-display/table/parts/BulkActionsBar'
 
 // ─── Data ────────────────────────────────────────────────
 import {
@@ -514,7 +514,7 @@ export interface Item {
             return <Badge variant={variant}>{String(value)}</Badge>
         },`
             return `// columns/userColumns.ts
-import { type Column } from '../components/ui/Table/types'
+import { type Column } from '@components/data-display/table/types'
 import ${cf ? '{ StatusDot }' : 'Badge'} from '../components/ui/${cf ? 'StatusDot' : 'Badge'}'
 import type { User } from '../types/user'
 
@@ -558,7 +558,7 @@ ${statusRender}
             return <Badge variant={variant}>{String(value)}</Badge>
         },`
             return `// columns/employeeColumns.ts
-import { type Column } from '../components/ui/Table/types'
+import { type Column } from '@components/data-display/table/types'
 import ${cf ? '{ StatusDot }' : 'Badge'} from '../components/ui/${cf ? 'StatusDot' : 'Badge'}'
 import type { Employee } from '../types/employee'
 
@@ -588,7 +588,7 @@ ${statusRender}
 
         if (config.dataset === 'spreadsheet') {
             return `// columns/invoiceColumns.ts
-import { type Column } from '../components/ui/Table/types'
+import { type Column } from '@components/data-display/table/types'
 import type { InvoiceItem } from '../types/invoice'
 
 export const invoiceColumns: Column<InvoiceItem>[] = [
@@ -600,7 +600,7 @@ export const invoiceColumns: Column<InvoiceItem>[] = [
         }
 
         return `// columns/itemColumns.ts
-import { type Column } from '../components/ui/Table/types'
+import { type Column } from '@components/data-display/table/types'
 
 export const itemColumns = [
     { key: 'name', header: 'Nombre', minWidth: '180px' },
@@ -612,8 +612,8 @@ export const itemColumns = [
     const componentCode = useMemo(() => {
         const componentName = isExcel ? 'ExcelTable' : 'DataTable'
         const importPath = isExcel
-            ? '../components/ui/ExcelTable/ExcelTable'
-            : '../components/ui/Table/DataTable'
+            ? '@components/data-display/table/ExcelTable'
+            : '@components/data-display/table/DataTable'
 
         const typeName = config.dataset === 'users' ? 'User'
             : config.dataset === 'employees' ? 'Employee'
@@ -650,10 +650,10 @@ export const itemColumns = [
         if (config.dataset !== 'none') {
             lines.push(`import type { ${typeName} } from '../types/${config.dataset === 'users' ? 'user' : config.dataset === 'employees' ? 'employee' : config.dataset === 'spreadsheet' ? 'invoice' : 'item'}'`)
         }
-        if (needsSearch) lines.push(`import { SearchHighlight } from '../components/ui/Table/SearchHighlight'`)
-        if (needsDensity) lines.push(`import { DensitySelector } from '../components/ui/Table/DensitySelector'`)
-        if (needsColumnToggle) lines.push(`import { ColumnToggle } from '../components/ui/Table/ColumnToggle'`)
-        if (needsBulkActions) lines.push(`import { BulkActionsBar } from '../components/ui/Table/BulkActionsBar'`)
+        if (needsSearch) lines.push(`import { SearchHighlight } from '@components/data-display/table/parts/SearchHighlight'`)
+        if (needsDensity) lines.push(`import { DensitySelector } from '@components/data-display/table/parts/DensitySelector'`)
+        if (needsColumnToggle) lines.push(`import { ColumnToggle } from '@components/data-display/table/parts/ColumnToggle'`)
+        if (needsBulkActions) lines.push(`import { BulkActionsBar } from '@components/data-display/table/parts/BulkActionsBar'`)
         lines.push('')
 
         // ─── API Response type (server-side) ───

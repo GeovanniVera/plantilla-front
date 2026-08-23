@@ -1,19 +1,19 @@
 import { useState, useCallback } from 'react'
 import { LuEye, LuCode, LuSettings2, LuRotateCcw, LuTrash2, LuPlus, LuChevronRight, LuApple, LuPaintbrush, LuSquarePen, LuStar } from 'react-icons/lu'
-import { CodeBlock } from '../components/ui/Showcase'
+import { CodeBlock } from '@dev/showcase/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Form Components ─────────────────────────────────────
-import Input from '../components/ui/Form/Input'
-import Textarea from '../components/ui/Form/Textarea'
-import Select from '../components/ui/Form/Select'
-import Checkbox from '../components/ui/Form/Checkbox'
-import { RadioGroup } from '../components/ui/Form/Radio'
-import FormField from '../components/ui/Form/FormField'
-import { RowBlock } from '../components/ui/Form/FormBuilder/FieldCard'
-import type { DragData } from '../components/ui/Form/FormBuilder/FieldCard'
-import { FieldConfigModal } from '../components/ui/Form/FormBuilder/FieldConfigModal'
-import type { InputVariant, FieldConfig } from '../components/ui/Form/types'
+import Input from '@components/primitives/Input'
+import Textarea from '@components/primitives/Textarea'
+import Select from '@components/primitives/Select'
+import Checkbox from '@components/primitives/Checkbox'
+import { RadioGroup } from '@components/primitives/Radio'
+import FormField from '@components/forms/FormField'
+import type { InputVariant, FieldConfig } from '@components/forms/types'
+import { RowBlock } from '@dev/form-builder/FieldCard'
+import type { DragData } from '@dev/form-builder/FieldCard'
+import { FieldConfigModal } from '@dev/form-builder/FieldConfigModal'
 
 // ─── Types ───────────────────────────────────────────────
 type LabelMode = 'above' | 'placeholder' | 'none'
@@ -669,8 +669,8 @@ function GeneratedCode({ config }: { config: FormConfig }) {
     // Component
     const imports = new Set<string>()
     imports.add("import { useState } from 'react'")
-    imports.add("import FormLayout from '../components/ui/Form/FormLayout'")
-    imports.add("import FormField from '../components/ui/Form/FormField'")
+    imports.add("import FormLayout from '@components/layout/FormLayout'")
+    imports.add("import FormField from '@components/forms/FormField'")
     const usedInputs = new Set<string>()
     allFields.forEach((f) => {
         if (['text', 'email', 'password', 'number', 'tel'].includes(f.type)) usedInputs.add('Input')
@@ -679,7 +679,7 @@ function GeneratedCode({ config }: { config: FormConfig }) {
         if (f.type === 'checkbox') usedInputs.add('Checkbox')
         if (f.type === 'radio') usedInputs.add('RadioGroup')
     })
-    usedInputs.forEach((c) => imports.add(`import ${c === 'RadioGroup' ? '{ RadioGroup }' : c} from '../components/ui/Form/${c === 'RadioGroup' ? 'Radio' : c}'`))
+    usedInputs.forEach((c) => imports.add(`import ${c === 'RadioGroup' ? '{ RadioGroup }' : c} from '@components/primitives/${c === 'RadioGroup' ? 'Radio' : c}'`))
 
     if (config.isMultiStep) imports.add("import { LuChevronLeft, LuChevronRight } from 'react-icons/lu'")
 

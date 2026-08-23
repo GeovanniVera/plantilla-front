@@ -1,6 +1,6 @@
-import Badge from '../../components/ui/Badge'
-import { StatusDot } from '../../components/ui/StatusDot'
-import type { Column } from '../../components/ui/Table/types'
+import Badge from '@components/primitives/Badge'
+import { StatusDot } from '@components/primitives/StatusDot'
+import type { Column } from '@components/data-display/table/types'
 
 // --- Tipos ---
 export interface SampleUser {

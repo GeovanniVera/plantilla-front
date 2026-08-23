@@ -9,9 +9,21 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
-// More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
+// Internal path aliases (mirrored in tsconfig.app.json compilerOptions.paths).
+// Storybook's Vite builder reads this file automatically, so no viteFinal is needed.
+const aliases = {
+  '@components': path.resolve(dirname, 'src/components'),
+  '@hooks': path.resolve(dirname, 'src/hooks'),
+  '@theme': path.resolve(dirname, 'src/theme'),
+  '@dev': path.resolve(dirname, 'src/dev'),
+};
+
+// More info at: https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: aliases,
+  },
   test: {
     projects: [{
       extends: true,

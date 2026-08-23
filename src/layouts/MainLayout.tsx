@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Outlet, useLocation, Link, NavLink } from 'react-router'
 import { LuSettings, LuHouse, LuBlocks, LuMousePointerClick, LuTable2, LuCreditCard, LuTextCursorInput, LuPanelRightOpen, LuBell, LuNavigation, LuPalette, LuShield, LuCalendar } from 'react-icons/lu'
-import Sidebar from '../components/sidebar/Sidebar'
-import SidebarLogo from '../components/sidebar/SidebarLogo'
-import UserAvatar from '../components/sidebar/UserAvatar'
-import UserClock from '../components/sidebar/UserClock'
-import NavItem from '../components/sidebar/NavItem'
-import NavGroup from '../components/sidebar/NavGroup'
+import Sidebar from '@components/navigation/sidebar/Sidebar'
+import SidebarLogo from '@components/navigation/sidebar/SidebarLogo'
+import UserAvatar from '@components/navigation/sidebar/UserAvatar'
+import UserClock from '@components/navigation/sidebar/UserClock'
+import NavItem from '@components/navigation/sidebar/NavItem'
+import NavGroup from '@components/navigation/sidebar/NavGroup'
 import styles from './MainLayout.module.css'
 
 // ─── Route config ────────────────────────────────────────

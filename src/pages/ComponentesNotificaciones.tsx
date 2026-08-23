@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import { LuCheck, LuCircleAlert, LuTriangleAlert, LuInfo, LuFileCode2 } from 'react-icons/lu'
-import { useToast } from '../components/ui/Toast'
-import { ConfirmDialog } from '../components/ui/Modal'
-import type { ConfirmVariant } from '../components/ui/Modal'
-import Button from '../components/ui/Button'
-import { CopyButton } from '../components/ui/Showcase'
+import { useToast } from '@components/feedback'
+import { ConfirmDialog } from '@components/overlays'
+import type { ConfirmVariant } from '@components/overlays'
+import Button from '@components/primitives/Button'
+import { CopyButton } from '@dev/showcase/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Toast variants ───────────────────────────────────────
@@ -159,10 +159,10 @@ export default function ComponentesNotificaciones() {
                             <span className={styles.codeFilenameIcon}><LuFileCode2 size={14} /></span>
                             useToast()
                         </span>
-                        <CopyButton text={`import { useToast } from '../components/ui/Toast'\n\nconst toast = useToast()\n\ntoast.success('Guardado')\ntoast.error('Error')\ntoast.warning('Advertencia')\ntoast.info('Info')\n\ntoast.error('Error de red', {\n    action: { label: 'Reintentar', onClick: retry },\n    duration: 8000,\n})`} />
+                        <CopyButton text={`import { useToast } from '@components/feedback'\n\nconst toast = useToast()\n\ntoast.success('Guardado')\ntoast.error('Error')\ntoast.warning('Advertencia')\ntoast.info('Info')\n\ntoast.error('Error de red', {\n    action: { label: 'Reintentar', onClick: retry },\n    duration: 8000,\n})`} />
                     </div>
                     <pre className={styles.codeContent}>
-{`import { useToast } from '../components/ui/Toast'
+{`import { useToast } from '@components/feedback'
 
 const toast = useToast()
 
@@ -248,11 +248,11 @@ toast.error('Error de red', {
                             <span className={styles.codeFilenameIcon}><LuFileCode2 size={14} /></span>
                             ConfirmDialog.tsx
                         </span>
-                        <CopyButton text={`import { ConfirmDialog } from '../components/ui/Modal'\nimport { useToast } from '../components/ui/Toast'\n\nconst [open, setOpen] = useState(false)\nconst toast = useToast()\n\n<ConfirmDialog\n    isOpen={open}\n    onClose={() => setOpen(false)}\n    onConfirm={() => {\n        setOpen(false)\n        toast.success('Hecho')\n    }}\n    title="Eliminar usuario"\n    message="¿Estás seguro?"\n    confirmLabel="Eliminar"\n    cancelLabel="Cancelar"\n    variant="destructive"  // default | destructive | warning | info\n/>`} />
+                        <CopyButton text={`import { ConfirmDialog } from '@components/overlays'\nimport { useToast } from '@components/feedback'\n\nconst [open, setOpen] = useState(false)\nconst toast = useToast()\n\n<ConfirmDialog\n    isOpen={open}\n    onClose={() => setOpen(false)}\n    onConfirm={() => {\n        setOpen(false)\n        toast.success('Hecho')\n    }}\n    title="Eliminar usuario"\n    message="¿Estás seguro?"\n    confirmLabel="Eliminar"\n    cancelLabel="Cancelar"\n    variant="destructive"  // default | destructive | warning | info\n/>`} />
                     </div>
                     <pre className={styles.codeContent}>
-{`import { ConfirmDialog } from '../components/ui/Modal'
-import { useToast } from '../components/ui/Toast'
+{`import { ConfirmDialog } from '@components/overlays'
+import { useToast } from '@components/feedback'
 
 const [open, setOpen] = useState(false)
 const toast = useToast()

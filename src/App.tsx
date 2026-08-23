@@ -8,7 +8,7 @@ import FormShowcase from './pages/FormShowcase';
 import ComponentesModales from './pages/ComponentesModales';
 import ComponentesNotificaciones from './pages/ComponentesNotificaciones';
 import ComponentesNavegacion from './pages/ComponentesNavegacion';
-import BrandColorSettings from './theme/BrandColorSettings';
+import BrandColorSettings from '@dev/theme-tools/BrandColorSettings';
 import AjustesIndex from './pages/AjustesIndex';
 import Auditoria from './pages/Auditoria';
 import ComponentesCalendario from './pages/ComponentesCalendario';

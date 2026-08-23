@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { LuUser, LuSettings } from 'react-icons/lu'
-import { Modal, Drawer, DrawerStack } from '../components/ui/Modal'
-import { useToast } from '../components/ui/Toast'
-import Button from '../components/ui/Button'
-import { ExampleCard } from '../components/ui/Showcase'
+import { Modal, Drawer, DrawerStack } from '@components/overlays'
+import { useToast } from '@components/feedback'
+import Button from '@components/primitives/Button'
+import { ExampleCard } from '@dev/showcase/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Code Snippets ────────────────────────────────────────
 const CODE = {
     modal: `import { useState } from 'react'
-import { Modal } from '../components/ui/Modal'
+import { Modal } from '@components/overlays'
 
 export default function MyComponent() {
     const [open, setOpen] = useState(false)
@@ -34,8 +34,8 @@ export default function MyComponent() {
 }`,
 
     modalForm: `import { useState } from 'react'
-import { Modal } from '../components/ui/Modal'
-import { useToast } from '../components/ui/Toast'
+import { Modal } from '@components/overlays'
+import { useToast } from '@components/feedback'
 
 export default function EditUserModal({ user, onSave }) {
     const [open, setOpen] = useState(false)
@@ -72,7 +72,7 @@ export default function EditUserModal({ user, onSave }) {
 }`,
 
     drawer: `import { useState } from 'react'
-import { Drawer } from '../components/ui/Modal'
+import { Drawer } from '@components/overlays'
 
 export default function MyComponent() {
     const [open, setOpen] = useState(false)
@@ -97,7 +97,7 @@ export default function MyComponent() {
 }`,
 
     drawerStack: `import { useState } from 'react'
-import { DrawerStack } from '../components/ui/Modal'
+import { DrawerStack } from '@components/overlays'
 
 const USERS = [
     { id: 1, name: 'Ana García', email: 'ana@email.com' },
@@ -160,8 +160,8 @@ export default function UserExplorer() {
 }`,
 
     confirmDefault: `import { useState } from 'react'
-import { ConfirmDialog } from '../components/ui/Modal'
-import { useToast } from '../components/ui/Toast'
+import { ConfirmDialog } from '@components/overlays'
+import { useToast } from '@components/feedback'
 
 export default function ConfirmAction() {
     const [open, setOpen] = useState(false)
@@ -191,8 +191,8 @@ export default function ConfirmAction() {
 }`,
 
     confirmDestructive: `import { useState } from 'react'
-import { ConfirmDialog } from '../components/ui/Modal'
-import { useToast } from '../components/ui/Toast'
+import { ConfirmDialog } from '@components/overlays'
+import { useToast } from '@components/feedback'
 
 export default function DeleteButton({ userId, onDeleted }) {
     const [open, setOpen] = useState(false)
@@ -230,8 +230,8 @@ export default function DeleteButton({ userId, onDeleted }) {
 }`,
 
     confirmWarning: `import { useState } from 'react'
-import { ConfirmDialog } from '../components/ui/Modal'
-import { useToast } from '../components/ui/Toast'
+import { ConfirmDialog } from '@components/overlays'
+import { useToast } from '@components/feedback'
 
 export default function LogoutButton() {
     const [open, setOpen] = useState(false)
@@ -262,8 +262,8 @@ export default function LogoutButton() {
 }`,
 
     confirmInfo: `import { useState } from 'react'
-import { ConfirmDialog } from '../components/ui/Modal'
-import { useToast } from '../components/ui/Toast'
+import { ConfirmDialog } from '@components/overlays'
+import { useToast } from '@components/feedback'
 
 export default function UpdatePermissions() {
     const [open, setOpen] = useState(false)

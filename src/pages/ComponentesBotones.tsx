@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
 import { LuEye, LuCode, LuSettings2, LuRotateCcw } from 'react-icons/lu'
-import Button from '../components/ui/Button'
-import type { ButtonVariant, ButtonSize, ButtonShape, ButtonAnimation } from '../components/ui/Button'
-import { CodeBlock } from '../components/ui/Showcase'
-import { contrastRatio, wcagLevel, formatRatio } from '../theme/contrast'
+import Button from '@components/primitives/Button'
+import type { ButtonVariant, ButtonSize, ButtonShape, ButtonAnimation } from '@components/primitives/Button'
+import { CodeBlock } from '@dev/showcase/Showcase'
+import { contrastRatio, wcagLevel, formatRatio } from '@theme/contrast'
 import styles from './TablesShowcase.module.css'
 
 // ─── Types ────────────────────────────────────────────────
@@ -362,7 +362,7 @@ function GeneratedCode({ config }: { config: ButtonConfig }) {
     if (config.variant === 'primary') {
         filename = 'ContactForm.tsx'
         code = [
-            "import Button from '../components/ui/Button'",
+            "import Button from '@components/primitives/Button'",
             "",
             "export default function ContactForm() {",
             "    const handleSubmit = () => {",
@@ -386,7 +386,7 @@ function GeneratedCode({ config }: { config: ButtonConfig }) {
         filename = 'DeleteUserButton.tsx'
         code = [
             "import { useState } from 'react'",
-            "import Button from '../components/ui/Button'",
+            "import Button from '@components/primitives/Button'",
             "",
             "interface Props {",
             "    userId: string",
@@ -415,7 +415,7 @@ function GeneratedCode({ config }: { config: ButtonConfig }) {
         filename = 'UserMenu.tsx'
         code = [
             "import { useState, useRef, useEffect } from 'react'",
-            "import Button from '../components/ui/Button'",
+            "import Button from '@components/primitives/Button'",
             "",
             "export default function UserMenu() {",
             "    const [open, setOpen] = useState(false)",
@@ -461,7 +461,7 @@ function GeneratedCode({ config }: { config: ButtonConfig }) {
         filename = 'ConfirmDialog.tsx'
         code = [
             "import { useState } from 'react'",
-            "import Button from '../components/ui/Button'",
+            "import Button from '@components/primitives/Button'",
             "",
             "interface Props {",
             "    title: string",
@@ -509,7 +509,7 @@ function GeneratedCode({ config }: { config: ButtonConfig }) {
         filename = 'App.tsx'
         code = [
             "import { useState } from 'react'",
-            "import Button from '../components/ui/Button'",
+            "import Button from '@components/primitives/Button'",
             "",
             "export default function App() {",
             "    const [count, setCount] = useState(0)",

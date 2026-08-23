@@ -1,14 +1,14 @@
-import Card from '../components/ui/Card'
-import Button from '../components/ui/Button'
-import { ExampleCard } from '../components/ui/Showcase'
-import { StatCard, StatCardGroup } from '../components/ui/StatCard'
+import Button from '@components/primitives/Button'
+import { ExampleCard } from '@dev/showcase/Showcase'
+import Card from '@components/layout/Card'
+import { StatCard, StatCardGroup } from '@components/layout/StatCard'
 import { LuCalendar, LuCheck, LuX, LuClock, LuUsers, LuChartLine, LuZap, LuTarget } from 'react-icons/lu'
 import styles from './TablesShowcase.module.css'
 import gridStyles from './ComponentesCards.module.css'
 
 // ─── Code Snippets ────────────────────────────────────────
 const CODE = {
-    basic: `import Card from '../components/ui/Card'
+    basic: `import Card from '@components/layout/Card'
 
 export default function MyComponent() {
     return (
@@ -23,7 +23,7 @@ export default function MyComponent() {
     )
 }`,
 
-    description: `import Card from '../components/ui/Card'
+    description: `import Card from '@components/layout/Card'
 
 export default function ProjectCard() {
     return (
@@ -41,7 +41,7 @@ export default function ProjectCard() {
     )
 }`,
 
-    noTitle: `import Card from '../components/ui/Card'
+    noTitle: `import Card from '@components/layout/Card'
 
 export default function FlexCard() {
     return (
@@ -53,7 +53,7 @@ export default function FlexCard() {
     )
 }`,
 
-    image: `import Card from '../components/ui/Card'
+    image: `import Card from '@components/layout/Card'
 
 export default function ImageCard() {
     return (
@@ -72,8 +72,8 @@ export default function ImageCard() {
     )
 }`,
 
-    footer: `import Card from '../components/ui/Card'
-import Button from '../components/ui/Button'
+    footer: `import Card from '@components/layout/Card'
+import Button from '@components/primitives/Button'
 
 export default function ActionCard() {
     return (
@@ -95,7 +95,7 @@ export default function ActionCard() {
     )
 }`,
 
-    clickable: `import Card from '../components/ui/Card'
+    clickable: `import Card from '@components/layout/Card'
 
 export default function ClickableCard() {
     const handleClick = () => {
@@ -117,7 +117,7 @@ export default function ClickableCard() {
     )
 }`,
 
-    outlined: `import Card from '../components/ui/Card'
+    outlined: `import Card from '@components/layout/Card'
 
 export default function OutlinedCard() {
     return (
@@ -135,7 +135,7 @@ export default function OutlinedCard() {
     )
 }`,
 
-    elevated: `import Card from '../components/ui/Card'
+    elevated: `import Card from '@components/layout/Card'
 
 export default function ElevatedCard() {
     return (
@@ -153,7 +153,7 @@ export default function ElevatedCard() {
     )
 }`,
 
-    flat: `import Card from '../components/ui/Card'
+    flat: `import Card from '@components/layout/Card'
 
 export default function FlatCard() {
     return (
@@ -553,7 +553,7 @@ export default function ComponentesCards() {
                     title="Básicas"
                     desc="4 tarjetas de stats con acentos de color diferentes"
                     filename="StatCards.tsx"
-                    code={`import { StatCard, StatCardGroup } from '../components/ui/StatCard'
+                    code={`import { StatCard, StatCardGroup } from '@components/layout/StatCard'
 import { LuCalendar, LuCheck, LuX, LuClock } from 'react-icons/lu'
 
 export default function Dashboard() {
@@ -581,7 +581,7 @@ export default function Dashboard() {
                     title="Dashboard de proyecto"
                     desc="Stats con métricas de un proyecto"
                     filename="ProjectStats.tsx"
-                    code={`import { StatCard, StatCardGroup } from '../components/ui/StatCard'
+                    code={`import { StatCard, StatCardGroup } from '@components/layout/StatCard'
 import { LuUsers, LuChartLine, LuZap, LuTarget } from 'react-icons/lu'
 
 export default function ProjectStats() {
@@ -609,7 +609,7 @@ export default function ProjectStats() {
                     title="Dos estadísticas"
                     desc="Grid se adapta: 2 en desktop, 1 en móvil"
                     filename="SimpleStats.tsx"
-                    code={`import { StatCard, StatCardGroup } from '../components/ui/StatCard'
+                    code={`import { StatCard, StatCardGroup } from '@components/layout/StatCard'
 import { LuCheck, LuX } from 'react-icons/lu'
 
 export default function SimpleStats() {

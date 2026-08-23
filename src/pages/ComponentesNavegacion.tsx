@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { LuHouse, LuFolder, LuFile, LuSettings, LuUser, LuBell, LuPalette, LuShield } from 'react-icons/lu'
-import { Tabs, Breadcrumb } from '../components/ui/Navigation'
-import { ExampleCard } from '../components/ui/Showcase'
+import { Tabs, Breadcrumb } from '@components/navigation'
+import { ExampleCard } from '@dev/showcase/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Code Snippets ────────────────────────────────────────
 const CODE = {
-    breadcrumbBasic: `import { Breadcrumb } from '../components/ui/Navigation'
+    breadcrumbBasic: `import { Breadcrumb } from '@components/navigation'
 import { LuHouse, LuFolder } from 'react-icons/lu'
 
 export default function MyBreadcrumb() {
@@ -24,7 +24,7 @@ export default function MyBreadcrumb() {
 // El último item NO tiene href → se renderiza como texto
 // Si hay más de 3 items, los intermedios se colapsan con "..."`,
 
-    breadcrumbSeparator: `import { Breadcrumb } from '../components/ui/Navigation'
+    breadcrumbSeparator: `import { Breadcrumb } from '@components/navigation'
 
 export default function SettingsBreadcrumb() {
     return (
@@ -42,7 +42,7 @@ export default function SettingsBreadcrumb() {
 
 // Separadores disponibles: "/", ">", "›", o un ReactNode custom`,
 
-    breadcrumbCollapse: `import { Breadcrumb } from '../components/ui/Navigation'
+    breadcrumbCollapse: `import { Breadcrumb } from '@components/navigation'
 
 export default function DeepBreadcrumb() {
     return (
@@ -62,7 +62,7 @@ export default function DeepBreadcrumb() {
 // Los items del medio se colapsan automáticamente`,
 
     tabsBasic: `import { useState } from 'react'
-import { Tabs } from '../components/ui/Navigation'
+import { Tabs } from '@components/navigation'
 
 export default function SettingsPage() {
     const [tab, setTab] = useState('general')
@@ -93,7 +93,7 @@ export default function SettingsPage() {
 // variant: "underline" (default) | "pills" | "enclosed"
 // Props: value, onChange, defaultValue, disabled, icon`,
 
-    tabsPills: `import { Tabs } from '../components/ui/Navigation'
+    tabsPills: `import { Tabs } from '@components/navigation'
 import { LuUser, LuBell, LuPalette } from 'react-icons/lu'
 
 export default function UserProfile() {
@@ -266,7 +266,7 @@ export default function ComponentesNavegacion() {
                     title="Enclosed"
                     desc="Tabs con borde completo. Ideal para configuración de admin."
                     filename="AdminSettings.tsx"
-                    code={`import { Tabs } from '../components/ui/Navigation'
+                    code={`import { Tabs } from '@components/navigation'
 import { LuShield } from 'react-icons/lu'
 
 export default function AdminSettings() {
