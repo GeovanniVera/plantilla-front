@@ -1,5 +1,3 @@
-import styles from './StatusDot.module.css'
-
 export type StatusColor = 'green' | 'yellow' | 'red' | 'blue' | 'gray'
 
 export interface StatusDotProps {
@@ -13,13 +11,30 @@ export interface StatusDotProps {
     size?: 'sm' | 'md'
 }
 
-const COLOR_MAP: Record<StatusColor, { bg: string; text: string; dot: string }> = {
-    green:  { bg: 'rgba(34, 197, 94, 0.1)',  text: '#16a34a', dot: '#22c55e' },
-    yellow: { bg: 'rgba(245, 158, 11, 0.1)', text: '#d97706', dot: '#f59e0b' },
-    red:    { bg: 'rgba(239, 68, 68, 0.1)',  text: '#dc2626', dot: '#ef4444' },
-    blue:   { bg: 'rgba(59, 130, 246, 0.1)', text: '#2563eb', dot: '#3b82f6' },
-    gray:   { bg: 'rgba(107, 114, 128, 0.1)', text: '#6b7280', dot: '#9ca3af' },
+/*
+ * Colors reuse the shared semantic status tokens (success / warning /
+ * danger / info) instead of a private palette. Gray has no semantic
+ * token and uses Tailwind's built-in neutral scale.
+ */
+const COLOR_CLASSES: Record<StatusColor, { bg: string; text: string; dot: string }> = {
+    green:  { bg: 'bg-success-bg',      text: 'text-success-strong', dot: 'bg-success' },
+    yellow: { bg: 'bg-warning-bg',      text: 'text-warning-strong', dot: 'bg-warning' },
+    red:    { bg: 'bg-danger-bg',       text: 'text-danger-strong',  dot: 'bg-danger' },
+    blue:   { bg: 'bg-info-bg',         text: 'text-info-strong',    dot: 'bg-info' },
+    gray:   { bg: 'bg-gray-500/10',     text: 'text-gray-500',       dot: 'bg-gray-400' },
 }
+
+const DOT_SIZE_CLASSES = { sm: 'size-1.5', md: 'size-2' } as const
+
+const BADGE_SIZE_CLASSES = {
+    sm: 'px-1.5 py-px text-[11px]',
+    md: 'px-2 py-0.5 text-xs',
+} as const
+
+const FULL_SIZE_CLASSES = {
+    sm: 'px-2 py-px text-[11px]',
+    md: 'px-2.5 py-0.5 text-xs',
+} as const
 
 export function StatusDot({
     color,
@@ -27,17 +42,14 @@ export function StatusDot({
     variant = 'dot',
     size = 'md',
 }: StatusDotProps) {
-    const colors = COLOR_MAP[color]
+    const colors = COLOR_CLASSES[color]
 
     if (variant === 'dot') {
         return (
-            <span className={styles.dotContainer}>
-                <span
-                    className={`${styles.dot} ${size === 'sm' ? styles.dotSm : styles.dotMd}`}
-                    style={{ background: colors.dot }}
-                />
+            <span className="inline-flex items-center gap-1.5">
+                <span className={`${DOT_SIZE_CLASSES[size]} rounded-full shrink-0 ${colors.dot}`} />
                 {label && (
-                    <span className={styles.label} style={{ color: colors.text }}>
+                    <span className={`text-[13px] font-medium leading-none ${colors.text}`}>
                         {label}
                     </span>
                 )}
@@ -48,10 +60,9 @@ export function StatusDot({
     if (variant === 'badge') {
         return (
             <span
-                className={`${styles.badge} ${size === 'sm' ? styles.badgeSm : styles.badgeMd}`}
-                style={{ background: colors.bg, color: colors.text }}
+                className={`inline-flex items-center gap-[5px] rounded-full font-medium leading-[1.4] whitespace-nowrap ${BADGE_SIZE_CLASSES[size]} ${colors.bg} ${colors.text}`}
             >
-                <span className={styles.dot} style={{ background: colors.dot }} />
+                <span className={`size-2 rounded-full shrink-0 ${colors.dot}`} />
                 {label}
             </span>
         )
@@ -60,8 +71,7 @@ export function StatusDot({
     // variant === 'full' — fondo coloreado
     return (
         <span
-            className={`${styles.full} ${size === 'sm' ? styles.fullSm : styles.fullMd}`}
-            style={{ background: colors.bg, color: colors.text }}
+            className={`inline-block rounded-md font-medium leading-[1.4] whitespace-nowrap ${FULL_SIZE_CLASSES[size]} ${colors.bg} ${colors.text}`}
         >
             {label}
         </span>
