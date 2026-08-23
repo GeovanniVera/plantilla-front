@@ -2,8 +2,20 @@ import { useState, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Toast } from './Toast'
 import { registerToast, unregisterToast } from './useToast'
-import styles from './Toast.module.css'
-import type { ToastItem, ToastAPI, ToastProviderProps } from './types'
+import type { ToastItem, ToastAPI, ToastProviderProps, ToastPosition } from './types'
+
+// ─── Container styling ────────────────────────────────────
+// One effective class set per position: translate/align/flex-direction
+// never compete across entries (phase 6F.2 cascade rule).
+const CONTAINER_BASE_CLASSES =
+    'fixed z-[2000] flex flex-col gap-2 p-4 pointer-events-none max-w-[400px] w-full [&>*]:pointer-events-auto'
+
+const CONTAINER_POSITION_CLASSES: Record<ToastPosition, string> = {
+    'top-right': 'top-0 right-0 items-end',
+    'top-center': 'top-0 left-1/2 -translate-x-1/2 items-center',
+    'bottom-right': 'bottom-0 right-0 items-end flex-col-reverse',
+    'bottom-center': 'bottom-0 left-1/2 -translate-x-1/2 items-center flex-col-reverse',
+}
 
 // ─── Counter for unique IDs ───────────────────────────────
 let nextId = 0
@@ -55,7 +67,7 @@ export function ToastProvider({
         <>
             {children}
             {createPortal(
-                <div className={`${styles.toastContainer} ${styles[position]}`}>
+                <div className={CONTAINER_BASE_CLASSES + ' ' + CONTAINER_POSITION_CLASSES[position]}>
                     {visibleToasts.map((item) => (
                         <Toast
                             key={item.id}

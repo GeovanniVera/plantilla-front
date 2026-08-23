@@ -111,6 +111,11 @@
     /* Tabs panel entrance (migrated from Tabs.module.css, phase 6F.1) */
     --animate-tabs-panel: tabs-panel-fade-in 0.2s ease;
 
+    /* Toast enter/exit (migrated from Toast.module.css, phase 6F.2).
+     * Mutually exclusive: the component picks ONE based on isExiting. */
+    --animate-toast-in: toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    --animate-toast-out: toast-out 0.2s ease forwards;
+
     @keyframes radio-in {
         from { transform: scale(0); }
         to { transform: scale(1); }
@@ -119,6 +124,16 @@
     @keyframes tabs-panel-fade-in {
         from { opacity: 0; transform: translateY(4px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toast-in {
+        from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes toast-out {
+        from { opacity: 1; transform: translateY(0) scale(1); }
+        to { opacity: 0; transform: translateY(-8px) scale(0.96); }
     }
 
     @keyframes btn-pulse {
