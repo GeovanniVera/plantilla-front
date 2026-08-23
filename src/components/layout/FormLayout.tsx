@@ -1,5 +1,11 @@
 import type { FormLayoutProps } from '@components/forms/types'
-import styles from '@components/primitives/Form.module.css'
+
+const COLUMN_CLASSES: Record<FormLayoutProps['columns'] & number, string> = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-2',
+    3: 'grid-cols-3',
+    4: 'grid-cols-4',
+}
 
 export default function FormLayout({
     columns = 1,
@@ -7,11 +13,9 @@ export default function FormLayout({
     children,
     className,
 }: FormLayoutProps) {
-    const colClass = columns === 2 ? styles.cols2 : columns === 3 ? styles.cols3 : columns === 4 ? styles.cols4 : styles.cols1
-
     return (
         <div
-            className={`${styles.layout} ${colClass} ${className ?? ''}`}
+            className={`grid ${COLUMN_CLASSES[columns]} max-[640px]:grid-cols-1 ${className ?? ''}`}
             style={{ gap }}
         >
             {children}

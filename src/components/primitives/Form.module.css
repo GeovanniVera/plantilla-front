@@ -1,51 +1,14 @@
 /* ================================
-   FORM FIELD (shared by forms/FormField)
-   Control styling (Input, Textarea, Select, Checkbox, Radio) migrated to
-   Tailwind in phase 6D.2 — see src/components/primitives/*.tsx.
-   Error-state selectors target the data-variant attribute the controls
-   still emit so FormField can override their borders without knowing
-   their internal classes.
+   FORM ERROR BRIDGE — sole residual rule set
+   Everything else (field chrome, controls, floating labels, column
+   grids) migrated to Tailwind in phases 6D.2 / 6E.1.
+   This survives because FormField wraps ARBITRARY control children:
+   the wrapper-level descendant override can't be expressed as a
+   utility without fighting the cascade. Controls emit data-variant
+   (6D.2); unlayered module CSS intentionally wins over @layer
+   utilities so error borders beat the controls' own focus styles,
+   exactly like the original module did.
    ================================ */
-.field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.fieldDisabled {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-.label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-h);
-}
-
-.required {
-    color: #dc2626;
-    margin-left: 2px;
-}
-
-.inputWrap {
-    display: flex;
-    flex-direction: column;
-}
-
-.errorText {
-    font-size: 12px;
-    color: #dc2626;
-}
-
-.helperText {
-    font-size: 12px;
-    color: var(--text);
-    opacity: 0.6;
-}
-
-/* Field error state — overrides the controls' Tailwind focus/border
- * utilities. Unlayered module CSS wins over @layer utilities by design. */
 .fieldError [data-variant='default'] {
     border-color: #dc2626;
 }
@@ -60,51 +23,4 @@
 
 .fieldError [data-variant='outlined'] {
     border-color: #dc2626;
-}
-
-/* Floating label variant
- * NOTE: pre-existing behavior preserved as-is; the sibling combinator
- * only matches when consumers render the label after the control. */
-.fieldFloating {
-    position: relative;
-}
-
-.fieldFloating .label {
-    position: absolute;
-    top: 50%;
-    left: 12px;
-    transform: translateY(-50%);
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--text);
-    opacity: 0.5;
-    pointer-events: none;
-    transition: opacity 0.2s, transform 0.2s;
-    z-index: 1;
-}
-
-.fieldFloating input:focus ~ .label,
-.fieldFloating input:not(:placeholder-shown) ~ .label,
-.fieldFloating select:focus-within ~ .label {
-    top: 8px;
-    transform: translateY(0);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent);
-    opacity: 1;
-}
-
-/* Column variants (FormLayout) */
-.cols1 { grid-template-columns: 1fr; }
-.cols2 { grid-template-columns: repeat(2, 1fr); }
-.cols3 { grid-template-columns: repeat(3, 1fr); }
-.cols4 { grid-template-columns: repeat(4, 1fr); }
-
-/* ================================
-   RESPONSIVE
-   ================================ */
-@media (max-width: 640px) {
-    .layout {
-        grid-template-columns: 1fr;
-    }
 }
