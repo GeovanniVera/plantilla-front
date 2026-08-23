@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { LuX } from 'react-icons/lu'
-import styles from './Modal.module.css'
 import type { ModalProps, ModalHeaderProps, ModalBodyProps, ModalFooterProps } from './types'
 import { ModalContext, useModalClose } from './context'
 
@@ -77,9 +76,15 @@ Modal.Header = function ModalHeader({ title, rightSlot, showClose = true, classN
 }
 
 // ─── Modal.Body ───────────────────────────────────────────
+/* Scrollable body replicating the legacy .body rule (incl. custom
+ * scrollbar via arbitrary variants). Modal.module.css was deleted in
+ * 6F.3D once this was its last consumer. */
+const BODY_CLASSES =
+    'flex-1 overflow-y-auto px-6 py-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-sm [&::-webkit-scrollbar-thumb]:bg-border-base'
+
 Modal.Body = function ModalBody({ children, className }: ModalBodyProps) {
     return (
-        <div className={`${styles.body} ${className ?? ''}`}>
+        <div className={`${BODY_CLASSES} ${className ?? ''}`}>
             {children}
         </div>
     )
