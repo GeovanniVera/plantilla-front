@@ -1,4 +1,5 @@
 import Badge from '../../components/ui/Badge'
+import { StatusDot } from '../../components/ui/StatusDot'
 import type { Column } from '../../components/ui/Table/types'
 
 // --- Tipos ---
@@ -94,36 +95,42 @@ export const employees: Employee[] = [
 export const userColumns: Column<SampleUser>[] = [
     { key: 'name',   header: 'Nombre',  minWidth: '180px' },
     { key: 'email',  header: 'Email',   minWidth: '220px' },
-    { key: 'role',   header: 'Rol',     align: 'center',
+    { key: 'role',   header: 'Rol',     align: 'center', filterType: 'select', filterOptions: ['Admin', 'Editor', 'Viewer'],
       render: (value) => {
           const variant = value === 'Admin' ? 'success' : value === 'Editor' ? 'info' : 'default'
           return <Badge variant={variant}>{String(value)}</Badge>
       },
     },
-    { key: 'status', header: 'Estado',  align: 'center',
-      render: (value) => {
-          const variant = value === 'Activo' ? 'success' : 'warning'
-          return <Badge variant={variant}>{String(value)}</Badge>
-      },
+    { key: 'status', header: 'Estado',  align: 'center', filterType: 'select', filterOptions: ['Activo', 'Inactivo'],
+      render: (value) => (
+          <StatusDot
+              color={value === 'Activo' ? 'green' : 'red'}
+              label={String(value)}
+              variant="dot"
+          />
+      ),
     },
 ]
 
 export const spreadsheetColumns: Column<SpreadsheetRow>[] = [
     { key: 'concepto', header: 'Concepto', minWidth: '200px' },
-    { key: 'cantidad', header: 'Cantidad', width: '100px', align: 'right' },
-    { key: 'precio',   header: 'Precio',   width: '120px', align: 'right' },
-    { key: 'total',    header: 'Total',    width: '120px', align: 'right' },
+    { key: 'cantidad', header: 'Cantidad', width: '100px', align: 'right', filterType: 'number' },
+    { key: 'precio',   header: 'Precio',   width: '120px', align: 'right', filterType: 'number' },
+    { key: 'total',    header: 'Total',    width: '120px', align: 'right', filterType: 'number' },
 ]
 
 export const employeeColumns: Column<Employee>[] = [
     { key: 'name',       header: 'Nombre',     minWidth: '180px' },
-    { key: 'department', header: 'Departamento', minWidth: '140px', align: 'center' },
+    { key: 'department', header: 'Departamento', minWidth: '140px', align: 'center', filterType: 'select', filterOptions: ['Tecnología', 'Diseño', 'Marketing'] },
     { key: 'position',   header: 'Posición',    minWidth: '140px' },
     { key: 'city',       header: 'Ciudad',      minWidth: '120px', align: 'center' },
-    { key: 'status',     header: 'Estado',      width: '100px',   align: 'center',
-      render: (value) => {
-          const variant = value === 'Activo' ? 'success' : 'warning'
-          return <Badge variant={variant}>{String(value)}</Badge>
-      },
+    { key: 'status',     header: 'Estado',      width: '100px',   align: 'center', filterType: 'select', filterOptions: ['Activo', 'Inactivo'],
+      render: (value) => (
+          <StatusDot
+              color={value === 'Activo' ? 'green' : 'red'}
+              label={String(value)}
+              variant="dot"
+          />
+      ),
     },
 ]

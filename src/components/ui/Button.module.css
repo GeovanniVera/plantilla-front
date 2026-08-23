@@ -125,28 +125,4 @@
     80% { transform: translateX(2px); }
 }
 
-/* ================================
-   LOADING
-   ================================ */
 
-.loading {
-    position: relative;
-    color: transparent !important;
-    pointer-events: none;
-}
-
-.spinner {
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    border: 2px solid currentColor;
-    border-right-color: transparent;
-    border-radius: 50%;
-    animation: btnSpin 0.6s linear infinite;
-}
-
-.primary .spinner { border-color: rgba(255,255,255,0.3); border-right-color: transparent; }
-
-@keyframes btnSpin {
-    to { transform: rotate(360deg); }
-}

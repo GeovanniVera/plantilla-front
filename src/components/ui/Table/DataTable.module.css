@@ -9,36 +9,3 @@
     align-items: center;
     gap: 6px;
 }
-
-.activeFiltersBar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 14px;
-    background: var(--accent-bg);
-    border: 1px solid var(--accent-border);
-    border-radius: 8px;
-    font-size: 13px;
-}
-
-.filterLabel {
-    color: var(--accent);
-    font-weight: 500;
-}
-
-.clearAllBtn {
-    padding: 4px 10px;
-    border-radius: 6px;
-    border: 1px solid var(--accent-border);
-    background: transparent;
-    color: var(--accent);
-    font-size: 12px;
-    font-family: var(--sans);
-    cursor: pointer;
-    transition: background 0.12s, color 0.12s;
-}
-
-.clearAllBtn:hover {
-    background: var(--accent);
-    color: #fff;
-}

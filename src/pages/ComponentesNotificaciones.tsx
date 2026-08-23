@@ -1,8 +1,10 @@
-import { useState, useCallback } from 'react'
-import { LuCheck, LuCircleAlert, LuTriangleAlert, LuInfo, LuCopy, LuCircleCheck, LuFileCode2 } from 'react-icons/lu'
+import { useState, type ReactNode } from 'react'
+import { LuCheck, LuCircleAlert, LuTriangleAlert, LuInfo, LuFileCode2 } from 'react-icons/lu'
 import { useToast } from '../components/ui/Toast'
 import { ConfirmDialog } from '../components/ui/Modal'
 import type { ConfirmVariant } from '../components/ui/Modal'
+import Button from '../components/ui/Button'
+import { CopyButton } from '../components/ui/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Toast variants ───────────────────────────────────────
@@ -20,7 +22,7 @@ const confirmVariants: {
     desc: string
     color: string
     bg: string
-    icon: string
+    icon: ReactNode
     title: string
     message: string
     confirmLabel: string
@@ -29,45 +31,30 @@ const confirmVariants: {
 }[] = [
     {
         variant: 'default', label: 'Default', desc: 'Confirmar acción normal',
-        color: '#22c55e', bg: 'rgba(34,197,94,0.04)', icon: '✓',
+        color: '#22c55e', bg: 'rgba(34,197,94,0.04)', icon: <LuCheck size={16} />,
         title: 'Confirmar acción', message: '¿Deseas proceder? Se aplicarán los cambios inmediatamente.',
         confirmLabel: 'Confirmar', toastMsg: 'Acción completada correctamente', toastVariant: 'success',
     },
     {
         variant: 'destructive', label: 'Destructive', desc: 'Eliminar o desactivar',
-        color: '#dc2626', bg: 'rgba(220,38,38,0.04)', icon: '✕',
+        color: '#dc2626', bg: 'rgba(220,38,38,0.04)', icon: <LuCircleAlert size={16} />,
         title: 'Eliminar usuario', message: '¿Estás seguro? Esta acción no se puede deshacer. Se eliminarán todos los datos asociados.',
         confirmLabel: 'Eliminar', toastMsg: 'Usuario eliminado correctamente', toastVariant: 'success',
     },
     {
         variant: 'warning', label: 'Warning', desc: 'Acción con precaución',
-        color: '#f59e0b', bg: 'rgba(245,158,11,0.04)', icon: '⚠',
+        color: '#f59e0b', bg: 'rgba(245,158,11,0.04)', icon: <LuTriangleAlert size={16} />,
         title: 'Cerrar sesión', message: 'Tienes cambios sin guardar. Si cierras sesión, perderás los cambios no guardados.',
         confirmLabel: 'Cerrar sesión', toastMsg: 'La sesión se cerrará en 60 segundos', toastVariant: 'warning',
     },
     {
         variant: 'info', label: 'Info', desc: 'Información o permisos',
-        color: '#3b82f6', bg: 'rgba(59,130,246,0.04)', icon: 'ℹ',
+        color: '#3b82f6', bg: 'rgba(59,130,246,0.04)', icon: <LuInfo size={16} />,
         title: 'Actualizar permisos', message: 'El usuario tendrá acceso de lectura y escritura a todos los archivos del proyecto.',
         confirmLabel: 'Actualizar', toastMsg: 'Permisos actualizados', toastVariant: 'success',
     },
 ]
 
-// ─── Copy Button ──────────────────────────────────────────
-function CopyButton({ text }: { text: string }) {
-    const [copied, setCopied] = useState(false)
-    const handleCopy = useCallback(async () => {
-        await navigator.clipboard.writeText(text)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }, [text])
-    return (
-        <button className={styles.copyBtn + (copied ? ' ' + styles.copyBtnCopied : '')} onClick={handleCopy}>
-            {copied ? <LuCircleCheck size={14} /> : <LuCopy size={14} />}
-            {copied ? 'Copiado' : 'Copiar'}
-        </button>
-    )
-}
 
 // ─── Page ─────────────────────────────────────────────────
 export default function ComponentesNotificaciones() {
@@ -92,20 +79,16 @@ export default function ComponentesNotificaciones() {
 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                     {toastVariants.map((v) => (
-                        <button
+                        <Button
                             key={v.key}
+                            variant="ghost"
+                            color={v.color}
+                            colorBg={`${v.color}0a`}
                             onClick={() => toast[v.key](v.message)}
-                            style={{
-                                padding: '10px 20px', borderRadius: 8,
-                                border: `1.5px solid ${v.color}20`,
-                                background: `${v.color}0a`,
-                                color: v.color, fontSize: 13, fontWeight: 600,
-                                cursor: 'pointer', fontFamily: 'var(--sans)',
-                                display: 'flex', alignItems: 'center', gap: 6,
-                            }}
+                            style={{ border: `1.5px solid ${v.color}20` }}
                         >
                             {v.icon} {v.label}
-                        </button>
+                        </Button>
                     ))}
                 </div>
             </div>
@@ -117,7 +100,10 @@ export default function ComponentesNotificaciones() {
                     Los toasts pueden incluir un link que ejecuta una acción (Reintentar, Deshacer, Ver).
                 </p>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <button
+                    <Button
+                        variant="ghost"
+                        color="#dc2626"
+                        colorBg="rgba(220,38,38,0.08)"
                         onClick={() => {
                             toast.error('Error de red', {
                                 action: {
@@ -129,42 +115,33 @@ export default function ComponentesNotificaciones() {
                                 },
                             })
                         }}
-                        style={{
-                            padding: '10px 20px', borderRadius: 8, border: 'none',
-                            background: 'rgba(220,38,38,0.08)', color: '#dc2626', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}
                     >
                         Error + Reintentar
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        color="#22c55e"
+                        colorBg="rgba(34,197,94,0.08)"
                         onClick={() => {
                             toast.success('Borrador guardado', {
                                 action: { label: 'Ver borrador', onClick: () => toast.info('Navegando al borrador...') }
                             })
                         }}
-                        style={{
-                            padding: '10px 20px', borderRadius: 8, border: 'none',
-                            background: 'rgba(34,197,94,0.08)', color: '#22c55e', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}
                     >
                         Success + Ver
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        color="#d97706"
+                        colorBg="rgba(245,158,11,0.08)"
                         onClick={() => {
                             toast.warning('Tu sesión expira en 5 minutos', {
                                 action: { label: 'Extender sesión', onClick: () => toast.success('Sesión extendida 30 min más') }
                             })
                         }}
-                        style={{
-                            padding: '10px 20px', borderRadius: 8, border: 'none',
-                            background: 'rgba(245,158,11,0.08)', color: '#d97706', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}
                     >
                         Warning + Extender
-                    </button>
+                    </Button>
                 </div>
                 {actionLog.length > 0 && (
                     <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text)', opacity: 0.6 }}>

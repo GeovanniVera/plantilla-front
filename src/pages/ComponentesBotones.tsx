@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react'
-import { LuEye, LuCode, LuCopy, LuCheck, LuFileCode2, LuSettings2, LuRotateCcw } from 'react-icons/lu'
+import { LuEye, LuCode, LuSettings2, LuRotateCcw } from 'react-icons/lu'
 import Button from '../components/ui/Button'
 import type { ButtonVariant, ButtonSize, ButtonShape, ButtonAnimation } from '../components/ui/Button'
+import { CodeBlock } from '../components/ui/Showcase'
+import { contrastRatio, wcagLevel, formatRatio } from '../theme/contrast'
 import styles from './TablesShowcase.module.css'
 
 // ─── Types ────────────────────────────────────────────────
@@ -14,7 +16,8 @@ interface ButtonConfig {
     animation: ButtonAnimation
     label: string
     disabled: boolean
-    loading: boolean
+    color: string
+    colorBg: string
 }
 
 const DEFAULT_CONFIG: ButtonConfig = {
@@ -24,7 +27,8 @@ const DEFAULT_CONFIG: ButtonConfig = {
     animation: 'none',
     label: 'Botón',
     disabled: false,
-    loading: false,
+    color: '',
+    colorBg: '',
 }
 
 // ─── Helpers ──────────────────────────────────────────────
@@ -34,8 +38,10 @@ function buildProps(config: ButtonConfig): string {
     if (config.size !== 'md') props.push('size="' + config.size + '"')
     if (config.shape !== 'default') props.push('shape="' + config.shape + '"')
     if (config.animation !== 'none') props.push('animation="' + config.animation + '"')
-    if (config.loading) props.push('loading')
+
     if (config.disabled) props.push('disabled')
+    if (config.color) props.push('color="' + config.color + '"')
+    if (config.colorBg) props.push('colorBg="' + config.colorBg + '"')
     return props.length > 0 ? ' ' + props.join(' ') : ''
 }
 
@@ -44,36 +50,6 @@ function indent(str: string, spaces: number): string {
     return str.split('\n').map(function (l) { return pad + l }).join('\n')
 }
 
-// ─── CopyButton ───────────────────────────────────────────
-function CopyButton({ text }: { text: string }) {
-    const [copied, setCopied] = useState(false)
-    const handleCopy = useCallback(async () => {
-        await navigator.clipboard.writeText(text)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }, [text])
-    return (
-        <button className={styles.copyBtn + (copied ? ' ' + styles.copyBtnCopied : '')} onClick={handleCopy}>
-            {copied ? <LuCheck size={14} /> : <LuCopy size={14} />}
-            {copied ? 'Copiado' : 'Copiar'}
-        </button>
-    )
-}
-
-function CodeBlock({ filename, code }: { filename: string; code: string }) {
-    return (
-        <div className={styles.codeBlock}>
-            <div className={styles.codeHeader}>
-                <span className={styles.codeFilename}>
-                    <span className={styles.codeFilenameIcon}><LuFileCode2 size={14} /></span>
-                    {filename}
-                </span>
-                <CopyButton text={code} />
-            </div>
-            <pre className={styles.codeContent}>{code}</pre>
-        </div>
-    )
-}
 
 // ─── Configurator Panel ───────────────────────────────────
 function ConfiguratorPanel({
@@ -123,8 +99,8 @@ function ConfiguratorPanel({
             {!collapsed && (
             <>
             <div className={styles.configGroup}>
-                <label className={styles.configLabel}>Variante</label>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <label className={styles.configLabel}>Variante{config.color ? ' (bloqueada por color custom)' : ''}</label>
+                <div style={{ display: 'flex', gap: 6, opacity: config.color ? 0.4 : 1, pointerEvents: config.color ? 'none' : 'auto' }}>
                     {variantOpts.map(function (opt) {
                         return (
                             <button
@@ -211,28 +187,150 @@ function ConfiguratorPanel({
             </div>
 
             <div className={styles.configGroup}>
-                <label className={styles.configLabel}>Estado</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                    {[
-                        { key: 'disabled' as const, label: 'Deshabilitado', desc: 'No interaction' },
-                        { key: 'loading' as const, label: 'Loading', desc: 'Spinner + disabled' },
-                    ].map(function (item) {
-                        return (
-                            <div key={item.key} className={styles.toggleItem}>
-                                <div className={styles.toggleInfo}>
-                                    <span className={styles.toggleName}>{item.label}</span>
-                                    <span className={styles.toggleDesc}>{item.desc}</span>
-                                </div>
-                                <button
-                                    className={styles.toggleSwitch + (config[item.key] ? ' ' + styles.toggleSwitchOn : '')}
-                                    onClick={function () { var patch: Record<string, boolean> = {}; patch[item.key] = !config[item.key]; onChange(patch as Partial<ButtonConfig>) }}
-                                    type="button"
-                                >
-                                    <span className={styles.toggleKnob} />
-                                </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: config.color ? 10 : 0 }}>
+                    <label className={styles.configLabel} style={{ margin: 0 }}>Color personalizado</label>
+                    <button
+                        className={styles.toggleSwitch + (config.color ? ' ' + styles.toggleSwitchOn : '')}
+                        onClick={function () {
+                            if (config.color) {
+                                onChange({ color: '', colorBg: '' })
+                            } else {
+                                onChange({ color: '#dc2626', colorBg: 'rgba(220,38,38,0.08)', variant: 'ghost' })
+                            }
+                        }}
+                        type="button"
+                    >
+                        <span className={styles.toggleKnob} />
+                    </button>
+                </div>
+                {config.color && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+                        {/* Fila: Color de texto — estilo ContrastChecker */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            padding: '12px 14px', borderRadius: 10,
+                            background: 'var(--code-bg)', border: '1px solid var(--border)',
+                        }}>
+                            <div style={{ position: 'relative', flexShrink: 0 }}>
+                                <input
+                                    type="color"
+                                    value={config.color}
+                                    onChange={function (e) {
+                                        var hex = e.target.value
+                                        var r = parseInt(hex.slice(1, 3), 16)
+                                        var g = parseInt(hex.slice(3, 5), 16)
+                                        var b = parseInt(hex.slice(5, 7), 16)
+                                        onChange({ color: hex, colorBg: 'rgba(' + r + ',' + g + ',' + b + ',0.08)' })
+                                    }}
+                                    style={{
+                                        width: 44, height: 44, padding: 0, border: 'none',
+                                        borderRadius: 8, cursor: 'pointer', background: 'transparent',
+                                    }}
+                                />
                             </div>
-                        )
-                    })}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-h)' }}>Color de texto</span>
+                                <span style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text)', marginTop: 2 }}>{config.color}</span>
+                            </div>
+                        </div>
+
+                        {/* Fila: Color de fondo — estilo ContrastChecker */}
+                        {function () {
+                            var bgMatch = config.colorBg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]+)?\)/)
+                            var bgOpacity = bgMatch && bgMatch[4] !== undefined ? Math.round(parseFloat(bgMatch[4]) * 100) : 8
+                            var r = bgMatch ? parseInt(bgMatch[1]) : 220
+                            var g = bgMatch ? parseInt(bgMatch[2]) : 38
+                            var b = bgMatch ? parseInt(bgMatch[3]) : 38
+                            var bgHex = '#' + [r, g, b].map(function (n) { return n.toString(16).padStart(2, '0') }).join('')
+
+                            // WCAG: text vs white (button background)
+                            var ratio = contrastRatio(config.color, '#ffffff')
+                            var level = wcagLevel(ratio)
+                            var levelConfig: Record<string, { label: string; color: string }> = {
+                                AAA: { label: 'AAA cumple', color: '#22c55e' },
+                                AA:  { label: 'AA cumple',  color: '#ca8a04' },
+                                fail:{ label: 'No cumple', color: '#dc2626' },
+                            }
+                            var lc = levelConfig[level]
+
+                            return (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: 12,
+                                        padding: '12px 14px', borderRadius: 10,
+                                        background: 'var(--code-bg)', border: '1px solid var(--border)',
+                                    }}>
+                                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                                            <input
+                                                type="color"
+                                                value={bgHex}
+                                                onChange={function (e) {
+                                                    var hex = e.target.value
+                                                    var rr = parseInt(hex.slice(1, 3), 16)
+                                                    var gg = parseInt(hex.slice(3, 5), 16)
+                                                    var bb = parseInt(hex.slice(5, 7), 16)
+                                                    onChange({ colorBg: 'rgba(' + rr + ',' + gg + ',' + bb + ',' + (bgOpacity / 100) + ')' })
+                                                }}
+                                                style={{
+                                                    width: 44, height: 44, padding: 0, border: 'none',
+                                                    borderRadius: 8, cursor: 'pointer', background: 'transparent',
+                                                }}
+                                            />
+                                        </div>
+                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-h)' }}>Color de fondo</span>
+                                            <span style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text)', marginTop: 2 }}>{bgHex} · {bgOpacity}%</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0 }}>
+                                            <span style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text)' }}>{formatRatio(ratio)}</span>
+                                            <span style={{
+                                                fontSize: 11, fontWeight: 600, padding: '2px 8px',
+                                                borderRadius: 20, whiteSpace: 'nowrap',
+                                                color: lc.color, background: lc.color + '18',
+                                            }}>{lc.label}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Slider opacidad */}
+                                    <div style={{ padding: '0 2px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                                            <span style={{ fontSize: 11, color: 'var(--text)', opacity: 0.6 }}>Opacidad del fondo</span>
+                                            <span style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--text-h)' }}>{bgOpacity}%</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min={0}
+                                            max={100}
+                                            value={bgOpacity}
+                                            onChange={function (e) {
+                                                var val = parseInt(e.target.value)
+                                                onChange({ colorBg: 'rgba(' + r + ',' + g + ',' + b + ',' + (val / 100) + ')' })
+                                            }}
+                                            style={{ width: '100%', accentColor: 'var(--accent)' }}
+                                        />
+                                    </div>
+                                </div>
+                            )
+                        }()}
+                    </div>
+                )}
+            </div>
+
+            <div className={styles.configGroup}>
+                <label className={styles.configLabel}>Estado</label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div className={styles.toggleInfo}>
+                        <span className={styles.toggleName}>Deshabilitado</span>
+                        <span className={styles.toggleDesc}>No interaction</span>
+                    </div>
+                    <button
+                        className={styles.toggleSwitch + (config.disabled ? ' ' + styles.toggleSwitchOn : '')}
+                        onClick={function () { onChange({ disabled: !config.disabled }) }}
+                        type="button"
+                    >
+                        <span className={styles.toggleKnob} />
+                    </button>
                 </div>
             </div>
 
@@ -244,7 +342,8 @@ function ConfiguratorPanel({
                     <span className={styles.flagBadge}>{config.shape}</span>
                     {config.animation !== 'none' && <span className={styles.flagBadge}>anim: {config.animation}</span>}
                     {config.disabled && <span className={styles.flagBadge}>disabled</span>}
-                    {config.loading && <span className={styles.flagBadge}>loading</span>}
+                    {config.color && <span className={styles.flagBadge}>color: {config.color}</span>}
+                    {config.colorBg && <span className={styles.flagBadge}>bg: {config.colorBg}</span>}
                 </div>
             </div>
             </>
@@ -263,43 +362,18 @@ function GeneratedCode({ config }: { config: ButtonConfig }) {
     if (config.variant === 'primary') {
         filename = 'ContactForm.tsx'
         code = [
-            "import { useState } from 'react'",
             "import Button from '../components/ui/Button'",
             "",
             "export default function ContactForm() {",
-            "    const [email, setEmail] = useState('')",
-            indent(config.loading || true ? "const [loading, setLoading] = useState(false)" : "", 4),
-            "",
-            "    const handleSubmit = async (e: React.FormEvent) => {",
-            "        e.preventDefault()",
-            "        setLoading(true)",
-            "        try {",
-            "            const res = await fetch('/api/contact', {",
-            "                method: 'POST',",
-            "                headers: { 'Content-Type': 'application/json' },",
-            "                body: JSON.stringify({ email }),",
-            "            })",
-            "            if (!res.ok) throw new Error('Error del servidor')",
-            "            alert('¡Mensaje enviado!')",
-            "            setEmail('')",
-            "        } catch (err) {",
-            "            alert('Error: ' + (err as Error).message)",
-            "        } finally {",
-            "            setLoading(false)",
-            "        }",
+            "    const handleSubmit = () => {",
+            "        alert('¡Mensaje enviado!')",
             "    }",
             "",
             "    return (",
             "        <form onSubmit={handleSubmit}>",
-            "            <input",
-            "                type=\"email\"",
-            "                value={email}",
-            "                onChange={(e) => setEmail(e.target.value)}",
-            "                placeholder=\"tu@email.com\"",
-            "                required",
-            "            />",
+            "            <input type=\"email\" placeholder=\"tu@email.com\" required />",
             indent("<Button" + props + " type=\"submit\">", 12),
-            indent("    {loading ? 'Enviando...' : '" + config.label + "'}", 12),
+            indent("    " + config.label, 12),
             indent("</Button>", 12),
             "        </form>",
             "    )",
@@ -320,28 +394,16 @@ function GeneratedCode({ config }: { config: ButtonConfig }) {
             "    onDeleted: (id: string) => void",
             "}",
             "",
-            "export default function DeleteUserButton({ userId, userName, onDeleted }: Props) {",
-            "    const [loading, setLoading] = useState(false)",
-            "",
-            "    const handleDelete = async () => {",
-            "        const ok = window.confirm(`¿Eliminar a ${userName}?\\n\\nEsta acción no se puede deshacer.`)",
+            "export default function DeleteUserButton({ userId, onDeleted }: Props) {",
+            "    const handleDelete = () => {",
+            "        const ok = window.confirm('¿Eliminar usuario?\\nEsta acción no se puede deshacer.')",
             "        if (!ok) return",
-            "",
-            "        setLoading(true)",
-            "        try {",
-            "            const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' })",
-            "            if (!res.ok) throw new Error('No se pudo eliminar')",
-            "            onDeleted(userId)  // Notificar al padre para actualizar la lista",
-            "        } catch (err) {",
-            "            alert('Error: ' + (err as Error).message)",
-            "        } finally {",
-            "            setLoading(false)",
-            "        }",
+            "        onDeleted(userId)",
             "    }",
             "",
             "    return (",
             indent("<Button" + props + " onClick={handleDelete}>", 8),
-            indent("    {loading ? 'Eliminando...' : '" + config.label + "'}", 8),
+            indent("    " + config.label, 8),
             indent("</Button>", 8),
             "    )",
             "}",
@@ -508,22 +570,25 @@ export default function ComponentesBotones() {
                             {config.variant} · {config.size} · {config.shape} · {config.animation !== 'none' ? config.animation : 'sin anim'}
                         </span>
                     </div>
-                    <div className={styles.tableWrapper} style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {view === 'preview' ? (
+                    {view === 'preview' ? (
+                        <div className={styles.tableWrapper} style={{ padding: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Button
                                 variant={config.variant}
                                 size={config.size}
                                 shape={config.shape}
                                 animation={config.animation}
                                 disabled={config.disabled}
-                                loading={config.loading}
+                                color={config.color || undefined}
+                                colorBg={config.colorBg || undefined}
                             >
                                 {config.label}
                             </Button>
-                        ) : (
+                        </div>
+                    ) : (
+                        <div style={{ padding: '0 4px' }}>
                             <GeneratedCode config={config} />
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -188,7 +188,7 @@ export function RowBlock({
                     const field = fields[colIdx]
                     if (!field) {
                         // Empty slot — can accept drops here too
-                        const isTarget = activeDrag && dropIndex === colIdx
+                        const isTarget = !!(activeDrag && dropIndex === colIdx)
                         return (
                             <EmptySlot
                                 key={colIdx}

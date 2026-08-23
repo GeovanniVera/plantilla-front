@@ -3,6 +3,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MemoryRouter } from 'react-router'
 import { LuBlocks, LuMonitor, LuSmartphone, LuPalette, LuFileText } from 'react-icons/lu'
 import NavGroup from './NavGroup'
+import NavItem from './NavItem'
+import { SidebarContext } from './context'
 
 const meta: Meta<typeof NavGroup> = {
     title: 'Sidebar/NavGroup',
@@ -11,9 +13,11 @@ const meta: Meta<typeof NavGroup> = {
     decorators: [
         (Story) => (
             <MemoryRouter>
-                <div style={{ width: 240, background: 'var(--bg)', padding: 12 }}>
-                    <Story />
-                </div>
+                <SidebarContext.Provider value={{ expanded: true, toggleExpanded: () => {} }}>
+                    <div style={{ width: 240, background: 'var(--bg)', padding: 12 }}>
+                        <Story />
+                    </div>
+                </SidebarContext.Provider>
             </MemoryRouter>
         ),
     ],
@@ -22,60 +26,62 @@ const meta: Meta<typeof NavGroup> = {
 export default meta
 type Story = StoryObj<typeof NavGroup>
 
-const sampleGroup = {
-    id: 'componentes',
-    icon: LuBlocks,
-    label: 'Componentes',
-    basePath: '/componentes',
-    children: [
-        { to: '/componentes/web', icon: LuMonitor, label: 'Web' },
-        { to: '/componentes/movil', icon: LuSmartphone, label: 'Móvil' },
-    ],
-}
-
-const largeGroup = {
-    id: 'diseno',
-    icon: LuPalette,
-    label: 'Diseño',
-    basePath: '/diseno',
-    children: [
-        { to: '/diseno/colores', icon: LuPalette, label: 'Colores' },
-        { to: '/diseno/tipografia', icon: LuFileText, label: 'Tipografía' },
-        { to: '/diseno/iconos', icon: LuMonitor, label: 'Iconos' },
-        { to: '/diseno/espaciado', icon: LuSmartphone, label: 'Espaciado' },
-    ],
-}
-
 export const Closed: Story = {
     args: {
-        group: sampleGroup,
+        icon: LuBlocks,
+        label: 'Componentes',
         open: false,
         active: false,
-        expanded: true,
         onToggle: () => {},
-        isChildActive: () => false,
+        children: (
+            <>
+                <NavItem to="/componentes/web" icon={LuMonitor} label="Web" />
+                <NavItem to="/componentes/movil" icon={LuSmartphone} label="Móvil" />
+            </>
+        ),
     },
 }
 
 export const Open: Story = {
     args: {
-        group: sampleGroup,
+        icon: LuBlocks,
+        label: 'Componentes',
         open: true,
         active: true,
-        expanded: true,
         onToggle: () => {},
-        isChildActive: (path: string) => path === '/componentes/web',
+        children: (
+            <>
+                <NavItem to="/componentes/web" icon={LuMonitor} label="Web" active />
+                <NavItem to="/componentes/movil" icon={LuSmartphone} label="Móvil" />
+            </>
+        ),
     },
 }
 
 export const Collapsed: Story = {
+    decorators: [
+        (Story) => (
+            <MemoryRouter>
+                <SidebarContext.Provider value={{ expanded: false, toggleExpanded: () => {} }}>
+                    <div style={{ width: 80, background: 'var(--bg)', padding: 12 }}>
+                        <Story />
+                    </div>
+                </SidebarContext.Provider>
+            </MemoryRouter>
+        ),
+    ],
     args: {
-        group: sampleGroup,
+        icon: LuBlocks,
+        label: 'Componentes',
         open: false,
         active: false,
-        expanded: false,
         onToggle: () => {},
-        isChildActive: () => false,
+        children: (
+            <>
+                <NavItem to="/componentes/web" icon={LuMonitor} label="Web" />
+                <NavItem to="/componentes/movil" icon={LuSmartphone} label="Móvil" />
+            </>
+        ),
     },
 }
 
@@ -84,13 +90,17 @@ export const Interactive: Story = {
         const [open, setOpen] = useState(false)
         return (
             <NavGroup
-                group={largeGroup}
+                icon={LuPalette}
+                label="Diseño"
                 open={open}
                 active={open}
-                expanded={true}
                 onToggle={() => setOpen(!open)}
-                isChildActive={(path) => path === '/diseno/colores'}
-            />
+            >
+                <NavItem to="/diseno/colores" icon={LuPalette} label="Colores" active={open} />
+                <NavItem to="/diseno/tipografia" icon={LuFileText} label="Tipografía" />
+                <NavItem to="/diseno/iconos" icon={LuMonitor} label="Iconos" />
+                <NavItem to="/diseno/espaciado" icon={LuSmartphone} label="Espaciado" />
+            </NavGroup>
         )
     },
 }

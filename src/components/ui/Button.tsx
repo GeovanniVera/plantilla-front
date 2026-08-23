@@ -11,7 +11,10 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     size?: ButtonSize
     shape?: ButtonShape
     animation?: ButtonAnimation
-    loading?: boolean
+    /** Override text/icon color */
+    color?: string
+    /** Override background color */
+    colorBg?: string
     children: ReactNode
 }
 
@@ -20,19 +23,25 @@ export default function Button({
     size = 'md',
     shape = 'default',
     animation = 'none',
-    loading = false,
+    color,
+    colorBg,
     children,
     className,
     disabled,
+    style,
     ...props
 }: ButtonProps) {
+    const customStyle = (color || colorBg)
+        ? { ...style, ...(color ? { color } : {}), ...(colorBg ? { background: colorBg } : {}) }
+        : style
+
     return (
         <button
-            className={`${styles.button} ${styles[variant]} ${styles[size]} ${styles[shape]} ${animation !== 'none' ? styles[`anim_${animation}`] : ''} ${loading ? styles.loading : ''} ${className ?? ''}`}
-            disabled={disabled || loading}
+            className={`${styles.button} ${styles[variant]} ${styles[size]} ${styles[shape]} ${animation !== 'none' ? styles[`anim_${animation}`] : ''} ${className ?? ''}`}
+            disabled={disabled}
+            style={customStyle}
             {...props}
         >
-            {loading && <span className={styles.spinner} />}
             {children}
         </button>
     )

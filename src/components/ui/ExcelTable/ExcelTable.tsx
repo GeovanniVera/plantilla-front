@@ -4,9 +4,20 @@ import type { Column } from '../Table/types'
 import { useTableFilters } from '../Table/hooks/useTableFilters'
 import { useTablePagination } from '../Table/hooks/useTablePagination'
 import FilterDropdown from '../Table/FilterDropdown'
+import { FilterBar } from '../Table/FilterBar'
 import Pagination from '../Pagination/Pagination'
+import { SelectEditor, BooleanEditor } from './CellEditors'
 import styles from './ExcelTable.module.css'
 import composeStyles from '../Table/DataTable.module.css'
+import tableStyles from '../Table/Table.module.css'
+
+/** Mapping de nombres de clase a CSS module classes */
+const ROW_CLASS_MAP: Record<string, string> = {
+    rowDanger: tableStyles.rowDanger,
+    rowWarning: tableStyles.rowWarning,
+    rowSuccess: tableStyles.rowSuccess,
+    rowInfo: tableStyles.rowInfo,
+}
 
 export default function ExcelTable<T extends object>({
     columns,
@@ -17,6 +28,8 @@ export default function ExcelTable<T extends object>({
     filters: enableFilters = false,
     pagination: enablePagination = false,
     pageSize: initialPageSize = 10,
+    rowClassName,
+    rowStyle,
 }: ExcelTableProps<T>) {
     // ─── Edit state ───────────────────────────────────
     const [selected, setSelected] = useState<CellPosition | null>(null)
@@ -60,10 +73,13 @@ export default function ExcelTable<T extends object>({
                         <span>{col.header}</span>
                         <FilterDropdown
                             header={col.header}
+                            filterType={fProps.filterType}
                             uniqueValues={fProps.uniqueValues}
                             selectedValues={fProps.selectedValues}
+                            numericRange={fProps.numericRange}
                             hasFilter={fProps.hasFilter}
                             onChange={fProps.onFilterChange}
+                            onNumericChange={fProps.onNumericChange}
                             onClear={fProps.onFilterClear}
                         />
                     </div>
@@ -169,30 +185,13 @@ export default function ExcelTable<T extends object>({
         }
     }, [selected, editing, displayData, composedColumns, readOnly, commitEdit, cancelEdit, handleCellDoubleClick, getCellValue])
 
-    // ─── Empty state ──────────────────────────────────
-    if (displayData.length === 0) {
-        return (
-            <div className={composeStyles.container}>
-                <div className={styles.empty}>
-                    <div className={styles.emptyIcon}>∅</div>
-                    <p className={styles.emptyTitle}>Sin datos</p>
-                    <p className={styles.emptyDesc}>No hay registros para mostrar.</p>
-                </div>
-            </div>
-        )
-    }
-
     // ─── Render ───────────────────────────────────────
     return (
         <div className={composeStyles.container}>
-            {enableFilters && hasActiveFilters && (
-                <div className={composeStyles.activeFiltersBar}>
-                    <span className={composeStyles.filterLabel}>Filtros activos</span>
-                    <button className={composeStyles.clearAllBtn} onClick={clearAllFilters}>
-                        Limpiar todos
-                    </button>
-                </div>
-            )}
+            <FilterBar
+                hasActiveFilters={enableFilters && hasActiveFilters}
+                onClearAll={clearAllFilters}
+            />
 
             <div className={styles.wrapper} onKeyDown={handleKeyDown} tabIndex={0} role="grid" aria-label="Tabla de datos">
                 <table ref={tableRef} className={styles.table}>
@@ -214,50 +213,87 @@ export default function ExcelTable<T extends object>({
                         </tr>
                     </thead>
                     <tbody>
-                        {displayData.map((row, rowIndex) => (
-                            <tr key={keyExtractor(row, rowIndex)}>
-                                <td className={styles.rowHeader}>{rowIndex + 1}</td>
-                                {composedColumns.map((col, colIndex) => {
-                                    const isSelected = selected?.row === rowIndex && selected?.col === colIndex
-                                    const isEditing = editing?.row === rowIndex && editing?.col === colIndex
-                                    const value = getCellValue(row, col.key)
-
-                                    return (
-                                        <td
-                                            key={col.key}
-                                            className={[
-                                                styles.td,
-                                                isSelected && !isEditing ? styles.selected : '',
-                                                isEditing ? styles.editing : '',
-                                            ].filter(Boolean).join(' ')}
-                                            style={{ textAlign: col.align ?? 'left' }}
-                                            role="gridcell"
-                                            tabIndex={isSelected ? 0 : -1}
-                                            aria-selected={isSelected}
-                                            onClick={() => handleCellClick(rowIndex, colIndex)}
-                                            onDoubleClick={() => handleCellDoubleClick(rowIndex, colIndex, value)}
-                                        >
-                                            {isEditing ? (
-                                                <input
-                                                    ref={inputRef}
-                                                    type="text"
-                                                    className={styles.input}
-                                                    value={editValue}
-                                                    onChange={(e) => setEditValue(e.target.value)}
-                                                    onBlur={commitEdit}
-                                                />
-                                            ) : (
-                                                <span className={styles.cellContent}>
-                                                    {col.render
-                                                        ? col.render(value, row, rowIndex)
-                                                        : value}
-                                                </span>
-                                            )}
-                                        </td>
-                                    )
-                                })}
+                        {displayData.length === 0 ? (
+                            <tr>
+                                <td colSpan={composedColumns.length + 1} className={styles.td}>
+                                    <div className={styles.empty}>
+                                        <div className={styles.emptyIcon}>∅</div>
+                                        <p className={styles.emptyTitle}>Sin datos</p>
+                                        <p className={styles.emptyDesc}>No hay registros para mostrar.</p>
+                                    </div>
+                                </td>
                             </tr>
-                        ))}
+                        ) : displayData.map((row, rowIndex) => {
+                            const rawClass = rowClassName?.(row, rowIndex)
+                            const conditionalClass = rawClass ? ROW_CLASS_MAP[rawClass] ?? rawClass : undefined
+                            const conditionalStyle = rowStyle?.(row, rowIndex)
+
+                            return (
+                                <tr
+                                    key={keyExtractor(row, rowIndex)}
+                                    className={conditionalClass}
+                                    style={conditionalStyle}
+                                >
+                                    <td className={styles.rowHeader}>{rowIndex + 1}</td>
+                                    {composedColumns.map((col, colIndex) => {
+                                        const isSelected = selected?.row === rowIndex && selected?.col === colIndex
+                                        const isEditing = editing?.row === rowIndex && editing?.col === colIndex
+                                        const value = getCellValue(row, col.key)
+
+                                        return (
+                                            <td
+                                                key={col.key}
+                                                className={[
+                                                    styles.td,
+                                                    isSelected && !isEditing ? styles.selected : '',
+                                                    isEditing ? styles.editing : '',
+                                                ].filter(Boolean).join(' ')}
+                                                style={{ textAlign: col.align ?? 'left' }}
+                                                role="gridcell"
+                                                tabIndex={isSelected ? 0 : -1}
+                                                aria-selected={isSelected}
+                                                onClick={() => handleCellClick(rowIndex, colIndex)}
+                                                onDoubleClick={() => handleCellDoubleClick(rowIndex, colIndex, value)}
+                                            >
+                                                {isEditing ? (
+                                                    col.filterType === 'select' && col.filterOptions ? (
+                                                        <SelectEditor
+                                                            value={value}
+                                                            options={col.filterOptions}
+                                                            onChange={setEditValue}
+                                                            onCommit={commitEdit}
+                                                            onCancel={cancelEdit}
+                                                        />
+                                                    ) : col.filterType === 'boolean' ? (
+                                                        <BooleanEditor
+                                                            value={value}
+                                                            onChange={setEditValue}
+                                                            onCommit={commitEdit}
+                                                            onCancel={cancelEdit}
+                                                        />
+                                                    ) : (
+                                                        <input
+                                                            ref={inputRef}
+                                                            type="text"
+                                                            className={styles.input}
+                                                            value={editValue}
+                                                            onChange={(e) => setEditValue(e.target.value)}
+                                                            onBlur={commitEdit}
+                                                        />
+                                                    )
+                                                ) : (
+                                                    <span className={styles.cellContent}>
+                                                        {col.render
+                                                            ? col.render(value, row, rowIndex)
+                                                            : value}
+                                                    </span>
+                                                )}
+                                            </td>
+                                        )
+                                    })}
+                                </tr>
+                            )
+                        })}
                     </tbody>
                 </table>
             </div>

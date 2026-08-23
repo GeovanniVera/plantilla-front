@@ -1,89 +1,10 @@
-import { useState, useCallback } from 'react'
-import { LuCopy, LuCheck, LuFileCode2 } from 'react-icons/lu'
+import { useState } from 'react'
+import { LuUser, LuSettings } from 'react-icons/lu'
 import { Modal, Drawer, DrawerStack } from '../components/ui/Modal'
 import { useToast } from '../components/ui/Toast'
+import Button from '../components/ui/Button'
+import { ExampleCard } from '../components/ui/Showcase'
 import styles from './TablesShowcase.module.css'
-
-// ─── Copy Button ──────────────────────────────────────────
-function CopyButton({ text }: { text: string }) {
-    const [copied, setCopied] = useState(false)
-    const handleCopy = useCallback(async () => {
-        await navigator.clipboard.writeText(text)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }, [text])
-    return (
-        <button className={styles.copyBtn + (copied ? ' ' + styles.copyBtnCopied : '')} onClick={handleCopy}>
-            {copied ? <LuCheck size={14} /> : <LuCopy size={14} />}
-            {copied ? 'Copiado' : 'Copiar'}
-        </button>
-    )
-}
-
-function CodeBlock({ filename, code }: { filename: string; code: string }) {
-    return (
-        <div className={styles.codeBlock}>
-            <div className={styles.codeHeader}>
-                <span className={styles.codeFilename}>
-                    <span className={styles.codeFilenameIcon}><LuFileCode2 size={14} /></span>
-                    {filename}
-                </span>
-                <CopyButton text={code} />
-            </div>
-            <pre className={styles.codeContent}>{code}</pre>
-        </div>
-    )
-}
-
-// ─── Example Card ─────────────────────────────────────────
-function ExampleCard({ title, desc, children, code, filename }: {
-    title: string
-    desc: string
-    children: React.ReactNode
-    code: string
-    filename: string
-}) {
-    const [showCode, setShowCode] = useState(false)
-    return (
-        <div style={{
-            border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden',
-            background: 'var(--bg)', marginBottom: 24,
-        }}>
-            <div style={{ padding: '20px 24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <div>
-                        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-h)', marginBottom: 2 }}>{title}</div>
-                        <div style={{ fontSize: 13, color: 'var(--text)' }}>{desc}</div>
-                    </div>
-                    <button
-                        onClick={() => setShowCode(!showCode)}
-                        style={{
-                            padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)',
-                            background: showCode ? 'var(--accent-bg)' : 'var(--code-bg)',
-                            color: showCode ? 'var(--accent)' : 'var(--text)',
-                            fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--sans)',
-                            display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
-                            transition: 'all 0.15s',
-                        }}
-                    >
-                        <LuFileCode2 size={14} />
-                        {showCode ? 'Ver ejemplo' : 'Ver código'}
-                    </button>
-                </div>
-                {showCode ? (
-                    <CodeBlock filename={filename} code={code} />
-                ) : (
-                    <div style={{
-                        padding: 24, borderRadius: 10, background: 'var(--code-bg)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 80,
-                    }}>
-                        {children}
-                    </div>
-                )}
-            </div>
-        </div>
-    )
-}
 
 // ─── Code Snippets ────────────────────────────────────────
 const CODE = {
@@ -401,7 +322,7 @@ export default function ComponentesModales() {
             <div className={styles.section}>
                 <h2 className={styles.sectionTitle}>Modales</h2>
                 <p className={styles.sectionDesc}>
-                    Diálogos centrados con backdrop blur. Se cierran con ✕, clic fuera del overlay, o tecla Escape. Composición: Header, Body, Footer.
+                    Diálogos centrados con backdrop blur. Se cierran con clic fuera del overlay o tecla Escape. Composición: Header, Body, Footer.
                 </p>
 
                 {/* Modal básico */}
@@ -411,16 +332,7 @@ export default function ComponentesModales() {
                     filename="MyModal.tsx"
                     code={CODE.modal}
                 >
-                    <button
-                        onClick={() => setModalOpen(true)}
-                        style={{
-                            padding: '10px 24px', borderRadius: 8, border: 'none',
-                            background: 'var(--accent)', color: '#fff', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}
-                    >
-                        Abrir Modal
-                    </button>
+                    <Button onClick={() => setModalOpen(true)}>Abrir Modal</Button>
                 </ExampleCard>
 
                 <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} width={480}>
@@ -431,11 +343,7 @@ export default function ComponentesModales() {
                         </p>
                     </Modal.Body>
                     <Modal.Footer>
-                        <button onClick={() => setModalOpen(false)} style={{
-                            padding: '8px 20px', borderRadius: 8, border: 'none',
-                            background: 'var(--accent)', color: '#fff', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}>Cerrar</button>
+                        <Button onClick={() => setModalOpen(false)}>Cerrar</Button>
                     </Modal.Footer>
                 </Modal>
 
@@ -446,16 +354,7 @@ export default function ComponentesModales() {
                     filename="EditUserModal.tsx"
                     code={CODE.modalForm}
                 >
-                    <button
-                        onClick={() => setModalFormOpen(true)}
-                        style={{
-                            padding: '10px 24px', borderRadius: 8, border: 'none',
-                            background: 'var(--accent)', color: '#fff', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}
-                    >
-                        Editar usuario
-                    </button>
+                    <Button onClick={() => setModalFormOpen(true)}>Editar usuario</Button>
                 </ExampleCard>
 
                 <Modal isOpen={modalFormOpen} onClose={() => setModalFormOpen(false)} width={480}>
@@ -477,19 +376,11 @@ export default function ComponentesModales() {
                         </div>
                     </Modal.Body>
                     <Modal.Footer>
-                        <button onClick={() => setModalFormOpen(false)} style={{
-                            padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border)',
-                            background: 'var(--bg)', color: 'var(--text-h)', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}>Cancelar</button>
-                        <button onClick={() => {
+                        <Button variant="secondary" onClick={() => setModalFormOpen(false)}>Cancelar</Button>
+                        <Button onClick={() => {
                             setModalFormOpen(false)
                             toast.success('Usuario actualizado correctamente')
-                        }} style={{
-                            padding: '8px 20px', borderRadius: 8, border: 'none',
-                            background: 'var(--accent)', color: '#fff', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}>Guardar</button>
+                        }}>Guardar</Button>
                     </Modal.Footer>
                 </Modal>
             </div>
@@ -512,16 +403,7 @@ export default function ComponentesModales() {
                     filename="MyDrawer.tsx"
                     code={CODE.drawer}
                 >
-                    <button
-                        onClick={() => setDrawerOpen(true)}
-                        style={{
-                            padding: '10px 24px', borderRadius: 8, border: 'none',
-                            background: 'var(--accent)', color: '#fff', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}
-                    >
-                        Abrir Drawer
-                    </button>
+                    <Button onClick={() => setDrawerOpen(true)}>Abrir Drawer</Button>
                 </ExampleCard>
 
                 <Drawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} width={480}>
@@ -532,11 +414,7 @@ export default function ComponentesModales() {
                         </p>
                     </Drawer.Body>
                     <Drawer.Footer>
-                        <button onClick={() => setDrawerOpen(false)} style={{
-                            padding: '8px 20px', borderRadius: 8, border: 'none',
-                            background: 'var(--accent)', color: '#fff', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}>Cerrar</button>
+                        <Button onClick={() => setDrawerOpen(false)}>Cerrar</Button>
                     </Drawer.Footer>
                 </Drawer>
 
@@ -547,16 +425,7 @@ export default function ComponentesModales() {
                     filename="UserExplorer.tsx"
                     code={CODE.drawerStack}
                 >
-                    <button
-                        onClick={() => setStackOpen(true)}
-                        style={{
-                            padding: '10px 24px', borderRadius: 8, border: 'none',
-                            background: 'var(--accent)', color: '#fff', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--sans)',
-                        }}
-                    >
-                        Abrir DrawerStack
-                    </button>
+                    <Button onClick={() => setStackOpen(true)}>Abrir DrawerStack</Button>
                 </ExampleCard>
 
                 <DrawerStack
@@ -579,23 +448,21 @@ export default function ComponentesModales() {
                                 { id: 2, name: 'Carlos López', email: 'carlos@email.com' },
                                 { id: 3, name: 'María Ruiz', email: 'maria@email.com' },
                             ].map((user) => (
-                                <button
+                                <Button
                                     key={user.id}
+                                    variant="secondary"
                                     onClick={() => { setStackSelected(user); setStackLevel(1) }}
                                     style={{
-                                        padding: '12px 16px', border: '1px solid var(--border)',
-                                        borderRadius: 8, background: 'var(--bg)', cursor: 'pointer',
-                                        textAlign: 'left', fontSize: 14, fontWeight: 500,
-                                        color: 'var(--text-h)', fontFamily: 'var(--sans)',
-                                        display: 'flex', alignItems: 'center', gap: 10,
+                                        justifyContent: 'flex-start', gap: 10, height: 'auto',
+                                        padding: '12px 16px',
                                     }}
                                 >
-                                    <span style={{ fontSize: 18 }}>👤</span>
+                                    <LuUser size={18} />
                                     <div>
                                         <div style={{ fontWeight: 600 }}>{user.name}</div>
                                         <div style={{ fontSize: 12, color: 'var(--text)', opacity: 0.6 }}>{user.email}</div>
                                     </div>
-                                </button>
+                                </Button>
                             ))}
                         </div>
                     )}
@@ -606,17 +473,13 @@ export default function ComponentesModales() {
                                 <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-h)', marginBottom: 4 }}>{stackSelected.name}</div>
                                 <div style={{ fontSize: 13, color: 'var(--text)' }}>{stackSelected.email}</div>
                             </div>
-                            <button
+                            <Button
+                                variant="secondary"
                                 onClick={() => setStackLevel(2)}
-                                style={{
-                                    padding: '12px 16px', border: '1px solid var(--border)',
-                                    borderRadius: 8, background: 'var(--bg)', cursor: 'pointer',
-                                    textAlign: 'left', fontSize: 13, color: 'var(--text-h)',
-                                    fontFamily: 'var(--sans)', display: 'flex', alignItems: 'center', gap: 8,
-                                }}
+                                style={{ justifyContent: 'flex-start', gap: 8 }}
                             >
-                                ⚙️ Configuración →
-                            </button>
+                                <LuSettings size={16} /> Configuración →
+                            </Button>
                         </div>
                     )}
 

@@ -199,3 +199,62 @@
         display: none;
     }
 }
+
+/* ================================
+   MOBILE BOTTOM BAR
+   ================================ */
+.mobileBar {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobileBar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 80;
+        height: 56px;
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+        align-items: center;
+        justify-content: space-around;
+        padding: 0 8px;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .mobileItem {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+        text-decoration: none;
+    }
+
+    .mobileItem:hover {
+        background: var(--accent-bg);
+        color: var(--accent);
+    }
+
+    .mobileItemActive {
+        background: var(--accent-bg);
+        color: var(--accent);
+    }
+
+    .mobileItemDanger {
+        color: #dc2626;
+    }
+
+    .mobileItemDanger:hover {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+    }
+}

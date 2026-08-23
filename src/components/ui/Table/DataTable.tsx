@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import Table from './Table'
 import FilterDropdown from './FilterDropdown'
+import { FilterBar } from './FilterBar'
 import Pagination from '../Pagination/Pagination'
 import { useTableFilters } from './hooks/useTableFilters'
 import { useTablePagination } from './hooks/useTablePagination'
@@ -63,10 +64,13 @@ export default function DataTable<T extends object>({
                         <span>{col.header}</span>
                         <FilterDropdown
                             header={col.header}
+                            filterType={fProps.filterType}
                             uniqueValues={fProps.uniqueValues}
                             selectedValues={fProps.selectedValues}
+                            numericRange={fProps.numericRange}
                             hasFilter={fProps.hasFilter}
                             onChange={fProps.onFilterChange}
+                            onNumericChange={fProps.onNumericChange}
                             onClear={fProps.onFilterClear}
                         />
                     </div>
@@ -77,14 +81,10 @@ export default function DataTable<T extends object>({
 
     return (
         <div className={styles.container}>
-            {enableFilters && hasActiveFilters && (
-                <div className={styles.activeFiltersBar}>
-                    <span className={styles.filterLabel}>Filtros activos</span>
-                    <button className={styles.clearAllBtn} onClick={clearAllFilters}>
-                        Limpiar todos
-                    </button>
-                </div>
-            )}
+            <FilterBar
+                hasActiveFilters={enableFilters && hasActiveFilters}
+                onClearAll={clearAllFilters}
+            />
 
             <Table
                 columns={composedColumns}

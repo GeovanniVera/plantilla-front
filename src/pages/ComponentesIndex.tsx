@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { LuMousePointerClick, LuCreditCard, LuTable2, LuTextCursorInput, LuPanelRightOpen, LuBell, LuNavigation } from 'react-icons/lu'
+import { LuMousePointerClick, LuCreditCard, LuTable2, LuTextCursorInput, LuPanelRightOpen, LuBell, LuNavigation, LuCalendar } from 'react-icons/lu'
 import styles from './TablesShowcase.module.css'
 
 const components = [
@@ -10,6 +10,7 @@ const components = [
     { to: '/componentes/modales', icon: LuPanelRightOpen, label: 'Modales', desc: 'Modal centrado, Drawer lateral y ConfirmDialog' },
     { to: '/componentes/notificaciones', icon: LuBell, label: 'Notificaciones', desc: 'Toast/Snackbar con API imperativa y 4 variantes' },
     { to: '/componentes/navegacion', icon: LuNavigation, label: 'Navegación', desc: 'Tabs (3 variantes) y Breadcrumb responsive' },
+    { to: '/componentes/calendario', icon: LuCalendar, label: 'Calendario', desc: 'Componente de calendario con vista mensual y semanal' }
 ]
 
 export default function ComponentesIndex() {

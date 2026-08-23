@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MemoryRouter } from 'react-router'
 import { LuHouse, LuLogOut } from 'react-icons/lu'
 import NavItem from './NavItem'
+import { SidebarContext } from './context'
 
 const meta: Meta<typeof NavItem> = {
     title: 'Sidebar/NavItem',
@@ -10,9 +11,11 @@ const meta: Meta<typeof NavItem> = {
     decorators: [
         (Story) => (
             <MemoryRouter>
-                <div style={{ width: 240, background: 'var(--bg)', padding: 12 }}>
-                    <Story />
-                </div>
+                <SidebarContext.Provider value={{ expanded: true, toggleExpanded: () => {} }}>
+                    <div style={{ width: 240, background: 'var(--bg)', padding: 12 }}>
+                        <Story />
+                    </div>
+                </SidebarContext.Provider>
             </MemoryRouter>
         ),
     ],
@@ -23,32 +26,48 @@ type Story = StoryObj<typeof NavItem>
 
 export const Default: Story = {
     args: {
-        item: { to: '/', icon: LuHouse, label: 'Inicio' },
+        to: '/',
+        icon: LuHouse,
+        label: 'Inicio',
         active: false,
-        expanded: true,
     },
 }
 
 export const Active: Story = {
     args: {
-        item: { to: '/', icon: LuHouse, label: 'Inicio' },
+        to: '/',
+        icon: LuHouse,
+        label: 'Inicio',
         active: true,
-        expanded: true,
     },
 }
 
 export const Collapsed: Story = {
+    decorators: [
+        (Story) => (
+            <MemoryRouter>
+                <SidebarContext.Provider value={{ expanded: false, toggleExpanded: () => {} }}>
+                    <div style={{ width: 80, background: 'var(--bg)', padding: 12 }}>
+                        <Story />
+                    </div>
+                </SidebarContext.Provider>
+            </MemoryRouter>
+        ),
+    ],
     args: {
-        item: { to: '/', icon: LuHouse, label: 'Inicio' },
+        to: '/',
+        icon: LuHouse,
+        label: 'Inicio',
         active: false,
-        expanded: false,
     },
 }
 
 export const Danger: Story = {
     args: {
-        item: { to: '/logout', icon: LuLogOut, label: 'Cerrar sesión', danger: true },
+        to: '/logout',
+        icon: LuLogOut,
+        label: 'Cerrar sesión',
+        danger: true,
         active: false,
-        expanded: true,
     },
 }

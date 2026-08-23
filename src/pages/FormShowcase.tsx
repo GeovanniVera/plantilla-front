@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
-import { LuEye, LuCode, LuCopy, LuCheck, LuFileCode2, LuSettings2, LuRotateCcw, LuTrash2, LuPlus, LuChevronRight, LuApple, LuPaintbrush, LuSquarePen } from 'react-icons/lu'
+import { LuEye, LuCode, LuSettings2, LuRotateCcw, LuTrash2, LuPlus, LuChevronRight, LuApple, LuPaintbrush, LuSquarePen, LuStar } from 'react-icons/lu'
+import { CodeBlock } from '../components/ui/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Form Components ─────────────────────────────────────
@@ -76,36 +77,6 @@ const DEFAULT_SECTIONS: SectionConfig[] = [
 // ─── Helpers ─────────────────────────────────────────────
 const fieldToKey = (label: string) => label.toLowerCase().replace(/\s/g, '_')
 
-// ─── CopyButton ──────────────────────────────────────────
-function CopyButton({ text }: { text: string }) {
-    const [copied, setCopied] = useState(false)
-    const handleCopy = useCallback(async () => {
-        await navigator.clipboard.writeText(text)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }, [text])
-    return (
-        <button className={`${styles.copyBtn} ${copied ? styles.copyBtnCopied : ''}`} onClick={handleCopy}>
-            {copied ? <LuCheck size={14} /> : <LuCopy size={14} />}
-            {copied ? 'Copiado' : 'Copiar'}
-        </button>
-    )
-}
-
-function CodeBlock({ filename, code }: { filename: string; code: string }) {
-    return (
-        <div className={styles.codeBlock}>
-            <div className={styles.codeHeader}>
-                <span className={styles.codeFilename}>
-                    <span className={styles.codeFilenameIcon}><LuFileCode2 size={14} /></span>
-                    {filename}
-                </span>
-                <CopyButton text={code} />
-            </div>
-            <pre className={styles.codeContent}>{code}</pre>
-        </div>
-    )
-}
 
 // ─── Live Preview ────────────────────────────────────────
 function LivePreview({ config }: { config: FormConfig }) {
@@ -546,7 +517,7 @@ function ConfiguratorPanel({
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <span style={{ fontSize: '11px', color: field.required ? '#dc2626' : 'var(--text)', opacity: field.required ? 1 : 0.5 }}>
-                                            {field.required ? '★ Requerido (configurar en Campos)' : 'Opcional'}
+                                            {field.required ? <><LuStar size={10} /> Requerido (configurar en Campos)</> : 'Opcional'}
                                         </span>
                                         {['text', 'email', 'password', 'number', 'tel', 'textarea'].includes(field.type) && (
                                             <>

@@ -1,19 +1,43 @@
+import { type ElementType } from 'react'
 import { Link } from 'react-router'
 import styles from './NavItem.module.css'
-import type { NavItem as NavItemType } from './types'
+import { useSidebar } from './context'
 
 interface NavItemProps {
-    item: NavItemType
-    active: boolean
-    expanded?: boolean
+    /** Componente renderizador. Default: Link de react-router */
+    as?: ElementType
+    /** Props adicionales pasadas al componente renderizador */
+    to?: string
+    /** Icono del componente react-icons */
+    icon: ElementType
+    /** Texto de la etiqueta */
+    label: string
+    /** Estado activo */
+    active?: boolean
+    /** Estilo de peligro (rojo) */
+    danger?: boolean
+    /** Clase CSS adicional */
+    className?: string
 }
 
-export default function NavItem({ item, active, expanded }: NavItemProps) {
-    const className = [
+export default function NavItem({
+    as,
+    to,
+    icon: Icon,
+    label,
+    active = false,
+    danger = false,
+    className = '',
+}: NavItemProps) {
+    const { expanded } = useSidebar()
+    const Component = as || Link
+
+    const itemClass = [
         styles.item,
         expanded && styles.itemExpanded,
         active && styles.active,
-        item.danger && styles.danger,
+        danger && styles.danger,
+        className,
     ].filter(Boolean).join(' ')
 
     const textClass = [
@@ -21,10 +45,12 @@ export default function NavItem({ item, active, expanded }: NavItemProps) {
         expanded && styles.textVisible,
     ].filter(Boolean).join(' ')
 
+    const linkProps = to ? { to } : {}
+
     return (
-        <Link to={item.to} className={className}>
-            <item.icon size={20} className={styles.icon} />
-            <span className={textClass}>{item.label}</span>
-        </Link>
+        <Component {...linkProps} className={itemClass}>
+            <Icon size={20} className={styles.icon} />
+            <span className={textClass}>{label}</span>
+        </Component>
     )
 }

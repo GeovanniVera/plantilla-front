@@ -18,6 +18,10 @@ export interface ExcelTableProps<T extends object> {
     pagination?: boolean
     /** Items por página (default 10) */
     pageSize?: number
+    /** Clase CSS condicional para filas — formato condicional */
+    rowClassName?: (row: T, index: number) => string | undefined
+    /** Estilo inline condicional para filas */
+    rowStyle?: (row: T, index: number) => React.CSSProperties | undefined
 }
 
 /** Posición de una celda en la grilla */

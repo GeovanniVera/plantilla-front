@@ -1,0 +1,77 @@
+/* ================================
+   STATUS DOT — Variante: dot
+   ================================ */
+.dotContainer {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dot {
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dotSm {
+    width: 6px;
+    height: 6px;
+}
+
+.dotMd {
+    width: 8px;
+    height: 8px;
+}
+
+.label {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+}
+
+/* ================================
+   STATUS DOT — Variante: badge
+   ================================ */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.badgeSm {
+    padding: 1px 6px;
+    font-size: 11px;
+}
+
+.badgeMd {
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+/* ================================
+   STATUS DOT — Variante: full
+   ================================ */
+.full {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.fullSm {
+    padding: 1px 8px;
+    font-size: 11px;
+}
+
+.fullMd {
+    padding: 2px 10px;
+    font-size: 12px;
+}

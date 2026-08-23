@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { LuX, LuChevronLeft, LuChevronRight } from 'react-icons/lu'
 import { ModalContext } from './context'

@@ -1,22 +1,41 @@
-import { Link } from 'react-router'
+import { type ReactNode, type ElementType } from 'react'
 import { LuChevronDown } from 'react-icons/lu'
 import styles from './NavGroup.module.css'
-import type { GroupItem } from './types'
+import { useSidebar } from './context'
 
 interface NavGroupProps {
-    group: GroupItem
-    open: boolean
-    active: boolean
-    expanded?: boolean
-    onToggle: () => void
-    isChildActive: (path: string) => boolean
+    /** Icono del grupo */
+    icon: ElementType
+    /** Label del grupo */
+    label: string
+    /** Si el grupo está abierto */
+    open?: boolean
+    /** Si algún hijo está activo */
+    active?: boolean
+    /** Callback al hacer click en el toggle */
+    onToggle?: () => void
+    /** Contenido del grupo (NavItem u otros componentes) */
+    children: ReactNode
+    /** Clase CSS adicional */
+    className?: string
 }
 
-export default function NavGroup({ group, open, active, expanded, onToggle, isChildActive }: NavGroupProps) {
+export default function NavGroup({
+    icon: Icon,
+    label,
+    open = false,
+    active = false,
+    onToggle,
+    children,
+    className = '',
+}: NavGroupProps) {
+    const { expanded } = useSidebar()
+
     const toggleClass = [
         styles.toggle,
         expanded && styles.toggleExpanded,
         active && styles.active,
+        className,
     ].filter(Boolean).join(' ')
 
     const chevronClass = [
@@ -28,31 +47,16 @@ export default function NavGroup({ group, open, active, expanded, onToggle, isCh
     return (
         <div className={styles.group}>
             <button className={toggleClass} onClick={onToggle}>
-                <group.icon size={20} className={styles.icon} />
+                <Icon size={20} className={styles.icon} />
                 <span className={`${styles.label} ${expanded ? styles.labelVisible : ''}`}>
-                    {group.label}
+                    {label}
                 </span>
                 <LuChevronDown size={16} className={chevronClass} />
             </button>
 
             <div className={`${styles.subNav} ${open ? styles.subNavOpen : ''}`}>
                 <div className={styles.subNavInner}>
-                    {group.children.map((item) => {
-                        const subClass = [
-                            styles.subItem,
-                            expanded && styles.subItemExpanded,
-                            isChildActive(item.to) && styles.subItemActive,
-                        ].filter(Boolean).join(' ')
-
-                        return (
-                            <Link key={item.to} to={item.to} className={subClass}>
-                                <item.icon size={16} className={styles.subIcon} />
-                                <span className={`${styles.subLabel} ${expanded ? styles.subLabelVisible : ''}`}>
-                                    {item.label}
-                                </span>
-                            </Link>
-                        )
-                    })}
+                    {children}
                 </div>
             </div>
         </div>

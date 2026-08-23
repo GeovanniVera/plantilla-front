@@ -1,0 +1,433 @@
+/* ================================
+   CALENDAR VIEW
+   Estilo: Untitled UI / Corporativo moderno
+   ================================ */
+
+/* ─── Container ──────────────────────────────────────── */
+.calendar {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* ─── Header ─────────────────────────────────────────── */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dateBlock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.dateBlockDay {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.dateBlockMonth {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
+}
+
+.headerTitle {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.monthTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-h);
+    line-height: 1.2;
+}
+
+.monthRange {
+    font-size: 12px;
+    color: var(--text);
+    opacity: 0.5;
+}
+
+.weekBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    opacity: 0.6;
+}
+
+.headerRight {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ─── Navigation Buttons ─────────────────────────────── */
+.navBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.navBtn:hover {
+    background: var(--code-bg);
+    border-color: var(--accent-border);
+}
+
+.navBtnText {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.navBtnText:hover {
+    background: var(--code-bg);
+    border-color: var(--accent-border);
+}
+
+.addBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.addBtn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* ─── Weekday Headers ────────────────────────────────── */
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-bottom: 1px solid var(--border);
+}
+
+.weekday {
+    padding: 10px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    opacity: 0.45;
+    text-align: left;
+}
+
+/* ─── Month Grid ─────────────────────────────────────── */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+/* ─── Day Cell ───────────────────────────────────────── */
+.cell {
+    min-height: 100px;
+    padding: 8px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    transition: background 0.1s;
+    position: relative;
+}
+
+.cell:nth-child(7n) {
+    border-right: none;
+}
+
+.cell:hover {
+    background: var(--code-bg);
+}
+
+.cellToday {
+    background: var(--accent-bg);
+}
+
+.cellToday:hover {
+    background: var(--accent-bg);
+}
+
+/* Días de otros meses (ghost) */
+.cellOutside {
+    background: transparent;
+}
+
+.cellOutside .dayNumber {
+    opacity: 0.25;
+}
+
+/* Drag target */
+.cellDragOver {
+    background: var(--accent-bg);
+    outline: 2px dashed var(--accent);
+    outline-offset: -2px;
+}
+
+/* ─── Day Number ─────────────────────────────────────── */
+.dayNumber {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.dayNumberToday {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* ─── Events Container ───────────────────────────────── */
+.events {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* ─── Event Pill ─────────────────────────────────────── */
+.pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 3px 6px;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: grab;
+    transition: all 0.12s;
+    border: 1px solid transparent;
+}
+
+.pill:hover {
+    transform: translateX(1px);
+    border-color: currentColor;
+}
+
+.pill:active {
+    cursor: grabbing;
+    opacity: 0.7;
+}
+
+.pillDragging {
+    opacity: 0.4;
+}
+
+.pillTitle {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+}
+
+.pillTime {
+    font-weight: 500;
+    opacity: 0.7;
+    white-space: nowrap;
+    font-size: 10px;
+}
+
+/* Color variants */
+.pillBlue {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+}
+
+.pillGreen {
+    background: rgba(34, 197, 94, 0.12);
+    color: #16a34a;
+}
+
+.pillPurple {
+    background: rgba(139, 92, 246, 0.12);
+    color: #7c3aed;
+}
+
+.pillPink {
+    background: rgba(236, 72, 153, 0.12);
+    color: #db2777;
+}
+
+.pillYellow {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+}
+
+.pillRed {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+}
+
+.pillGray {
+    background: rgba(107, 114, 128, 0.12);
+    color: #6b7280;
+}
+
+/* ─── Overflow Indicator ─────────────────────────────── */
+.overflow {
+    display: flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text);
+    opacity: 0.5;
+    cursor: pointer;
+    transition: opacity 0.12s;
+}
+
+.overflow:hover {
+    opacity: 0.8;
+    background: var(--code-bg);
+}
+
+/* ══════════════════════════════════════════════════════
+   MOBILE — Lista vertical por día
+   ══════════════════════════════════════════════════════ */
+.mobileList {
+    display: flex;
+    flex-direction: column;
+}
+
+.mobileDay {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+}
+
+.mobileDay:hover {
+    background: var(--code-bg);
+}
+
+.mobileDayToday {
+    background: var(--accent-bg);
+}
+
+.mobileDayHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.mobileDayLeft {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mobileDayNum {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-h);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.mobileDayNumToday {
+    background: var(--accent);
+    color: #fff;
+}
+
+.mobileDayName {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    opacity: 0.6;
+    text-transform: capitalize;
+}
+
+.mobileDayCount {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    opacity: 0.4;
+    background: var(--code-bg);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.mobileEvents {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 4px;
+}
+
+/* Mobile pills — más anchos */
+.mobileEvents .pill {
+    max-width: none;
+}
+
+.mobileEvents .pillTitle {
+    max-width: none;
+}

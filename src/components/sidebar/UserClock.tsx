@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react'
 import styles from './UserClock.module.css'
-
-interface UserClockProps {
-    expanded: boolean
-}
+import { useSidebar } from './context'
 
 function formatTime(date: Date) {
     return date.toLocaleTimeString('es-ES', {
@@ -21,7 +18,8 @@ function formatDate(date: Date) {
     })
 }
 
-export default function UserClock({ expanded }: UserClockProps) {
+export default function UserClock() {
+    const { expanded } = useSidebar()
     const [now, setNow] = useState(new Date())
 
     useEffect(() => {

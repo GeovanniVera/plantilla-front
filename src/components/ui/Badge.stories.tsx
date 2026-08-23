@@ -1,16 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { LuCheck, LuTriangleAlert, LuInfo } from 'react-icons/lu'
 import Badge from './Badge'
 
 const meta: Meta<typeof Badge> = {
     title: 'UI/Badge',
     component: Badge,
     tags: ['autodocs'],
-    argTypes: {
-        variant: {
-            control: 'select',
-            options: ['default', 'success', 'warning', 'info'],
-        },
-    },
 }
 
 export default meta
@@ -42,6 +37,25 @@ export const Info: Story = {
         children: 'Info',
         variant: 'info',
     },
+}
+
+export const WithIcon: Story = {
+    render: () => (
+        <div style={{ display: 'flex', gap: 8 }}>
+            <Badge variant="success">
+                <Badge.Icon><LuCheck size={12} /></Badge.Icon>
+                Activo
+            </Badge>
+            <Badge variant="warning">
+                <Badge.Icon><LuTriangleAlert size={12} /></Badge.Icon>
+                Pendiente
+            </Badge>
+            <Badge variant="info">
+                <Badge.Icon><LuInfo size={12} /></Badge.Icon>
+                Info
+            </Badge>
+        </div>
+    ),
 }
 
 export const AllVariants: Story = {

@@ -1,0 +1,142 @@
+/* ================================
+   CODE BLOCK
+   ================================ */
+.codeBlock {
+    position: relative;
+    background: #1e1e2e;
+    border: 1px solid #313244;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.codeHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #181825;
+    border-bottom: 1px solid #313244;
+}
+
+.codeFilename {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #a6adc8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.codeFilenameIcon {
+    display: flex;
+    color: #89b4fa;
+}
+
+.copyBtn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border: 1px solid #45475a;
+    border-radius: 6px;
+    background: transparent;
+    color: #a6adc8;
+    font-size: 12px;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.copyBtn:hover {
+    background: #313244;
+    color: #cdd6f4;
+    border-color: #585b70;
+}
+
+.copyBtnCopied {
+    color: #a6e3a1;
+    border-color: #a6e3a1;
+}
+
+.codeContent {
+    padding: 16px 20px;
+    margin: 0;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #cdd6f4;
+    white-space: pre;
+    tab-size: 2;
+}
+
+/* ================================
+   EXAMPLE CARD
+   ================================ */
+.exampleCard {
+    margin-bottom: 24px;
+}
+
+.exampleCardBody {
+    padding: 20px 24px;
+}
+
+.exampleCardTop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.exampleCardInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.exampleCardTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-h);
+}
+
+.exampleCardDesc {
+    font-size: 13px;
+    color: var(--text);
+}
+
+.codeToggleBtn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--sans);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    transition: all 0.15s;
+}
+
+.codeToggleBtnIdle {
+    background: var(--code-bg);
+    color: var(--text);
+}
+
+.codeToggleBtnActive {
+    background: var(--accent-bg);
+    color: var(--accent);
+}
+
+.previewArea {
+    padding: 24px;
+    border-radius: 10px;
+    background: var(--code-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    overflow: visible;
+}

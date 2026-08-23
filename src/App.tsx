@@ -9,6 +9,10 @@ import ComponentesModales from './pages/ComponentesModales';
 import ComponentesNotificaciones from './pages/ComponentesNotificaciones';
 import ComponentesNavegacion from './pages/ComponentesNavegacion';
 import BrandColorSettings from './theme/BrandColorSettings';
+import AjustesIndex from './pages/AjustesIndex';
+import Auditoria from './pages/Auditoria';
+import ComponentesCalendario from './pages/ComponentesCalendario';
+import DemoCalendarioDocente from './pages/DemoCalendarioDocente';
 
 
 function App() {
@@ -24,7 +28,11 @@ function App() {
         <Route path="/componentes/modales" element={<ComponentesModales />} />
         <Route path="/componentes/notificaciones" element={<ComponentesNotificaciones />} />
         <Route path="/componentes/navegacion" element={<ComponentesNavegacion />} />
-        <Route path="/ajustes" element={<div style={{ padding: 32 }}><BrandColorSettings /></div>} />
+        <Route path="/componentes/calendario" element={<ComponentesCalendario />} />
+        <Route path="/calendario" element={<DemoCalendarioDocente />} />
+        <Route path="/ajustes" element={<AjustesIndex />} />
+        <Route path="/ajustes/colores" element={<div style={{ padding: 32 }}><BrandColorSettings /></div>} />
+        <Route path="/auditoria" element={<Auditoria />} />
       </Route>
     </Routes>
   );

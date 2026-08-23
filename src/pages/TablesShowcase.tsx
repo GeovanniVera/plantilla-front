@@ -1,10 +1,15 @@
 import { useState, useMemo, useCallback } from 'react'
-import { LuEye, LuCode, LuCopy, LuCheck, LuFileCode2, LuSettings2, LuRotateCcw } from 'react-icons/lu'
+import { LuEye, LuCode, LuSettings2, LuRotateCcw } from 'react-icons/lu'
+import { CodeBlock } from '../components/ui/Showcase'
 import styles from './TablesShowcase.module.css'
 
 // ─── Components ──────────────────────────────────────────
 import DataTable from '../components/ui/Table/DataTable'
 import ExcelTable from '../components/ui/ExcelTable/ExcelTable'
+import { DensitySelector, type Density } from '../components/ui/Table/DensitySelector'
+import { SearchHighlight } from '../components/ui/Table/SearchHighlight'
+import { ColumnToggle } from '../components/ui/Table/ColumnToggle'
+import { BulkActionsBar } from '../components/ui/Table/BulkActionsBar'
 
 // ─── Data ────────────────────────────────────────────────
 import {
@@ -28,6 +33,11 @@ interface BuilderConfig {
     dataMode: DataMode
     filters: boolean
     pagination: boolean
+    conditionalFormatting: boolean
+    search: boolean
+    density: boolean
+    columnToggle: boolean
+    bulkActions: boolean
 }
 
 const DEFAULT_CONFIG: BuilderConfig = {
@@ -36,6 +46,11 @@ const DEFAULT_CONFIG: BuilderConfig = {
     dataMode: 'client',
     filters: false,
     pagination: false,
+    conditionalFormatting: false,
+    search: false,
+    density: false,
+    columnToggle: false,
+    bulkActions: false,
 }
 
 // ─── Dataset Options ─────────────────────────────────────
@@ -51,44 +66,6 @@ const TABLE_TYPES: Record<TableType, { label: string; description: string; edita
     exceltable: { label: 'ExcelTable', description: 'Editable — cuadrícula densa tipo hoja de cálculo', editable: true },
 }
 
-// ─── CopyButton ──────────────────────────────────────────
-function CopyButton({ text }: { text: string }) {
-    const [copied, setCopied] = useState(false)
-
-    const handleCopy = useCallback(async () => {
-        await navigator.clipboard.writeText(text)
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-    }, [text])
-
-    return (
-        <button
-            className={`${styles.copyBtn} ${copied ? styles.copyBtnCopied : ''}`}
-            onClick={handleCopy}
-        >
-            {copied ? <LuCheck size={14} /> : <LuCopy size={14} />}
-            {copied ? 'Copiado' : 'Copiar'}
-        </button>
-    )
-}
-
-// ─── CodeBlock ───────────────────────────────────────────
-function CodeBlock({ filename, code }: { filename: string; code: string }) {
-    return (
-        <div className={styles.codeBlock}>
-            <div className={styles.codeHeader}>
-                <span className={styles.codeFilename}>
-                    <span className={styles.codeFilenameIcon}>
-                        <LuFileCode2 size={14} />
-                    </span>
-                    {filename}
-                </span>
-                <CopyButton text={code} />
-            </div>
-            <pre className={styles.codeContent}>{code}</pre>
-        </div>
-    )
-}
 
 // ─── Configurator Panel ──────────────────────────────────
 function ConfiguratorPanel({
@@ -124,7 +101,14 @@ function ConfiguratorPanel({
                         <button
                             key={key}
                             className={`${styles.radioCard} ${config.tableType === key ? styles.radioCardActive : ''}`}
-                            onClick={() => onChange({ tableType: key })}
+                            onClick={() => {
+                                const patch: Partial<BuilderConfig> = { tableType: key }
+                                if (key === 'exceltable') {
+                                    patch.bulkActions = false
+                                    patch.density = false
+                                }
+                                onChange(patch)
+                            }}
                         >
                             <span className={styles.radioLabel}>{info.label}</span>
                             <span className={styles.radioDesc}>{info.description}</span>
@@ -207,6 +191,99 @@ function ConfiguratorPanel({
                             <span className={styles.toggleKnob} />
                         </button>
                     </label>
+
+                    <label className={styles.toggleItem}>
+                        <span className={styles.toggleInfo}>
+                            <span className={styles.toggleName}>Formato condicional</span>
+                            <span className={styles.toggleDesc}>Filas Inactivos en rojo, StatusDot en celdas de estado</span>
+                        </span>
+                        <button
+                            className={`${styles.toggleSwitch} ${config.conditionalFormatting ? styles.toggleSwitchOn : ''}`}
+                            onClick={() => onChange({ conditionalFormatting: !config.conditionalFormatting })}
+                            role="switch"
+                            aria-checked={config.conditionalFormatting}
+                        >
+                            <span className={styles.toggleKnob} />
+                        </button>
+                    </label>
+
+                    <label className={styles.toggleItem}>
+                        <span className={styles.toggleInfo}>
+                            <span className={styles.toggleName}>Búsqueda</span>
+                            <span className={styles.toggleDesc}>Barra de búsqueda con resaltado de resultados (⌘K)</span>
+                        </span>
+                        <button
+                            className={`${styles.toggleSwitch} ${config.search ? styles.toggleSwitchOn : ''}`}
+                            onClick={() => onChange({ search: !config.search })}
+                            role="switch"
+                            aria-checked={config.search}
+                        >
+                            <span className={styles.toggleKnob} />
+                        </button>
+                    </label>
+
+                    <label className={styles.toggleItem} style={{ opacity: config.tableType === 'exceltable' ? 0.4 : 1 }}>
+                        <span className={styles.toggleInfo}>
+                            <span className={styles.toggleName}>Densidad</span>
+                            <span className={styles.toggleDesc}>
+                                {config.tableType === 'exceltable'
+                                    ? 'No disponible en ExcelTable (densidad fija 32px)'
+                                    : 'Selector de altura de filas (40/48/56px)'}
+                            </span>
+                        </span>
+                        <button
+                            className={`${styles.toggleSwitch} ${config.density ? styles.toggleSwitchOn : ''}`}
+                            onClick={() => {
+                                if (config.tableType === 'exceltable') return
+                                onChange({ density: !config.density })
+                            }}
+                            role="switch"
+                            aria-checked={config.density}
+                            disabled={config.tableType === 'exceltable'}
+                            style={{ cursor: config.tableType === 'exceltable' ? 'not-allowed' : 'pointer' }}
+                        >
+                            <span className={styles.toggleKnob} />
+                        </button>
+                    </label>
+
+                    <label className={styles.toggleItem}>
+                        <span className={styles.toggleInfo}>
+                            <span className={styles.toggleName}>Columnas</span>
+                            <span className={styles.toggleDesc}>Mostrar/ocultar columnas dinámicamente</span>
+                        </span>
+                        <button
+                            className={`${styles.toggleSwitch} ${config.columnToggle ? styles.toggleSwitchOn : ''}`}
+                            onClick={() => onChange({ columnToggle: !config.columnToggle })}
+                            role="switch"
+                            aria-checked={config.columnToggle}
+                        >
+                            <span className={styles.toggleKnob} />
+                        </button>
+                    </label>
+
+                    <label className={styles.toggleItem} style={{ opacity: config.tableType === 'exceltable' ? 0.4 : 1 }}>
+                        <span className={styles.toggleInfo}>
+                            <span className={styles.toggleName}>Acciones masivas</span>
+                            <span className={styles.toggleDesc}>
+                                {config.tableType === 'exceltable'
+                                    ? 'No disponible en ExcelTable (el click abre edición de celda)'
+                                    : 'Selección múltiple + barra de acciones'}
+                            </span>
+                        </span>
+                        <button
+                            className={`${styles.toggleSwitch} ${config.bulkActions ? styles.toggleSwitchOn : ''}`}
+                            onClick={() => {
+                                if (config.tableType === 'exceltable') return
+                                onChange({ bulkActions: !config.bulkActions })
+                            }}
+                            role="switch"
+                            aria-checked={config.bulkActions}
+                            disabled={config.tableType === 'exceltable'}
+                            style={{ cursor: config.tableType === 'exceltable' ? 'not-allowed' : 'pointer' }}
+                        >
+                            <span className={styles.toggleKnob} />
+                        </button>
+                    </label>
                 </div>
             </div>
 
@@ -221,6 +298,11 @@ function ConfiguratorPanel({
                     {config.dataset === 'none' && <span className={styles.flagBadge}>data={'[]'}</span>}
                     {config.filters && <span className={styles.flagBadge}>filters</span>}
                     {config.pagination && <span className={styles.flagBadge}>pagination</span>}
+                    {config.conditionalFormatting && <span className={styles.flagBadge}>rowClassName</span>}
+                    {config.search && <span className={styles.flagBadge}>search</span>}
+                    {config.density && <span className={styles.flagBadge}>density</span>}
+                    {config.columnToggle && <span className={styles.flagBadge}>columnToggle</span>}
+                    {config.bulkActions && <span className={styles.flagBadge}>bulkActions</span>}
                 </div>
             </div>
             </>
@@ -231,9 +313,12 @@ function ConfiguratorPanel({
 
 // ─── Live Preview ────────────────────────────────────────
 function LivePreview({ config }: { config: BuilderConfig }) {
-    const editHandler = useCallback((_rowIdx: number, _key: string, _value: string) => {
-        // Handler de edición en vivo — integrar con API real
-    }, [])
+    const [search, setSearch] = useState('')
+    const [density, setDensity] = useState<Density>('comfortable')
+    const [colVis, setColVis] = useState<Set<string> | null>(null)
+    const [selectedIds, setSelectedIds] = useState<Set<number | string>>(new Set())
+
+    const editHandler = useCallback((_rowIdx: number, _key: string, _value: string) => {}, [])
 
     const props = {
         filters: config.filters,
@@ -242,28 +327,130 @@ function LivePreview({ config }: { config: BuilderConfig }) {
 
     const isExcel = config.tableType === 'exceltable'
     const isEmpty = config.dataset === 'none'
+    const DENSITY_MAP: Record<Density, string> = { compact: '36px', comfortable: '44px', relaxed: '52px' }
 
-    if (isEmpty) {
-        return isExcel
-            ? <ExcelTable columns={[]} data={[]} keyExtractor={(_, i) => i} onDataChange={editHandler} {...props} />
-            : <DataTable columns={[]} data={[]} keyExtractor={(_, i) => i} {...props} />
+    const showToolbar = config.search || config.density || config.columnToggle || config.bulkActions
+
+    // Column visibility helper
+    const applyVisibility = <T extends { key: string }>(cols: T[]): T[] => {
+        if (!colVis) return cols
+        return cols.filter((c) => colVis.has(c.key))
     }
 
-    if (config.dataset === 'users') {
-        return isExcel
-            ? <ExcelTable columns={userColumns} data={sampleUsers} keyExtractor={(r) => r.id} onDataChange={editHandler} {...props} />
-            : <DataTable columns={userColumns} data={sampleUsers} keyExtractor={(r) => r.id} {...props} />
+    const allColKeys = (config.dataset === 'users' ? userColumns : config.dataset === 'employees' ? employeeColumns : spreadsheetColumns).map((c) => c.key)
+    const colToggleProps = config.columnToggle ? {
+        columns: allColKeys.map((k) => ({
+            key: k,
+            header: k.charAt(0).toUpperCase() + k.slice(1),
+            visible: colVis ? colVis.has(k) : true,
+        })),
+        onToggle: (key: string) => setColVis((prev) => {
+            const s = new Set(prev ?? allColKeys)
+            s.has(key) ? s.delete(key) : s.add(key)
+            return s
+        }),
+        onShowAll: () => setColVis(new Set(allColKeys)),
+    } : null
+
+    // Search filter helper
+    const filterBySearch = <T extends object>(data: T[]): T[] => {
+        if (!search || !config.search) return data
+        const q = search.toLowerCase()
+        return data.filter((row) =>
+            Object.values(row as Record<string, unknown>).some((v) =>
+                String(v ?? '').toLowerCase().includes(q),
+            ),
+        )
     }
 
-    if (config.dataset === 'employees') {
-        return isExcel
-            ? <ExcelTable columns={employeeColumns} data={employees} keyExtractor={(_, i) => i} onDataChange={editHandler} {...props} />
-            : <DataTable columns={employeeColumns} data={employees} keyExtractor={(_, i) => i} {...props} />
-    }
+    // Build table JSX
+    const tableJsx = (() => {
+        const rowHeight = config.density ? DENSITY_MAP[density] : undefined
 
-    return isExcel
-        ? <ExcelTable columns={spreadsheetColumns} data={initialSpreadsheet} keyExtractor={(_, i) => i} onDataChange={editHandler} {...props} />
-        : <DataTable columns={spreadsheetColumns} data={initialSpreadsheet} keyExtractor={(_, i) => i} {...props} />
+        const toggleSelect = (id: number | string) => {
+            setSelectedIds((prev) => {
+                const next = new Set(prev)
+                next.has(id) ? next.delete(id) : next.add(id)
+                return next
+            })
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rowClick: any = config.bulkActions ? (row: any) => {
+            if (row.id != null) toggleSelect(row.id)
+        } : undefined
+
+        if (isEmpty) {
+            return isExcel
+                ? <ExcelTable columns={[]} data={[]} keyExtractor={(_, i) => i} onDataChange={editHandler} {...props} />
+                : <DataTable columns={[]} data={[]} keyExtractor={(_, i) => i} {...props} />
+        }
+
+        if (config.dataset === 'users') {
+            const cols = applyVisibility(userColumns)
+            const data = filterBySearch(sampleUsers)
+            const rowClass = config.conditionalFormatting ? (row: typeof sampleUsers[0]) => {
+                if (row.status === 'Inactivo') return 'rowDanger'
+                return undefined
+            } : undefined
+            return isExcel
+                ? <ExcelTable columns={cols} data={data} keyExtractor={(r) => r.id} onDataChange={editHandler} rowClassName={rowClass} {...props} />
+                : <DataTable columns={cols} data={data} keyExtractor={(r) => r.id} rowClassName={rowClass} rowHeight={rowHeight} onRowClick={rowClick} {...props} />
+        }
+
+        if (config.dataset === 'employees') {
+            const cols = applyVisibility(employeeColumns)
+            const data = filterBySearch(employees)
+            const rowClass = config.conditionalFormatting ? (row: typeof employees[0]) => {
+                if (row.status === 'Inactivo') return 'rowDanger'
+                return undefined
+            } : undefined
+            return isExcel
+                ? <ExcelTable columns={cols} data={data} keyExtractor={(_, i) => i} onDataChange={editHandler} rowClassName={rowClass} {...props} />
+                : <DataTable columns={cols} data={data} keyExtractor={(_, i) => i} rowClassName={rowClass} rowHeight={rowHeight} onRowClick={rowClick} {...props} />
+        }
+
+        const cols = applyVisibility(spreadsheetColumns)
+        const data = filterBySearch(initialSpreadsheet)
+        return isExcel
+            ? <ExcelTable columns={cols} data={data} keyExtractor={(_, i) => i} onDataChange={editHandler} {...props} />
+            : <DataTable columns={cols} data={data} keyExtractor={(_, i) => i} rowHeight={rowHeight} onRowClick={rowClick} {...props} />
+    })()
+
+    if (!showToolbar) return tableJsx
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                {config.search && (
+                    <SearchHighlight
+                        value={search}
+                        onChange={setSearch}
+                        placeholder="Buscar..."
+                    />
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {colToggleProps && <ColumnToggle {...colToggleProps} />}
+                    {config.density && <DensitySelector value={density} onChange={setDensity} />}
+                </div>
+            </div>
+            {config.bulkActions && (
+                <BulkActionsBar
+                    selectedCount={selectedIds.size}
+                    totalCount={config.dataset === 'users' ? sampleUsers.length : config.dataset === 'employees' ? employees.length : initialSpreadsheet.length}
+                    onSelectAll={() => {
+                        const all = config.dataset === 'users' ? sampleUsers.map((r) => r.id)
+                            : config.dataset === 'employees' ? employees.map((_, i) => i)
+                            : initialSpreadsheet.map((_, i) => i)
+                        setSelectedIds(new Set(all))
+                    }}
+                    onClearSelection={() => setSelectedIds(new Set())}
+                    actions={[]}
+                />
+            )}
+            {tableJsx}
+        </div>
+    )
 }
 
 // ─── Generated Code (Realistic Examples) ─────────────────
@@ -312,10 +499,23 @@ export interface Item {
 
     // ─── Archivo 2: Columnas ───────────────────────────
     const columnsCode = useMemo(() => {
+        const cf = config.conditionalFormatting
         if (config.dataset === 'users') {
+            const statusRender = cf
+                ? `        render: (value) => (
+            <StatusDot
+                color={value === 'Activo' ? 'green' : 'red'}
+                label={String(value)}
+                variant="dot"
+            />
+        ),`
+                : `        render: (value) => {
+            const variant = value === 'Activo' ? 'success' : 'warning'
+            return <Badge variant={variant}>{String(value)}</Badge>
+        },`
             return `// columns/userColumns.ts
 import { type Column } from '../components/ui/Table/types'
-import Badge from '../components/ui/Badge'
+import ${cf ? '{ StatusDot }' : 'Badge'} from '../components/ui/${cf ? 'StatusDot' : 'Badge'}'
 import type { User } from '../types/user'
 
 export const userColumns: Column<User>[] = [
@@ -325,6 +525,8 @@ export const userColumns: Column<User>[] = [
         key: 'role',
         header: 'Rol',
         align: 'center',
+        filterType: 'select',
+        filterOptions: ['Admin', 'Editor', 'Viewer'],
         render: (value) => {
             const variant = value === 'Admin' ? 'success'
                 : value === 'Editor' ? 'info' : 'default'
@@ -335,23 +537,41 @@ export const userColumns: Column<User>[] = [
         key: 'status',
         header: 'Estado',
         align: 'center',
-        render: (value) => {
-            const variant = value === 'Activo' ? 'success' : 'warning'
-            return <Badge variant={variant}>{String(value)}</Badge>
-        },
+        filterType: 'select',
+        filterOptions: ['Activo', 'Inactivo'],
+${statusRender}
     },
 ]`
         }
 
         if (config.dataset === 'employees') {
+            const statusRender = cf
+                ? `        render: (value) => (
+            <StatusDot
+                color={value === 'Activo' ? 'green' : 'red'}
+                label={String(value)}
+                variant="dot"
+            />
+        ),`
+                : `        render: (value) => {
+            const variant = value === 'Activo' ? 'success' : 'warning'
+            return <Badge variant={variant}>{String(value)}</Badge>
+        },`
             return `// columns/employeeColumns.ts
 import { type Column } from '../components/ui/Table/types'
-import Badge from '../components/ui/Badge'
+import ${cf ? '{ StatusDot }' : 'Badge'} from '../components/ui/${cf ? 'StatusDot' : 'Badge'}'
 import type { Employee } from '../types/employee'
 
 export const employeeColumns: Column<Employee>[] = [
     { key: 'name', header: 'Nombre', minWidth: '180px' },
-    { key: 'department', header: 'Departamento', minWidth: '140px', align: 'center' },
+    {
+        key: 'department',
+        header: 'Departamento',
+        minWidth: '140px',
+        align: 'center',
+        filterType: 'select',
+        filterOptions: ['Tecnología', 'Diseño', 'Marketing'],
+    },
     { key: 'position', header: 'Posición', minWidth: '140px' },
     { key: 'city', header: 'Ciudad', minWidth: '120px', align: 'center' },
     {
@@ -359,10 +579,9 @@ export const employeeColumns: Column<Employee>[] = [
         header: 'Estado',
         width: '100px',
         align: 'center',
-        render: (value) => {
-            const variant = value === 'Activo' ? 'success' : 'warning'
-            return <Badge variant={variant}>{String(value)}</Badge>
-        },
+        filterType: 'select',
+        filterOptions: ['Activo', 'Inactivo'],
+${statusRender}
     },
 ]`
         }
@@ -374,9 +593,9 @@ import type { InvoiceItem } from '../types/invoice'
 
 export const invoiceColumns: Column<InvoiceItem>[] = [
     { key: 'concepto', header: 'Concepto', minWidth: '200px' },
-    { key: 'cantidad', header: 'Cantidad', width: '100px', align: 'right' },
-    { key: 'precio', header: 'Precio', width: '120px', align: 'right' },
-    { key: 'total', header: 'Total', width: '120px', align: 'right' },
+    { key: 'cantidad', header: 'Cantidad', width: '100px', align: 'right', filterType: 'number' },
+    { key: 'precio', header: 'Precio', width: '120px', align: 'right', filterType: 'number' },
+    { key: 'total', header: 'Total', width: '120px', align: 'right', filterType: 'number' },
 ]`
         }
 
@@ -387,7 +606,7 @@ export const itemColumns = [
     { key: 'name', header: 'Nombre', minWidth: '180px' },
     { key: 'status', header: 'Estado', align: 'center' },
 ]`
-    }, [config.dataset, isExcel])
+    }, [config.dataset, isExcel, config.conditionalFormatting])
 
     // ─── Archivo 3: Componente principal ───────────────
     const componentCode = useMemo(() => {
@@ -419,14 +638,22 @@ export const itemColumns = [
         const isServer = config.dataMode === 'server'
 
         const lines: string[] = []
+        const needsSearch = config.search && !isExcel
+        const needsDensity = config.density && !isExcel
+        const needsBulkActions = config.bulkActions && !isExcel
+        const needsColumnToggle = config.columnToggle
 
         // ─── Imports ───
-        lines.push(`import { useState, useEffect, useCallback } from 'react'`)
+        lines.push(`import { useState, useEffect, useCallback, useMemo } from 'react'`)
         lines.push(`import ${componentName} from '${importPath}'`)
         lines.push(`import { ${columnsVar} } from './columns/${config.dataset === 'users' ? 'userColumns' : config.dataset === 'employees' ? 'employeeColumns' : config.dataset === 'spreadsheet' ? 'invoiceColumns' : 'itemColumns'}'`)
         if (config.dataset !== 'none') {
             lines.push(`import type { ${typeName} } from '../types/${config.dataset === 'users' ? 'user' : config.dataset === 'employees' ? 'employee' : config.dataset === 'spreadsheet' ? 'invoice' : 'item'}'`)
         }
+        if (needsSearch) lines.push(`import { SearchHighlight } from '../components/ui/Table/SearchHighlight'`)
+        if (needsDensity) lines.push(`import { DensitySelector } from '../components/ui/Table/DensitySelector'`)
+        if (needsColumnToggle) lines.push(`import { ColumnToggle } from '../components/ui/Table/ColumnToggle'`)
+        if (needsBulkActions) lines.push(`import { BulkActionsBar } from '../components/ui/Table/BulkActionsBar'`)
         lines.push('')
 
         // ─── API Response type (server-side) ───
@@ -456,6 +683,12 @@ export const itemColumns = [
             if (isExcel) lines.push(`                onDataChange={() => {}}`)
             if (config.filters) lines.push(`                filters`)
             if (config.pagination) lines.push(`                pagination`)
+            if (config.conditionalFormatting) {
+                lines.push(`                rowClassName={(row) => {`)
+                lines.push(`                    if (row.status === 'Inactivo') return 'rowDanger'`)
+                lines.push(`                    return undefined`)
+                lines.push(`                }}`)
+            }
             lines.push(`            />`)
             lines.push(`        </div>`)
             lines.push(`    )`)
@@ -504,6 +737,38 @@ export const itemColumns = [
                 lines.push(`    // El backend recibe los filtros como query params`)
                 lines.push(`    // y retorna solo los datos que coinciden`)
             }
+            // ─── Toolbar states (non-Excel only) ───
+            if (needsSearch) lines.push(`    const [search, setSearch] = useState('')`)
+            if (needsDensity) lines.push(`    const [density, setDensity] = useState<'compact' | 'comfortable' | 'relaxed'>('comfortable')`)
+            if (needsColumnToggle) lines.push(`    const [visibleCols, setVisibleCols] = useState<Set<string> | null>(null)`)
+            if (needsBulkActions) {
+                lines.push(`    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())`)
+                lines.push(``)
+                lines.push(`    const toggleSelect = (id: number) => {`)
+                lines.push(`        setSelectedIds((prev) => {`)
+                lines.push(`            const next = new Set(prev)`)
+                lines.push(`            next.has(id) ? next.delete(id) : next.add(id)`)
+                lines.push(`            return next`)
+                lines.push(`        })`)
+                lines.push(`    }`)
+            }
+
+            // ─── Search filtering ───
+            if (needsSearch) {
+                lines.push(``)
+                lines.push(`    const filteredData = useMemo(() => {`)
+                lines.push(`        if (!search) return data`)
+                lines.push(`        const q = search.toLowerCase()`)
+                lines.push(`        return data.filter((row) =>`)
+                lines.push(`            Object.values(row).some((v) => String(v ?? '').toLowerCase().includes(q))`)
+                lines.push(`        )`)
+                lines.push(`    }, [data, search])`)
+            }
+
+            lines.push(``)
+            lines.push(`    const DENSITY_MAP = { compact: '36px', comfortable: '44px', relaxed: '52px' }`)
+            lines.push(`    const tableData = ${needsSearch ? 'filteredData' : 'data'}`)
+
             lines.push(``)
             lines.push(`    if (loading) return <div>Cargando...</div>`)
             lines.push(`    if (error) return <div>Error: {error}</div>`)
@@ -511,9 +776,42 @@ export const itemColumns = [
             lines.push(`    return (`)
             lines.push(`        <div>`)
             lines.push(`            <h1>${pageName.replace('Page', '')}</h1>`)
+
+            // ─── Toolbar ───
+            if (needsSearch || needsDensity || needsColumnToggle || needsBulkActions) {
+                lines.push(`            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>`)
+                if (needsSearch) {
+                    lines.push(`                <SearchHighlight value={search} onChange={setSearch} placeholder="Buscar..." />`)
+                }
+                lines.push(`                <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>`)
+                if (needsColumnToggle) {
+                    lines.push(`                <ColumnToggle columns={${columnsVar}.map((c) => ({ key: c.key, header: c.header, visible: visibleCols ? visibleCols.has(c.key) : true }))}`)
+                    lines.push(`                    onToggle={(key) => setVisibleCols((prev) => { const s = new Set(prev ?? ${columnsVar}.map((c) => c.key)); s.has(key) ? s.delete(key) : s.add(key); return s })}`)
+                    lines.push(`                    onShowAll={() => setVisibleCols(new Set(${columnsVar}.map((c) => c.key)))}`)
+                    lines.push(`                />`)
+                }
+                if (needsDensity) {
+                    lines.push(`                <DensitySelector value={density} onChange={setDensity} />`)
+                }
+                lines.push(`                </div>`)
+                lines.push(`            </div>`)
+            }
+
+            // ─── Bulk actions ───
+            if (needsBulkActions) {
+                lines.push(`            <BulkActionsBar`)
+                lines.push(`                selectedCount={selectedIds.size}`)
+                lines.push(`                totalCount={data.length}`)
+                lines.push(`                onSelectAll={() => setSelectedIds(new Set(data.map((r) => r.id)))}`)
+                lines.push(`                onClearSelection={() => setSelectedIds(new Set())}`)
+                lines.push(`                actions={[]}`)
+                lines.push(`            />`)
+            }
+
+            // ─── Table ───
             lines.push(`            <${componentName}`)
-            lines.push(`                columns={${columnsVar}}`)
-            lines.push(`                data={data}`)
+            lines.push(`                columns={${needsColumnToggle ? `${columnsVar}.filter((c) => !visibleCols || visibleCols.has(c.key))` : columnsVar}}`)
+            lines.push(`                data={tableData}`)
             lines.push(`                keyExtractor={${keyFn}}`)
             if (isExcel) lines.push(`                onDataChange={(rowIdx, key, value) => {`)
             if (isExcel) lines.push(`                    // TODO: PATCH ${apiEndpoint}/:id`)
@@ -521,6 +819,14 @@ export const itemColumns = [
             if (isExcel) lines.push(`                }}`)
             if (config.filters) lines.push(`                filters`)
             if (config.pagination) lines.push(`                pagination`)
+            if (config.conditionalFormatting) {
+                lines.push(`                rowClassName={(row) => {`)
+                lines.push(`                    if (row.status === 'Inactivo') return 'rowDanger'`)
+                lines.push(`                    return undefined`)
+                lines.push(`                }}`)
+            }
+            if (needsDensity) lines.push(`                rowHeight={DENSITY_MAP[density]}`)
+            if (needsBulkActions) lines.push(`                onRowClick={(row) => toggleSelect(row.id)}`)
             lines.push(`            />`)
             lines.push(`        </div>`)
             lines.push(`    )`)
@@ -558,6 +864,38 @@ export const itemColumns = [
                 lines.push(`        // TODO: PATCH ${apiEndpoint}/:id`)
                 lines.push(`    }`)
             }
+            // ─── Toolbar states ───
+            if (needsSearch) lines.push(`    const [search, setSearch] = useState('')`)
+            if (needsDensity) lines.push(`    const [density, setDensity] = useState<'compact' | 'comfortable' | 'relaxed'>('comfortable')`)
+            if (needsColumnToggle) lines.push(`    const [visibleCols, setVisibleCols] = useState<Set<string> | null>(null)`)
+            if (needsBulkActions) {
+                lines.push(`    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())`)
+                lines.push(``)
+                lines.push(`    const toggleSelect = (id: number) => {`)
+                lines.push(`        setSelectedIds((prev) => {`)
+                lines.push(`            const next = new Set(prev)`)
+                lines.push(`            next.has(id) ? next.delete(id) : next.add(id)`)
+                lines.push(`            return next`)
+                lines.push(`        })`)
+                lines.push(`    }`)
+            }
+
+            // ─── Search filtering ───
+            if (needsSearch) {
+                lines.push(``)
+                lines.push(`    const filteredData = useMemo(() => {`)
+                lines.push(`        if (!search) return data`)
+                lines.push(`        const q = search.toLowerCase()`)
+                lines.push(`        return data.filter((row) =>`)
+                lines.push(`            Object.values(row).some((v) => String(v ?? '').toLowerCase().includes(q))`)
+                lines.push(`        )`)
+                lines.push(`    }, [data, search])`)
+            }
+
+            lines.push(``)
+            lines.push(`    const DENSITY_MAP = { compact: '36px', comfortable: '44px', relaxed: '52px' }`)
+            lines.push(`    const tableData = ${needsSearch ? 'filteredData' : 'data'}`)
+
             lines.push(``)
             lines.push(`    if (loading) return <div>Cargando...</div>`)
             lines.push(`    if (error) return <div>Error: {error}</div>`)
@@ -565,13 +903,54 @@ export const itemColumns = [
             lines.push(`    return (`)
             lines.push(`        <div>`)
             lines.push(`            <h1>${pageName.replace('Page', '')}</h1>`)
+
+            // ─── Toolbar ───
+            if (needsSearch || needsDensity || needsColumnToggle || needsBulkActions) {
+                lines.push(`            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>`)
+                if (needsSearch) {
+                    lines.push(`                <SearchHighlight value={search} onChange={setSearch} placeholder="Buscar..." />`)
+                }
+                lines.push(`                <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>`)
+                if (needsColumnToggle) {
+                    lines.push(`                <ColumnToggle columns={${columnsVar}.map((c) => ({ key: c.key, header: c.header, visible: visibleCols ? visibleCols.has(c.key) : true }))}`)
+                    lines.push(`                    onToggle={(key) => setVisibleCols((prev) => { const s = new Set(prev ?? ${columnsVar}.map((c) => c.key)); s.has(key) ? s.delete(key) : s.add(key); return s })}`)
+                    lines.push(`                    onShowAll={() => setVisibleCols(new Set(${columnsVar}.map((c) => c.key)))}`)
+                    lines.push(`                />`)
+                }
+                if (needsDensity) {
+                    lines.push(`                <DensitySelector value={density} onChange={setDensity} />`)
+                }
+                lines.push(`                </div>`)
+                lines.push(`            </div>`)
+            }
+
+            // ─── Bulk actions ───
+            if (needsBulkActions) {
+                lines.push(`            <BulkActionsBar`)
+                lines.push(`                selectedCount={selectedIds.size}`)
+                lines.push(`                totalCount={data.length}`)
+                lines.push(`                onSelectAll={() => setSelectedIds(new Set(data.map((r) => r.id)))}`)
+                lines.push(`                onClearSelection={() => setSelectedIds(new Set())}`)
+                lines.push(`                actions={[]}`)
+                lines.push(`            />`)
+            }
+
+            // ─── Table ───
             lines.push(`            <${componentName}`)
-            lines.push(`                columns={${columnsVar}}`)
-            lines.push(`                data={data}`)
+            lines.push(`                columns={${needsColumnToggle ? `${columnsVar}.filter((c) => !visibleCols || visibleCols.has(c.key))` : columnsVar}}`)
+            lines.push(`                data={tableData}`)
             lines.push(`                keyExtractor={${keyFn}}`)
             if (isExcel) lines.push(`                onDataChange={handleCellEdit}`)
             if (config.filters) lines.push(`                filters`)
             if (config.pagination) lines.push(`                pagination`)
+            if (config.conditionalFormatting) {
+                lines.push(`                rowClassName={(row) => {`)
+                lines.push(`                    if (row.status === 'Inactivo') return 'rowDanger'`)
+                lines.push(`                    return undefined`)
+                lines.push(`                }}`)
+            }
+            if (needsDensity) lines.push(`                rowHeight={DENSITY_MAP[density]}`)
+            if (needsBulkActions) lines.push(`                onRowClick={(row) => toggleSelect(row.id)}`)
             lines.push(`            />`)
             lines.push(`        </div>`)
             lines.push(`    )`)

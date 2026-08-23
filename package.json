@@ -12,29 +12,31 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "date-fns": "^4.4.0",
     "react": "^19.2.8",
+    "react-day-picker": "^10.0.1",
     "react-dom": "^19.2.8",
     "react-icons": "^5.7.0",
     "react-router": "^8.3.0"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "latest",
+    "@storybook/addon-a11y": "^10.5.10",
+    "@storybook/addon-docs": "^10.5.10",
+    "@storybook/addon-mcp": "latest",
+    "@storybook/addon-vitest": "^10.5.10",
+    "@storybook/react-vite": "^10.5.10",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "@vitest/browser-playwright": "latest",
+    "@vitest/coverage-v8": "latest",
     "oxlint": "^1.75.0",
+    "playwright": "latest",
+    "storybook": "^10.5.10",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
-    "storybook": "^10.5.10",
-    "@storybook/react-vite": "^10.5.10",
-    "@chromatic-com/storybook": "latest",
-    "@storybook/addon-vitest": "^10.5.10",
-    "@storybook/addon-a11y": "^10.5.10",
-    "@storybook/addon-docs": "^10.5.10",
-    "@storybook/addon-mcp": "latest",
-    "vitest": "latest",
-    "playwright": "latest",
-    "@vitest/browser-playwright": "latest",
-    "@vitest/coverage-v8": "latest"
+    "vitest": "latest"
   }
 }
