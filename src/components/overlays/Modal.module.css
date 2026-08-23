@@ -1,103 +1,10 @@
 /* ================================
-   OVERLAY
+   OVERLAYS SHARED CSS — residual
+   Modal overlay/window/header moved to Tailwind (6F.3A). What remains:
+   - .body / .footer: consumed by BOTH Modal and Drawer/DrawerStack —
+     kept shared to avoid drift until 6F.3B/C splits them.
+   - drawer* rules, level indicator and slide animations: Drawer family.
    ================================ */
-
-.overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    animation: overlayFadeIn 0.2s ease;
-}
-
-@keyframes overlayFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* ================================
-   WINDOW
-   ================================ */
-
-.window {
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    box-shadow:
-        0 25px 50px -12px rgba(0, 0, 0, 0.25),
-        0 0 0 1px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
-    animation: windowSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes windowSlideIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95) translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-/* ================================
-   HEADER
-   ================================ */
-
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    background: var(--code-bg);
-    flex-shrink: 0;
-}
-
-.headerTitle {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-h);
-    font-family: var(--sans);
-}
-
-.headerChildren {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.closeBtn {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-}
-
-.closeBtn:hover {
-    background: rgba(220, 38, 38, 0.1);
-    color: #dc2626;
-}
 
 /* ================================
    BODY (scrollable)

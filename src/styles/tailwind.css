@@ -136,6 +136,22 @@
         to { opacity: 0; transform: translateY(-8px) scale(0.96); }
     }
 
+    /* Modal overlay/window entrances (migrated from Modal.module.css,
+     * phase 6F.3A). The drawer keeps its own copy of overlayFadeIn in
+     * Modal.module.css while it remains on CSS Modules. */
+    --animate-overlay-fade-in: overlay-fade-in 0.2s ease;
+    --animate-window-slide-in: window-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+    @keyframes overlay-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes window-slide-in {
+        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
     @keyframes btn-pulse {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.05); }
