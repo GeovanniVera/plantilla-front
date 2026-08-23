@@ -105,6 +105,14 @@
     --animate-btn-bounce: btn-bounce 0.5s ease;
     --animate-btn-shake: btn-shake 0.4s ease;
 
+    /* Radio dot mount animation (migrated from Form.module.css, phase 6D.2) */
+    --animate-radio-in: radio-in 0.15s ease;
+
+    @keyframes radio-in {
+        from { transform: scale(0); }
+        to { transform: scale(1); }
+    }
+
     @keyframes btn-pulse {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.05); }
