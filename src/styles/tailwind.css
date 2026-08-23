@@ -108,9 +108,17 @@
     /* Radio dot mount animation (migrated from Form.module.css, phase 6D.2) */
     --animate-radio-in: radio-in 0.15s ease;
 
+    /* Tabs panel entrance (migrated from Tabs.module.css, phase 6F.1) */
+    --animate-tabs-panel: tabs-panel-fade-in 0.2s ease;
+
     @keyframes radio-in {
         from { transform: scale(0); }
         to { transform: scale(1); }
+    }
+
+    @keyframes tabs-panel-fade-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes btn-pulse {
