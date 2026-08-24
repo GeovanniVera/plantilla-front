@@ -6,7 +6,6 @@ import { useFilterableColumns } from './hooks/useFilterableColumns'
 import { useTableFilters } from './hooks/useTableFilters'
 import { useTablePagination } from './hooks/useTablePagination'
 import type { BaseTableProps, Column } from './types'
-import styles from './DataTable.module.css'
 
 export interface DataTableProps<T extends object> extends BaseTableProps<T> {
     /** Habilitar filtros en cabeceras */
@@ -57,7 +56,7 @@ export default function DataTable<T extends object>({
     }), [])
 
     return (
-        <div className={styles.container}>
+        <div className="flex flex-col gap-3">
             <FilterBar
                 hasActiveFilters={enableFilters && hasActiveFilters}
                 onClearAll={clearAllFilters}

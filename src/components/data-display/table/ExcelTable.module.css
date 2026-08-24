@@ -1,5 +1,9 @@
 /* ================================
-   EXCEL TABLE — Container (FilterBar / Pagination layout)
+   EXCELTABLE — DELIBERATE STRUCTURAL CSS
+   Kept on CSS Modules by decision (phase 6H): sticky header z-tiering,
+   frozen row-number column, table-layout fixed and editing states are
+   clearest as scoped CSS. Revisit only with a third variant or visual
+   redesign. NOT forgotten debt.
    ================================ */
 .container {
     display: flex;

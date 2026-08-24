@@ -1,5 +1,10 @@
 /* ================================
-   TABLE — Layout wrapper
+   BASETABLE — DELIBERATE STRUCTURAL CSS
+   Kept on CSS Modules by decision (phase 6H): these classes are injected
+   through the composition-slots contract consumed by BOTH variants.
+   Migrating would require cross-boundary coordination while ExcelTable
+   stays on modules anyway. Revisit only with a third variant or a visual
+   redesign. NOT forgotten debt.
    ================================ */
 .wrapper {
     width: 100%;
