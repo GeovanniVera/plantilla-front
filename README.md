@@ -43,8 +43,8 @@ npm run build-storybook  # Build estático de Storybook
   vivir como parte de una plantilla.
 - **Separación de responsabilidades**: cada familia tiene un rol claro y las
   herramientas de demo viven separadas del código reusable.
-- **Bajo acoplamiento**: los estilos son CSS Modules por componente; ninguna
-  familia importa los estilos de otra.
+- **Bajo acoplamiento**: cada componente estiliza su propio scope (utilidades
+  Tailwind o CSS Module propio); ninguna familia importa los estilos de otra.
 - **TypeScript primero**: contratos explícitos (`Props`, tipos exportados) antes
   que inferencia silenciosa.
 
@@ -210,6 +210,62 @@ npm run preview      # Servir el build
 ```
 
 Requisito: Node.js con soporte para Vite 8.
+
+## Sistema de estilos
+
+La migración a **Tailwind v4** (CSS-first) convive con dos capas que siguen
+vigentes: variables CSS runtime y CSS Modules estructurales.
+
+### Tailwind
+
+- Utilidades para layout, spacing, typography, borders, radius, estados
+  (`hover:`, `focus-visible:`, `disabled:`) y responsive.
+- Variantes de componentes resueltas como **sets efectivos por estado** desde
+  TypeScript (mapas tipados `Record<Variant, classes>`), sin clases
+  conflictivas concatenadas.
+- Animaciones declaradas en `@theme` (`--animate-*` + keyframes).
+- Componentes migrados: primitives (Button, Badge, Input, Select, Checkbox,
+  Radio, Textarea, StatusDot), Card/StatCard, Tabs/Breadcrumb/sidebar leaves,
+  Toast, Modal/ConfirmDialog/Drawer/DrawerStack, CalendarView,
+  DatePicker/DateRangePicker triggers, table parts (FilterBar, FilterDropdown,
+  FilterHeader, ColumnToggle, DensitySelector, BulkActionsBar, SearchHighlight,
+  Pagination, CellEditors) y DataTable.
+
+**Tailwind consume las variables runtime existentes — no reemplaza
+ThemeProvider.** El mapeo vive en `src/styles/tailwind.css`:
+
+```css
+@theme {
+  --color-accent: var(--accent);      /* brand switching sigue funcionando */
+  --color-background: var(--bg);
+  --color-surface: var(--code-bg);
+  /* ... */
+}
+```
+
+### CSS Variables (runtime theming)
+
+- `tokens.ts` define los tokens de marca; `ThemeProvider` los aplica como
+  custom properties en `:root` y deriva variantes rgba (`--accent-bg`,
+  `--accent-border`, `--secondary-bg`).
+- Los componentes consumen `var(--*)`; cambiar la marca actualiza toda la UI
+  en runtime, incluyendo las utilidades Tailwind.
+- Dark mode vía `prefers-color-scheme` sobre las mismas variables.
+
+### CSS Modules (residual deliberado)
+
+Quedan módulos donde el CSS scoped sigue siendo la mejor herramienta:
+
+- `data-display/table/BaseTable.module.css` y `ExcelTable.module.css` —
+  estructura de tablas (sticky/frozen, z-tiering) inyectada por el contrato
+  de composición.
+- `navigation/sidebar/Sidebar.module.css` — mecánica expand/collapse, slide-in
+  móvil y scrollbars.
+- `data-display/calendar/Calendar.module.css` — bridge `--rdp-*` y overrides
+  de estados internos de react-day-picker.
+- `primitives/Form.module.css` — puente de error `.fieldError [data-variant]`
+  usado por FormField.
+- Módulos de `pages/`, `layouts/` y `dev/` para superficies de demo.
 
 ## Theming
 
