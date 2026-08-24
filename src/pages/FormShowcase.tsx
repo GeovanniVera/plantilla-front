@@ -802,24 +802,33 @@ export default function FormShowcase() {
                 <p style={{ fontSize: 13, color: 'var(--text)', margin: '0 0 16px', opacity: 0.7 }}>
                     Variantes, tamaños, adornos y estados del control base.
                 </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-                    <Input value="" onChange={() => {}} placeholder="Básico" />
-                    <Input size="sm" value="" onChange={() => {}} placeholder="Small" />
-                    <Input variant="filled" value="" onChange={() => {}} placeholder="Filled" />
-                    <Input variant="outlined" value="" onChange={() => {}} placeholder="Outlined" />
-                    <Input value="" onChange={() => {}} placeholder="Plain icon" startAdornment={<LuSearch />} />
-                    <Input value="" onChange={() => {}} placeholder="Subtle addon" startAdornment={<LuSearch />} startAdornmentVariant="subtle" />
-                    <Input value="" onChange={() => {}} placeholder="Accent addon" startAdornment={<LuSearch />} startAdornmentVariant="accent" />
-                    <Input value="" onChange={() => {}} placeholder="Dark addon" startAdornment={<LuSearch />} startAdornmentVariant="dark" />
-                    <Input value="Contraseña segura" type="password" showPasswordToggle onChange={() => {}} />
-                    <Input value="" onChange={() => {}} endAdornment={<span style={{ fontSize: 11, opacity: 0.6 }}>máx. 40</span>} placeholder="Con suffix" />
-                    <ClearableInputDemo />
-                    <Input value="" onChange={() => {}} placeholder="Ambos lados" startAdornment={<LuSearch />} startAdornmentVariant="subtle" endAdornment={<span style={{ fontSize: 10, opacity: 0.5 }}>[enter]</span>} />
-                    <Input value="" onChange={() => {}} disabled placeholder="Deshabilitado" />
-                    <Input value="Solo lectura" readOnly onChange={() => {}} />
-                    <FormField label="Correo" required error="Introduce un correo válido">
-                        <Input value="no-es-email" onChange={() => {}} />
-                    </FormField>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                    {([
+                        ['Básico', <Input key="b" value="" onChange={() => {}} placeholder="Escribe algo…" />],
+                        ['Small', <Input key="s" size="sm" value="" onChange={() => {}} placeholder="Small" />],
+                        ['Filled', <Input key="f" variant="filled" value="" onChange={() => {}} placeholder="Filled" />],
+                        ['Outlined', <Input key="o" variant="outlined" value="" onChange={() => {}} placeholder="Outlined" />],
+                        ['Plain icon', <Input key="p1" value="" onChange={() => {}} placeholder="Plain icon" startAdornment={<LuSearch />} />],
+                        ['Subtle addon', <Input key="p2" value="" onChange={() => {}} placeholder="Subtle addon" startAdornment={<LuSearch />} startAdornmentVariant="subtle" />],
+                        ['Accent addon', <Input key="p3" value="" onChange={() => {}} placeholder="Accent addon" startAdornment={<LuSearch />} startAdornmentVariant="accent" />],
+                        ['Dark addon', <Input key="p4" value="" onChange={() => {}} placeholder="Dark addon" startAdornment={<LuSearch />} startAdornmentVariant="dark" />],
+                        ['Password toggle', <Input key="pw" type="password" showPasswordToggle value="contraseña" onChange={() => {}} />],
+                        ['End adornment', <Input key="ea" value="" onChange={() => {}} placeholder="Peso" endAdornment={<span style={{ fontSize: 11, opacity: 0.6 }}>kg</span>} />],
+                        ['Clearable endAction', <ClearableInputDemo />],
+                        ['Both sides', <Input key="bs" value="" onChange={() => {}} placeholder="Filtrar por nombre" startAdornment={<LuSearch />} startAdornmentVariant="subtle" endAdornment={<span style={{ fontSize: 10, opacity: 0.5 }}>[enter]</span>} />],
+                        ['Disabled', <Input key="d" value="" onChange={() => {}} disabled placeholder="Deshabilitado" />],
+                        ['Read only', <Input key="ro" value="Solo lectura" readOnly onChange={() => {}} />],
+                        ['Error via FormField', (
+                            <FormField label="Correo" required error="Introduce un correo válido">
+                                <Input value="no-es-email" onChange={() => {}} />
+                            </FormField>
+                        )],
+                    ] as [string, React.ReactNode][]).map(([label, node]) => (
+                        <div key={label}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', opacity: 0.6, marginBottom: 6 }}>{label}</div>
+                            {node}
+                        </div>
+                    ))}
                 </div>
             </section>
 

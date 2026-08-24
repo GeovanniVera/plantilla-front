@@ -12,6 +12,20 @@
  */
 @import 'tailwindcss';
 
+/*
+ * Scale normalization (phase 8E.3 hotfix): the app root sets an 18px font
+ * (index.css), so every rem-based Tailwind utility rendered ~12% larger than
+ * the px values it replaced. Pinning the scales to px keeps parity with the
+ * legacy CSS Modules dimensions regardless of root font size.
+ */
+@theme {
+    --spacing: 4px;
+    --text-xs: 12px;
+    --text-sm: 14px;
+    --text-lg: 18px;
+    --text-xl: 20px;
+}
+
 /* ─── Semantic tokens: status palette ──────────────────────────────
  * Extracted from previously hardcoded literals (Badge, Toast, tables,
  * ConfirmDialog, CalendarView). Independent from brand switching.
