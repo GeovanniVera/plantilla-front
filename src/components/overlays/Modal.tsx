@@ -42,6 +42,8 @@ export function Modal({ isOpen, onClose, children, width = 520, maxHeight = '85v
         <ModalContext.Provider value={onClose}>
             <div className={OVERLAY_CLASSES} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
                 <div
+                    role="dialog"
+                    aria-modal="true"
                     className={`${WINDOW_CLASSES} ${className ?? ''}`}
                     style={{ width, maxHeight }}
                     onClick={(e) => e.stopPropagation()}

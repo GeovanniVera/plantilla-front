@@ -117,6 +117,8 @@ export function DrawerStack({
         <ModalContext.Provider value={onClose}>
             <div className={OVERLAY_CLASSES} onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
                 <div
+                    role="dialog"
+                    aria-modal="true"
                     className={`${WINDOW_CLASSES} ${className ?? ''}`}
                     style={{ width }}
                     onClick={(e) => e.stopPropagation()}
