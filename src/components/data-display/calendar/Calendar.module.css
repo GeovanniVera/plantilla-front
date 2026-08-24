@@ -8,6 +8,10 @@
      range / disabled) which are clearest expressed against the
      library's own class names.
    Scoped under .calendar so CalendarView is unaffected.
+NOTE (phase 8C): selectors corrected to react-day-picker v10 class names
+(button_previous/button_next/month_caption/month_grid/today) - the legacy
+v9-era names (nav_button/caption/table/day_today) never matched the
+rendered DOM.
    ================================ */
 
 /* Override react-day-picker v10 variables */
@@ -31,7 +35,7 @@
 }
 
 /* ─── Caption (month/year) ─── */
-.calendar :global(.rdp-caption) {
+.calendar :global(.rdp-month_caption) {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -50,7 +54,8 @@
     gap: 4px;
 }
 
-.calendar :global(.rdp-nav_button) {
+.calendar :global(.rdp-button_previous),
+.calendar :global(.rdp-button_next) {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -64,12 +69,14 @@
     transition: background 0.12s, border-color 0.12s;
 }
 
-.calendar :global(.rdp-nav_button):hover {
+.calendar :global(.rdp-button_previous),
+.calendar :global(.rdp-button_next):hover {
     background: var(--accent-bg);
     border-color: var(--accent-border);
 }
 
-.calendar :global(.rdp-nav_button):disabled {
+.calendar :global(.rdp-button_previous),
+.calendar :global(.rdp-button_next):disabled {
     opacity: 0.3;
     cursor: not-allowed;
 }
@@ -79,7 +86,7 @@
     padding: 0;
 }
 
-.calendar :global(.rdp-table) {
+.calendar :global(.rdp-month_grid) {
     width: 100%;
     border-collapse: collapse;
 }
@@ -125,7 +132,7 @@
 }
 
 /* Today */
-.calendar :global(.rdp-day_today) > :global(.rdp-day_button) {
+.calendar :global(.rdp-today) > :global(.rdp-day_button) {
     font-weight: 700;
     color: var(--accent);
 }
