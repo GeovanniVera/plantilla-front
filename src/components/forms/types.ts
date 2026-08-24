@@ -17,6 +17,9 @@ export type FormFieldVariant = 'default' | 'floating'
 // ─── Input ───────────────────────────────────────────────
 export type InputType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search'
 
+export type InputSize = 'sm' | 'md'
+export type StartAdornmentVariant = 'plain' | 'subtle' | 'accent' | 'dark'
+
 export interface InputProps {
     value: string
     onChange: (value: string) => void
@@ -29,6 +32,21 @@ export interface InputProps {
     autoComplete?: string
     variant?: InputVariant
     className?: string
+    /** Tamaño compartido con Select. Default: 'md'. */
+    size?: InputSize
+    /** Contenido decorativo al inicio (icono o bloque addon). No interactivo. */
+    startAdornment?: ReactNode
+    /** Superficie del bloque inicial cuando hay startAdornment. Default: 'plain' (sin caja). */
+    startAdornmentVariant?: StartAdornmentVariant
+    /** Contenido decorativo al final (texto, icono informativo). No interactivo. */
+    endAdornment?: ReactNode
+    /** Zona interactiva al final (botón clear/acción custom). Responsabilidad de aria-label es del consumidor. */
+    endAction?: ReactNode
+    /**
+     * Muestra toggle mostrar/ocultar cuando type='password'.
+     * Precedencia: si está activo, reemplaza endAction (documentado en 8E.2).
+     */
+    showPasswordToggle?: boolean
 }
 
 // ─── Textarea ────────────────────────────────────────────
