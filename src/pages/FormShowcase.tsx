@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { LuEye, LuCode, LuSettings2, LuRotateCcw, LuTrash2, LuPlus, LuChevronRight, LuApple, LuPaintbrush, LuSquarePen, LuStar } from 'react-icons/lu'
+import { LuEye, LuCode, LuSettings2, LuRotateCcw, LuTrash2, LuPlus, LuChevronRight, LuApple, LuPaintbrush, LuSquarePen, LuStar, LuSearch } from 'react-icons/lu'
 import { CodeBlock } from '@dev/showcase/Showcase'
 import styles from './TablesShowcase.module.css'
 
@@ -796,6 +796,33 @@ export default function FormShowcase() {
                 </div>
             </div>
 
+            {/* ─── Input enriquecido: demo de capacidades (8E.3) ─── */}
+            <section style={{ marginBottom: 32 }}>
+                <h2 style={{ fontFamily: 'var(--heading)', fontSize: 22, margin: '0 0 4px', color: 'var(--text-h)' }}>Input</h2>
+                <p style={{ fontSize: 13, color: 'var(--text)', margin: '0 0 16px', opacity: 0.7 }}>
+                    Variantes, tamaños, adornos y estados del control base.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+                    <Input value="" onChange={() => {}} placeholder="Básico" />
+                    <Input size="sm" value="" onChange={() => {}} placeholder="Small" />
+                    <Input variant="filled" value="" onChange={() => {}} placeholder="Filled" />
+                    <Input variant="outlined" value="" onChange={() => {}} placeholder="Outlined" />
+                    <Input value="" onChange={() => {}} placeholder="Plain icon" startAdornment={<LuSearch />} />
+                    <Input value="" onChange={() => {}} placeholder="Subtle addon" startAdornment={<LuSearch />} startAdornmentVariant="subtle" />
+                    <Input value="" onChange={() => {}} placeholder="Accent addon" startAdornment={<LuSearch />} startAdornmentVariant="accent" />
+                    <Input value="" onChange={() => {}} placeholder="Dark addon" startAdornment={<LuSearch />} startAdornmentVariant="dark" />
+                    <Input value="Contraseña segura" type="password" showPasswordToggle onChange={() => {}} />
+                    <Input value="" onChange={() => {}} endAdornment={<span style={{ fontSize: 11, opacity: 0.6 }}>máx. 40</span>} placeholder="Con suffix" />
+                    <ClearableInputDemo />
+                    <Input value="" onChange={() => {}} placeholder="Ambos lados" startAdornment={<LuSearch />} startAdornmentVariant="subtle" endAdornment={<span style={{ fontSize: 10, opacity: 0.5 }}>[enter]</span>} />
+                    <Input value="" onChange={() => {}} disabled placeholder="Deshabilitado" />
+                    <Input value="Solo lectura" readOnly onChange={() => {}} />
+                    <FormField label="Correo" required error="Introduce un correo válido">
+                        <Input value="no-es-email" onChange={() => {}} />
+                    </FormField>
+                </div>
+            </section>
+
             <div className={styles.builderLayout}>
                 <ConfiguratorPanel config={config} onChange={handleChange} onReset={handleReset} />
                 <div className={styles.previewArea}>
@@ -811,5 +838,28 @@ export default function FormShowcase() {
                 </div>
             </div>
         </div>
+    )
+}
+
+
+/** Demo helper: input con acción de limpieza usando endAction (8E.3). */
+function ClearableInputDemo() {
+    const [value, setValue] = useState('Texto a borrar')
+    return (
+        <Input
+            value={value}
+            onChange={setValue}
+            placeholder="Escribe…"
+            endAction={
+                <button
+                    type="button"
+                    onClick={() => setValue('')}
+                    aria-label="Limpiar"
+                    style={{ border: 'none', background: 'transparent', color: 'var(--accent)', cursor: 'pointer', fontSize: 12 }}
+                >
+                    Limpiar
+                </button>
+            }
+        />
     )
 }

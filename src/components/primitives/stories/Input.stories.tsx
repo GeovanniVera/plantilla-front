@@ -212,7 +212,47 @@ export const ErrorViaFormField: StoryObj<typeof Input> = {
     },
 }
 
-/** All start-addon variants side by side for visual comparison. */
+/** Editable inputs must never show the blocked cursor (hotfix 8E.3). */
+export const EditableCursorNotBlocked: StoryObj<Partial<InputProps>> = {
+    render: () => (
+        <div className="flex flex-col gap-3 w-72">
+            <Input value="Editable" onChange={() => {}} placeholder="Editable simple" />
+            <Input value="" onChange={() => {}} placeholder="Editable decorado" startAdornment={<LuSearch />} />
+        </div>
+    ),
+    play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+        const canvas = within(canvasElement)
+        for (const ph of ['Editable simple', 'Editable decorado']) {
+            const input = canvas.getByPlaceholderText(ph)
+            await expect(input.getAttribute('disabled')).toBeNull()
+            await expect(input.getAttribute('readonly')).toBeNull()
+            expect(getComputedStyle(input).cursor).not.toBe('not-allowed')
+        }
+    },
+}
+
+/** Disabled keeps the attribute + blocked cursor; readOnly stays editable-looking. */
+export const DisabledVsReadOnly: StoryObj<typeof Input> = {
+    render: () => (
+        <div className="flex flex-col gap-3 w-72">
+            <Input value="" onChange={() => {}} disabled placeholder="Deshabilitado" />
+            <Input value="Solo lectura" readOnly onChange={() => {}} placeholder="Solo lectura" />
+        </div>
+    ),
+    play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+        const canvas = within(canvasElement)
+
+        const disabledInput = canvas.getByPlaceholderText('Deshabilitado') as HTMLInputElement
+        await expect(disabledInput.disabled).toBe(true)
+        expect(getComputedStyle(disabledInput).cursor).toBe('not-allowed')
+
+        const readonlyInput = canvas.getByPlaceholderText('Solo lectura') as HTMLInputElement
+        await expect(readonlyInput.readOnly).toBe(true)
+        expect(getComputedStyle(readonlyInput).cursor).not.toBe('not-allowed')
+    },
+}
+
+/** All start-addon variants side by side for visual comparison. *//** All start-addon variants side by side for visual comparison. */
 export const AddonShowcase: StoryObj<InputProps> = {
     render: () => (
         <div className="flex flex-col gap-4 w-80">

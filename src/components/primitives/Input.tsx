@@ -87,7 +87,7 @@ export default function Input({
                 id={id}
                 autoComplete={autoComplete}
                 data-variant={variant}
-                className={`${VARIANT_SHELL_CLASSES[variant]} h-10 py-2 px-3 ${DISABLED_CLASSES} ${className ?? ''}`}
+                className={`${VARIANT_SHELL_CLASSES[variant]} h-10 py-2 px-3 ${disabled ? DISABLED_CLASSES : ''} ${className ?? ''}`}
             />
         )
     }
