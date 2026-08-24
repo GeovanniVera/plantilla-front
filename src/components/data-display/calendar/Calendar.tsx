@@ -10,6 +10,32 @@ const ChevronIcon = (props: { orientation?: string }) => (
     props.orientation === 'left' ? <LuChevronLeft size={14} /> : <LuChevronRight size={14} />
 )
 
+// ─── Styling ──────────────────────────────────────────────
+/* The wrapper keeps the residual `calendar` module class: it scopes the
+ * --rdp-* bridge variables and the react-day-picker internal overrides
+ * living in Calendar.module.css (third-party contract — deliberately
+ * NOT moved to Tailwind, phase 6G.1). */
+const CALENDAR_WRAPPER_CLASS = styles.calendar
+
+/* DatePicker trigger/popover are our own elements → Tailwind. Size and
+ * value/placeholder resolve to single effective class sets. */
+const PICKER_WRAP_CLASSES = 'relative inline-flex'
+
+const PICKER_INPUT_BASE_CLASSES =
+    'flex items-center justify-between gap-2 border border-border-base rounded-md bg-background text-foreground text-[13px] font-sans cursor-pointer transition-colors duration-150 hover:border-accent-line focus:outline-none focus:border-accent'
+
+const PICKER_SIZE_CLASSES = {
+    sm: 'min-w-[140px] px-2.5 py-1.5 text-xs',
+    md: 'min-w-[180px] px-3 py-2',
+} as const
+
+const VALUE_CLASSES = 'text-foreground'
+const PLACEHOLDER_CLASSES = 'text-foreground opacity-40'
+const ICON_CLASSES = 'text-sm opacity-50'
+
+const POPOVER_CLASSES =
+    'absolute top-[calc(100%+6px)] left-0 z-[200] bg-background border border-border-base rounded-lg shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08),0_10px_20px_-2px_rgba(0,0,0,0.06)] p-3 animate-popover-in'
+
 // ─── Calendar ───────────────────────────────────────
 export interface CalendarProps {
     selected?: Date
@@ -29,7 +55,7 @@ export function Calendar({
     if (maxDate) disabled.push({ after: maxDate })
 
     return (
-        <div className={styles.calendar}>
+        <div className={CALENDAR_WRAPPER_CLASS}>
             <DayPicker
                 mode="single"
                 selected={selected}
@@ -65,7 +91,7 @@ export function CalendarRange({
     if (maxDate) disabled.push({ after: maxDate })
 
     return (
-        <div className={styles.calendar}>
+        <div className={CALENDAR_WRAPPER_CLASS}>
             <DayPicker
                 mode="range"
                 selected={{ from, to }}
@@ -104,20 +130,20 @@ export function DatePicker({
     const [isOpen, setIsOpen] = useState(false)
 
     return (
-        <div className={styles.datePickerWrap}>
+        <div className={PICKER_WRAP_CLASSES}>
             <button
-                className={`${styles.datePickerInput} ${size === 'sm' ? styles.inputSm : ''}`}
+                className={`${PICKER_INPUT_BASE_CLASSES} ${PICKER_SIZE_CLASSES[size]}`}
                 onClick={() => setIsOpen(!isOpen)}
                 type="button"
             >
-                <span className={value ? styles.inputValue : styles.inputPlaceholder}>
+                <span className={value ? VALUE_CLASSES : PLACEHOLDER_CLASSES}>
                     {value ? format(value, 'dd/MM/yyyy', { locale: es }) : placeholder}
                 </span>
-                <span className={styles.inputIcon}><LuCalendarDays size={16} /></span>
+                <span className={ICON_CLASSES}><LuCalendarDays size={16} /></span>
             </button>
 
             {isOpen && (
-                <div className={styles.popover}>
+                <div className={POPOVER_CLASSES}>
                     <Calendar
                         selected={value}
                         onSelect={(date) => {
@@ -152,6 +178,7 @@ export function DateRangePicker({
     maxDate,
 }: DateRangePickerProps) {
     const [isOpen, setIsOpen] = useState(false)
+    const hasValue = !!from
     const label = from && to
         ? `${format(from, 'dd/MM/yyyy')} — ${format(to, 'dd/MM/yyyy')}`
         : from
@@ -159,20 +186,20 @@ export function DateRangePicker({
         : placeholder
 
     return (
-        <div className={styles.datePickerWrap}>
+        <div className={PICKER_WRAP_CLASSES}>
             <button
-                className={styles.datePickerInput}
+                className={`${PICKER_INPUT_BASE_CLASSES} ${PICKER_SIZE_CLASSES.md}`}
                 onClick={() => setIsOpen(!isOpen)}
                 type="button"
             >
-                <span className={from ? styles.inputValue : styles.inputPlaceholder}>
+                <span className={hasValue ? VALUE_CLASSES : PLACEHOLDER_CLASSES}>
                     {label}
                 </span>
-                <span className={styles.inputIcon}><LuCalendarDays size={16} /></span>
+                <span className={ICON_CLASSES}><LuCalendarDays size={16} /></span>
             </button>
 
             {isOpen && (
-                <div className={styles.popover}>
+                <div className={POPOVER_CLASSES}>
                     <CalendarRange
                         from={from}
                         to={to}
