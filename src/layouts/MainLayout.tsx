@@ -25,7 +25,7 @@ const ROUTE_CONFIG: Record<string, RouteConfig> = {
     modales: { title: 'Modales', subtitle: 'Diálogos modales, drawers laterales, drawers multinivel y confirmaciones. Cada ejemplo es funcional.' },
     notificaciones: { title: 'Notificaciones', subtitle: 'Toasts para feedback rápido y ConfirmDialogs para acciones importantes.' },
     navegacion: { title: 'Navegación', subtitle: 'Breadcrumb con migas de pan responsive y Tabs con 3 variantes.' },
-    calendario: { title: 'Calendario', subtitle: 'DatePicker, DateRangePicker y calendario inline con locale español.' },
+    calendario: { title: 'Calendario', subtitle: 'Calendario Organizacional.' },
     ajustes: { title: 'Ajustes', subtitle: 'Configuración de la aplicación.' },
     colores: { title: 'Colores de marca', subtitle: 'Personaliza los colores de la aplicación.' },
     auditoria: { title: 'Auditoría', subtitle: 'Logs del sistema, seguridad y reglas de auditoría.' },
