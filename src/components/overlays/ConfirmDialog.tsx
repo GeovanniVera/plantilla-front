@@ -35,25 +35,25 @@ const VARIANT_CONFIG: Record<
         icon: <LuCircleCheck size={24} />,
         iconClasses: 'bg-success-bg text-success',
         confirmClasses:
-            'border-none bg-success text-white hover:bg-success-strong',
+            'border-none bg-success text-success-solid-fg hover:bg-success-strong',
     },
     destructive: {
         icon: <LuCircleAlert size={24} />,
         iconClasses: 'bg-danger-strong/10 text-danger-strong',
         confirmClasses:
-            'border border-danger-line bg-danger-strong/8 text-danger-strong hover:bg-danger-strong hover:text-white hover:border-danger-strong',
+            'border border-danger-line bg-danger-strong/8 text-danger-strong hover:bg-danger-strong hover:text-danger-solid-fg hover:border-danger-strong',
     },
     warning: {
         icon: <LuTriangleAlert size={24} />,
         iconClasses: 'bg-warning-bg text-warning',
         confirmClasses:
-            'border border-warning-line bg-warning/8 text-warning-strong hover:bg-warning hover:text-white hover:border-warning',
+            'border border-warning-line bg-warning/8 text-warning-strong hover:bg-warning hover:text-warning-solid-fg hover:border-warning',
     },
     info: {
         icon: <LuInfo size={24} />,
         iconClasses: 'bg-info-bg text-info',
         confirmClasses:
-            'border border-info-line bg-info/8 text-info-strong hover:bg-info hover:text-white hover:border-info',
+            'border border-info-line bg-info/8 text-info-strong hover:bg-info hover:text-info-solid-fg hover:border-info',
     },
 }
 

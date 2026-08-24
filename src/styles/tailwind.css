@@ -19,39 +19,66 @@
  * border (.30). Row-tint alpha standardized to .08 (was .06/.08).
  */
 :root {
-    --success: #22c55e;
-    --success-strong: #16a34a;
-    --success-bg: rgba(34, 197, 94, 0.1);
-    --success-border: rgba(34, 197, 94, 0.3);
-    --success-row: rgba(34, 197, 94, 0.08);
+--success: #008736;
+    --success-strong: #007c31;
+    --success-bg: #e6f9e8;
+    --success-border: #3c9052;
+    --success-row: #ecf6ee;
+    --success-solid-fg: #ffffff;
 
-    --warning: #f59e0b;
-    /* Matches StatusDot's amber-600 label color (the only pre-token usage) */
-    --warning-strong: #d97706;
-    --warning-bg: rgba(245, 158, 11, 0.1);
-    --warning-border: rgba(245, 158, 11, 0.3);
-    --warning-row: rgba(245, 158, 11, 0.08);
+    --warning: #a76700;
+    --warning-strong: #9c5a00;
+    --warning-bg: #fff0de;
+    --warning-border: #b07215;
+    --warning-row: #faf1e8;
+    --warning-solid-fg: #ffffff;
 
-    --danger: #ef4444;
-    --danger-strong: #dc2626;
-    --danger-bg: rgba(239, 68, 68, 0.1);
-    --danger-border: rgba(239, 68, 68, 0.3);
-    --danger-row: rgba(239, 68, 68, 0.08);
+    --danger: #c64a46;
+    --danger-strong: #b6433f;
+    --danger-bg: #ffeeec;
+    --danger-border: #c3635c;
+    --danger-row: #fdefee;
+    --danger-solid-fg: #ffffff;
 
-    --info: #3b82f6;
-    --info-strong: #2563eb;
-    --info-bg: rgba(59, 130, 246, 0.1);
-    --info-border: rgba(59, 130, 246, 0.3);
-    --info-row: rgba(59, 130, 246, 0.08);
+    --info: #3772d2;
+    --info-strong: #3369c1;
+    --info-bg: #ebf3ff;
+    --info-border: #5381cb;
+    --info-row: #edf3fd;
+    --info-solid-fg: #ffffff;
 }
 
 /* Status hues are vivid enough to survive dark mode unchanged.
  * Re-declared here so future dark adjustments have a single home. */
 @media (prefers-color-scheme: dark) {
     :root {
-        --warning-strong: #fbbf24;
-        --info-strong: #60a5fa;
-        --success-strong: #4ade80;
+    --success: #4dc06c;
+        --success-strong: #2c9b4f;
+        --success-bg: #122014;
+        --success-border: #2e7942;
+        --success-row: #171e18;
+        --success-solid-fg: #1a1525;
+
+        --warning: #ed990e;
+        --warning-strong: #c47800;
+        --warning-bg: #25190c;
+        --warning-border: #96600b;
+        --warning-row: #211b14;
+        --warning-solid-fg: #1a1525;
+
+        --danger: #db5d57;
+        --danger-strong: #dc655e;
+        --danger-bg: #291615;
+        --danger-border: #a7534d;
+        --danger-row: #231918;
+        --danger-solid-fg: #1a1525;
+
+        --info: #4984e6;
+        --info-strong: #5087e3;
+        --info-bg: #141c2a;
+        --info-border: #436bac;
+        --info-row: #181c23;
+        --info-solid-fg: #1a1525;
     }
 }
 
@@ -77,18 +104,22 @@
     --color-success-strong: var(--success-strong);
     --color-success-bg: var(--success-bg);
     --color-success-line: var(--success-border);
+    --color-success-solid-fg: var(--success-solid-fg);
     --color-warning: var(--warning);
     --color-warning-strong: var(--warning-strong);
     --color-warning-bg: var(--warning-bg);
     --color-warning-line: var(--warning-border);
+    --color-warning-solid-fg: var(--warning-solid-fg);
     --color-danger: var(--danger);
     --color-danger-strong: var(--danger-strong);
     --color-danger-bg: var(--danger-bg);
     --color-danger-line: var(--danger-border);
+    --color-danger-solid-fg: var(--danger-solid-fg);
     --color-info: var(--info);
     --color-info-strong: var(--info-strong);
     --color-info-bg: var(--info-bg);
     --color-info-line: var(--info-border);
+    --color-info-solid-fg: var(--info-solid-fg);
 
     /* Radius scale from measured usage (8px x23, 10px x16, 12px x8, 6px x10) */
     --radius-sm: 6px;
