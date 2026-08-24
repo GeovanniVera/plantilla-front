@@ -25,9 +25,11 @@ export interface UseTableFiltersReturn<T> {
  * Hook que encapsula la lógica de filtrado por columnas.
  * Soporta: text, number, boolean, select
  *
- * Filter semantics: an empty selection (Set with no values) or a numeric
- * range without bounds means NO active filter for that key — all rows stay
- * visible and the key is not counted by hasActiveFilters.
+ * Filter semantics (Excel-style, hotfix 6I — supersedes the phase-3 rule):
+ * - key ABSENT from the map -> no filter, all rows visible.
+ * - key PRESENT with an EMPTY Set -> ACTIVE filter matching nothing -> 0 rows.
+ * - key PRESENT with values -> only rows whose value is in the set.
+ * Explicit clear (clearFilter / clearAllFilters) removes keys again.
  *
  * @param columns - Definición de columnas
  * @param data - Datos originales
@@ -87,16 +89,15 @@ export function useTableFilters<T extends object>(
     }, [columns, data, columnTypes])
 
     // Datos filtrados
-    // Semantics: an EMPTY selection (or a numeric range with no bounds) means
-    // NO active filter for that key — rows stay visible. The setters normalize
-    // this by deleting such entries, so state never holds inert filters.
+    // Semantics (Excel-style): a stored entry IS an active filter. An empty
+    // Set matches nothing -> 0 rows. Absence of the key means unfiltered.
     const filteredData = useMemo(() => {
         return data.filter((row) => {
             for (const [key, selected] of Object.entries(filters)) {
                 const type = columnTypes[key]
                 if (type === 'number') continue // Se filtra por numericFilters
 
-                if (selected.size === 0) continue // Empty selection = no filter
+                if (selected.size === 0) return false // Active filter, no values -> no rows
                 const cellValue = String((row as Record<string, unknown>)[key] ?? '')
                 if (!selected.has(cellValue)) return false
             }
@@ -115,16 +116,10 @@ export function useTableFilters<T extends object>(
         })
     }, [data, filters, numericFilters, columnTypes])
 
-    // Handlers — entries whose selection is empty (or range unbounded) are
-    // REMOVED instead of stored, keeping hasActiveFilters and the FilterBar
-    // consistent with "empty selection = no active filter".
+    // Handlers — an empty selection is STORED as an active filter (0 rows).
+    // Only explicit clear actions remove entries.
     const setFilter = useCallback((columnKey: string, selected: Set<string>) => {
-        setFilters((prev) => {
-            const next = { ...prev }
-            if (selected.size === 0) delete next[columnKey]
-            else next[columnKey] = selected
-            return next
-        })
+        setFilters((prev) => ({ ...prev, [columnKey]: selected }))
         onFilterChange?.()
     }, [onFilterChange])
 
@@ -159,8 +154,7 @@ export function useTableFilters<T extends object>(
     }, [onFilterChange])
 
     // Filtro activo = la key existe en filters o numericFilters
-    // (setters normalize away empty selections / unbounded ranges, so every
-    // stored entry IS an active filter)
+    // (incluye sets vacíos: filtro activo que no matchea nada)
     const hasActiveFilters = useMemo(
         () => Object.keys(filters).length > 0 || Object.keys(numericFilters).length > 0,
         [filters, numericFilters],

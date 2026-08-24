@@ -15,13 +15,19 @@ export interface PaginationProps {
     onPageSizeChange?: (size: number) => void
 }
 
-/* Active/disabled resolved as single effective class sets per state. */
+/* Active/disabled resolved as single effective class sets per state.
+ * Arrow buttons compute their full class string from props instead of
+ * relying on enabled:/disabled: variants (hotfix 6I: restores legacy
+ * hover/colors deterministically across environments). */
 const ROOT_CLASSES = 'flex items-center justify-between px-4 py-3 gap-4'
 const INFO_CLASSES = 'text-[13px] text-foreground whitespace-nowrap'
 const CONTROLS_CLASSES = 'flex items-center gap-1'
 
-const ARROW_BTN_CLASSES =
-    'flex items-center justify-center size-8 rounded-md border border-border-base bg-background text-foreground cursor-pointer transition-colors duration-150 enabled:hover:bg-accent-subtle enabled:hover:border-accent-line enabled:hover:text-accent disabled:opacity-35 disabled:cursor-not-allowed'
+function arrowClasses(disabled: boolean) {
+    return disabled
+        ? 'flex items-center justify-center size-8 rounded-md border border-border-base bg-background text-foreground opacity-35 cursor-not-allowed'
+        : 'flex items-center justify-center size-8 rounded-md border border-border-base bg-background text-foreground cursor-pointer transition-colors duration-150 hover:bg-accent-subtle hover:border-accent-line hover:text-accent'
+}
 
 const PAGE_BTN_BASE_CLASSES =
     'flex items-center justify-center min-w-8 h-8 px-2 rounded-md border bg-transparent text-[13px] font-medium font-sans cursor-pointer transition-colors duration-150'
@@ -86,7 +92,7 @@ export default function Pagination({
                 {hasNavigation && (
                     <>
                         <button
-                            className={ARROW_BTN_CLASSES}
+                            className={arrowClasses(currentPage === 1)}
                             onClick={() => onPageChange(currentPage - 1)}
                             disabled={currentPage === 1}
                             aria-label="Página anterior"
@@ -111,7 +117,7 @@ export default function Pagination({
                         )}
 
                         <button
-                            className={ARROW_BTN_CLASSES}
+                            className={arrowClasses(currentPage === totalPages)}
                             onClick={() => onPageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}
                             aria-label="Página siguiente"

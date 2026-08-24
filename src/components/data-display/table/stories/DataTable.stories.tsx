@@ -86,19 +86,47 @@ export const Filtering: Story = {
     },
 }
 
-export const EmptyFilterKeepsRows: Story = {
-    name: 'Empty Filter Keeps Rows',
+export const EmptyFilterShowsNoRows: Story = {
+    name: 'Empty Filter Shows No Rows',
     parameters: {
         docs: {
             description: {
                 story:
-                    'Documents the empty-filter fix in `useTableFilters`.\n\n' +
-                    '**ANTES:** unchecking every value in a column dropdown stored an empty Set, which ' +
-                    'filtered out ALL rows and kept "Filtros activos" lit with no way to see data.\n' +
-                    '**DESPUÉS:** an empty selection equals NO active filter — all rows remain visible ' +
-                    'and the "Filtros activos" chip clears once the last value is unchecked.\n' +
-                    '**MOTIVO:** consistent hook-level semantics; no per-table workarounds. Try it: open ' +
-                    'the Department filter, check one value, then uncheck it again — rows come back.',
+                    'Excel-style filter semantics: an ACTIVE filter with zero selected ' +
+                    'values matches nothing.\n\n' +
+                    'Try it: open the Department filter and uncheck every value — the ' +
+                    'table shows 0 rows and the filter stays active until cleared.',
+            },
+        },
+    },
+    args: {
+        ...defaultArgs,
+        columns: [
+            { key: 'name', header: 'Name', minWidth: '160px', filterType: 'text' },
+            {
+                key: 'department',
+                header: 'Department',
+                align: 'center',
+                filterType: 'select',
+                filterOptions: [...DEPARTMENTS],
+            },
+            { key: 'salary', header: 'Salary', align: 'right', filterType: 'number' },
+            { key: 'active', header: 'Active', align: 'center', filterType: 'boolean' },
+        ],
+        filters: true,
+    },
+}
+
+export const ClearFilterShowsAllRows: Story = {
+    name: 'Clear Filter Shows All Rows',
+    parameters: {
+        docs: {
+            description: {
+                story:
+                    'Explicitly clearing a filter removes it entirely — all rows come ' +
+                    'back even after an empty-selection state.\n\n' +
+                    'Try it: uncheck all Department values (0 rows), then press ' +
+                    '"Limpiar todos" in the active-filters bar — the full dataset returns.',
             },
         },
     },
