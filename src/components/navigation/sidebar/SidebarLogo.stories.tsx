@@ -33,13 +33,11 @@ export const Collapsed: Story = {
 export const Expanded: Story = {
     decorators: [
         (Story) => (
-            <MemoryRouter>
-                <SidebarContext.Provider value={{ expanded: true, toggleExpanded: () => {} }}>
-                    <div style={{ width: 240, background: 'var(--bg)', padding: 12 }}>
-                        <Story />
-                    </div>
-                </SidebarContext.Provider>
-            </MemoryRouter>
+            <SidebarContext.Provider value={{ expanded: true, toggleExpanded: () => {} }}>
+                <div style={{ width: 240, background: 'var(--bg)', padding: 12 }}>
+                    <Story />
+                </div>
+            </SidebarContext.Provider>
         ),
     ],
     args: {

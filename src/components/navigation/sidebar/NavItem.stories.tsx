@@ -45,13 +45,11 @@ export const Active: Story = {
 export const Collapsed: Story = {
     decorators: [
         (Story) => (
-            <MemoryRouter>
-                <SidebarContext.Provider value={{ expanded: false, toggleExpanded: () => {} }}>
-                    <div style={{ width: 80, background: 'var(--bg)', padding: 12 }}>
-                        <Story />
-                    </div>
-                </SidebarContext.Provider>
-            </MemoryRouter>
+            <SidebarContext.Provider value={{ expanded: false, toggleExpanded: () => {} }}>
+                <div style={{ width: 80, background: 'var(--bg)', padding: 12 }}>
+                    <Story />
+                </div>
+            </SidebarContext.Provider>
         ),
     ],
     args: {
