@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 
 export interface UseTablePaginationReturn {
-    /** Página actual (1-indexed) */
+    /** Página actual efectiva (1-indexed, nunca > totalPages ni < 1) */
     currentPage: number
     /** Total de páginas */
     totalPages: number
@@ -25,51 +25,53 @@ export interface UseTablePaginationReturn {
 
 /**
  * Hook que encapsula la lógica de paginación client-side.
- * Recibe la cantidad total de items (ya filtrados) y devuelve
- * los índices de slice para que el componente haga data.slice().
  *
- * @param totalItems - Total de items (post-filtrado)
+ * The stored page may temporarily exceed totalPages when data/filters
+ * shrink the dataset; the EFFECTIVE page is derived as
+ * min(max(1, stored), totalPages) — pure computation, no setState during
+ * render (hotfix 7D). Empty datasets yield totalPages = 1 and are valid.
+ *
+ * @param totalItems - Total de items (ya filtrados)
  * @param initialPageSize - Items por página (default 10)
  */
 export function useTablePagination(
     totalItems: number,
     initialPageSize: number = 10,
 ): UseTablePaginationReturn {
-    const [currentPage, setCurrentPage] = useState(1)
+    const [storedPage, setStoredPage] = useState(1)
     const [pageSize, setPageSizeState] = useState(initialPageSize)
 
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
 
-    // Clamp si el total de items cambia y la página actual queda fuera de rango
-    const clampedPage = Math.min(currentPage, totalPages)
-    if (clampedPage !== currentPage) {
-        setCurrentPage(clampedPage)
-    }
+    // Derived, never mutated during render.
+    const effectivePage = Math.min(Math.max(1, storedPage), totalPages)
 
     const goToPage = useCallback((page: number) => {
-        setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+        setStoredPage(Math.max(1, Math.min(page, totalPages)))
     }, [totalPages])
 
+    // Navigation bases itself on the effective page so a stored out-of-range
+    // page can't produce out-of-range jumps.
     const nextPage = useCallback(() => {
-        setCurrentPage((p) => Math.min(p + 1, totalPages))
-    }, [totalPages])
+        setStoredPage(Math.min(effectivePage + 1, totalPages))
+    }, [effectivePage, totalPages])
 
     const prevPage = useCallback(() => {
-        setCurrentPage((p) => Math.max(p - 1, 1))
-    }, [])
+        setStoredPage(Math.max(effectivePage - 1, 1))
+    }, [effectivePage])
 
     const setPageSize = useCallback((size: number) => {
         setPageSizeState(size)
-        setCurrentPage(1) // Reset a página 1 al cambiar tamaño
+        setStoredPage(1) // Reset a página 1 al cambiar tamaño
     }, [])
 
     const { startIndex, endIndex } = useMemo(() => {
-        const start = (clampedPage - 1) * pageSize
+        const start = (effectivePage - 1) * pageSize
         return { startIndex: start, endIndex: start + pageSize }
-    }, [clampedPage, pageSize])
+    }, [effectivePage, pageSize])
 
     return {
-        currentPage: clampedPage,
+        currentPage: effectivePage,
         totalPages,
         pageSize,
         goToPage,

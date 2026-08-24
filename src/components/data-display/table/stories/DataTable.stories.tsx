@@ -154,8 +154,9 @@ export const PaginationStory: Story = {
         docs: {
             description: {
                 story:
-                    '15 rows with pageSize 5 gives 3 pages. Known quirk: the page-size selector renders even ' +
-                    'when a single page exists.',
+                    '15 rows with pageSize 5 gives 3 pages. The size selector appears because the ' +
+                    'dataset is larger than the smallest option (5) — switching sizes changes what ' +
+                    'is visible.',
             },
         },
     },
@@ -168,6 +169,25 @@ export const PaginationStory: Story = {
 
 function formatCurrency(value: unknown): string {
     return `$${Number(value ?? 0).toLocaleString('en-US')}`
+}
+
+export const FewRowsHidesPageSizeSelect: Story = {
+    name: 'Few Rows Hides Size Select',
+    parameters: {
+        docs: {
+            description: {
+                story:
+                    'With only 3 rows every page-size option renders identically, so the size ' +
+                    'selector is hidden — it could not change what is visible.',
+            },
+        },
+    },
+    args: {
+        ...defaultArgs,
+        data: employeeRows.slice(0, 3),
+        pagination: true,
+        pageSize: 10,
+    },
 }
 
 export const CustomRendering: Story = {

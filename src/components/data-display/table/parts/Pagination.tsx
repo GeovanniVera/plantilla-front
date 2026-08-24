@@ -39,6 +39,21 @@ const DOTS_CLASSES = 'flex items-center justify-center w-8 h-8 text-sm text-fore
 const PAGE_SIZE_SELECT_CLASSES =
     'h-8 px-2 rounded-md border border-border-base bg-background text-foreground text-[13px] font-sans cursor-pointer outline-none ml-2 transition-colors duration-150 ease-in-out hover:border-accent-line focus:border-accent'
 
+const PAGE_SIZE_OPTIONS = [5, 10, 20, 50]
+const MIN_PAGE_SIZE_OPTION = Math.min(...PAGE_SIZE_OPTIONS)
+
+/* The size select is only useful when the user could actually see a
+ * different amount of rows: with totalItems <= the smallest option every
+ * choice renders identically (hotfix 7D). Without totalItems we cannot
+ * judge and keep the legacy always-visible behavior. */
+const showPageSizeSelect = (
+    onPageSizeChange: ((size: number) => void) | undefined,
+    totalItems: number | undefined,
+) => {
+    if (!onPageSizeChange) return false
+    return totalItems === undefined || totalItems > MIN_PAGE_SIZE_OPTION
+}
+
 export default function Pagination({
     currentPage,
     totalPages,
@@ -127,8 +142,8 @@ export default function Pagination({
                     </>
                 )}
 
-                {/* Selector de page size — siempre visible si hay callback */}
-                {onPageSizeChange && (
+                {/* Selector de page size — solo si cambiar el tamaño puede alterar lo mostrado */}
+                {onPageSizeChange && showPageSizeSelect(onPageSizeChange, totalItems) && (
                     <select
                         className={PAGE_SIZE_SELECT_CLASSES}
                         value={pageSize}
