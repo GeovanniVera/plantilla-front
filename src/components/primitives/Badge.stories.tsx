@@ -58,6 +58,14 @@ export const WithIcon: Story = {
     ),
 }
 
+export const LongLabel: Story = {
+    render: () => (
+        <Badge variant="info">
+            Etiqueta de longitud considerable para verificar el comportamiento
+        </Badge>
+    ),
+}
+
 export const AllVariants: Story = {
     render: () => (
         <div style={{ display: 'flex', gap: 8 }}>
