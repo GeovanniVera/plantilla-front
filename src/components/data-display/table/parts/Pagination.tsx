@@ -30,9 +30,9 @@ function arrowClasses(disabled: boolean) {
 }
 
 const PAGE_BTN_BASE_CLASSES =
-    'flex items-center justify-center min-w-8 h-8 px-2 rounded-md border bg-transparent text-[13px] font-medium font-sans cursor-pointer transition-colors duration-150'
+    'flex items-center justify-center min-w-8 h-8 px-2 rounded-md border text-[13px] font-medium font-sans cursor-pointer transition-colors duration-150'
 const PAGE_ACTIVE_CLASSES = 'border-accent bg-accent text-white font-semibold hover:brightness-110'
-const PAGE_INACTIVE_CLASSES = 'border-transparent text-foreground hover:bg-accent-subtle hover:text-accent'
+const PAGE_INACTIVE_CLASSES = 'border-transparent bg-transparent text-foreground hover:bg-accent-subtle hover:text-accent'
 
 const DOTS_CLASSES = 'flex items-center justify-center w-8 h-8 text-sm text-foreground opacity-50'
 
