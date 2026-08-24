@@ -15,6 +15,29 @@ interface BulkActionsBarProps {
     actions?: BulkAction[]
 }
 
+/* Danger action colors consume the semantic danger tokens (exact match
+ * with the previous literals: .3 border = --danger-line, .08 bg =
+ * danger-strong/8, #dc2626 = --danger-strong). */
+const BAR_CLASSES =
+    'flex items-center justify-between px-3.5 py-2 bg-accent-subtle border border-accent-line rounded-md gap-3'
+
+const INFO_TEXT_CLASSES = 'text-[13px] font-semibold text-accent'
+
+const SELECT_ALL_BTN_CLASSES =
+    'px-2 py-[3px] rounded-[5px] border border-accent-line bg-transparent text-accent text-[11px] font-sans cursor-pointer transition-colors duration-150 hover:bg-accent hover:text-white'
+
+const CLEAR_BTN_CLASSES =
+    'flex items-center gap-1 px-2 py-[3px] rounded-[5px] border-none bg-transparent text-foreground text-[11px] font-sans cursor-pointer opacity-60 transition-opacity duration-150 hover:opacity-100'
+
+function actionClasses(isDanger: boolean) {
+    return [
+        'flex items-center gap-[5px] px-2.5 py-[5px] rounded-sm border text-xs font-sans font-medium cursor-pointer transition-colors duration-150',
+        isDanger
+            ? 'border-danger-line bg-danger-strong/8 text-danger-strong hover:bg-danger-strong/15'
+            : 'border-accent-line bg-transparent text-accent hover:bg-accent hover:text-white',
+    ].join(' ')
+}
+
 export function BulkActionsBar({
     selectedCount,
     totalCount,
@@ -25,112 +48,29 @@ export function BulkActionsBar({
     if (selectedCount === 0) return null
 
     return (
-        <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '8px 14px',
-            background: 'var(--accent-bg)',
-            border: '1px solid var(--accent-border)',
-            borderRadius: '8px',
-            gap: '12px',
-        }}>
+        <div className={BAR_CLASSES}>
             {/* Left: Selection info */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: 'var(--accent)',
-                }}>
+            <div className="flex items-center gap-2.5">
+                <span className={INFO_TEXT_CLASSES}>
                     {selectedCount} de {totalCount} seleccionados
                 </span>
 
-                <button
-                    onClick={onSelectAll}
-                    style={{
-                        padding: '3px 8px',
-                        borderRadius: '5px',
-                        border: '1px solid var(--accent-border)',
-                        background: 'transparent',
-                        color: 'var(--accent)',
-                        fontSize: '11px',
-                        fontFamily: 'var(--sans)',
-                        cursor: 'pointer',
-                        transition: 'background 0.12s',
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'var(--accent)'
-                        e.currentTarget.style.color = '#fff'
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent'
-                        e.currentTarget.style.color = 'var(--accent)'
-                    }}
-                >
+                <button onClick={onSelectAll} className={SELECT_ALL_BTN_CLASSES}>
                     Seleccionar todo ({totalCount})
                 </button>
 
-                <button
-                    onClick={onClearSelection}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        padding: '3px 8px',
-                        borderRadius: '5px',
-                        border: 'none',
-                        background: 'transparent',
-                        color: 'var(--text)',
-                        fontSize: '11px',
-                        fontFamily: 'var(--sans)',
-                        cursor: 'pointer',
-                        opacity: 0.6,
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.opacity = '1'
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.opacity = '0.6'
-                    }}
-                >
+                <button onClick={onClearSelection} className={CLEAR_BTN_CLASSES}>
                     <LuX size={12} />
                     Limpiar
                 </button>
             </div>
 
             {/* Right: Actions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div className="flex items-center gap-1.5">
                 {actions.map((action, i) => {
                     const Icon = action.icon
-                    const isDanger = action.variant === 'danger'
                     return (
-                        <button
-                            key={i}
-                            onClick={action.onClick}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '5px',
-                                padding: '5px 10px',
-                                borderRadius: '6px',
-                                border: `1px solid ${isDanger ? 'rgba(239, 68, 68, 0.3)' : 'var(--accent-border)'}`,
-                                background: isDanger ? 'rgba(239, 68, 68, 0.08)' : 'transparent',
-                                color: isDanger ? '#dc2626' : 'var(--accent)',
-                                fontSize: '12px',
-                                fontFamily: 'var(--sans)',
-                                fontWeight: 500,
-                                cursor: 'pointer',
-                                transition: 'background 0.12s',
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.background = isDanger ? 'rgba(239, 68, 68, 0.15)' : 'var(--accent)'
-                                e.currentTarget.style.color = isDanger ? '#dc2626' : '#fff'
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.background = isDanger ? 'rgba(239, 68, 68, 0.08)' : 'transparent'
-                                e.currentTarget.style.color = isDanger ? '#dc2626' : 'var(--accent)'
-                            }}
-                        >
+                        <button key={i} onClick={action.onClick} className={actionClasses(action.variant === 'danger')}>
                             <Icon size={13} />
                             {action.label}
                         </button>

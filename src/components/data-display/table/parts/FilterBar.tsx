@@ -1,4 +1,8 @@
-import styles from './FilterBar.module.css';
+const BAR_CLASSES =
+    'flex items-center justify-between px-4 py-2.5 bg-accent-subtle border border-accent-line rounded-md mb-3'
+const TEXT_CLASSES = 'text-[13px] text-accent font-medium'
+const CLEAR_BTN_CLASSES =
+    'bg-transparent border border-accent-line rounded-sm px-2.5 py-1 text-xs text-accent cursor-pointer transition-colors duration-150 hover:bg-accent hover:text-background'
 
 interface FilterBarProps {
     hasActiveFilters: boolean;
@@ -16,10 +20,10 @@ export function FilterBar({
     if (!hasActiveFilters) return null;
 
     return (
-        <div className={styles.bar}>
-            <span className={styles.text}>{label}</span>
+        <div className={BAR_CLASSES}>
+            <span className={TEXT_CLASSES}>{label}</span>
             <button
-                className={styles.clearBtn}
+                className={CLEAR_BTN_CLASSES}
                 onClick={onClearAll}
             >
                 {clearLabel}

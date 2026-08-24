@@ -8,22 +8,25 @@ interface DensitySelectorProps {
 }
 
 const OPTIONS: { value: Density; icon: typeof LuRows3; label: string; px: string }[] = [
-    { value: 'compact',   icon: LuRows3, label: 'Condensado',  px: '40px' },
+    { value: 'compact',     icon: LuRows3, label: 'Condensado', px: '40px' },
     { value: 'comfortable', icon: LuRows2, label: 'Regular',    px: '48px' },
-    { value: 'relaxed',   icon: LuRows4,  label: 'Relajado',    px: '56px' },
+    { value: 'relaxed',     icon: LuRows4, label: 'Relajado',   px: '56px' },
 ]
+
+/* Active/hover resolved as single effective sets per state — replaces
+ * the legacy JS mouseenter/mouseleave handlers. */
+const GROUP_CLASSES = 'flex items-center gap-0.5 p-0.5 rounded-md border border-border-base bg-surface'
+
+function buttonClasses(isActive: boolean) {
+    return [
+        'flex items-center justify-center size-7 rounded-sm border-none cursor-pointer transition-colors duration-150',
+        isActive ? 'bg-accent text-white opacity-100' : 'bg-transparent text-foreground opacity-60 hover:bg-accent-subtle hover:opacity-100',
+    ].join(' ')
+}
 
 export function DensitySelector({ value, onChange }: DensitySelectorProps) {
     return (
-        <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '2px',
-            padding: '2px',
-            borderRadius: '8px',
-            border: '1px solid var(--border)',
-            background: 'var(--code-bg)',
-        }}>
+        <div className={GROUP_CLASSES}>
             {OPTIONS.map((opt) => {
                 const Icon = opt.icon
                 const isActive = value === opt.value
@@ -32,32 +35,7 @@ export function DensitySelector({ value, onChange }: DensitySelectorProps) {
                         key={opt.value}
                         onClick={() => onChange(opt.value)}
                         title={`${opt.label} (${opt.px})`}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '28px',
-                            height: '28px',
-                            borderRadius: '6px',
-                            border: 'none',
-                            background: isActive ? 'var(--accent)' : 'transparent',
-                            color: isActive ? '#fff' : 'var(--text)',
-                            cursor: 'pointer',
-                            transition: 'background 0.12s, color 0.12s',
-                            opacity: isActive ? 1 : 0.6,
-                        }}
-                        onMouseEnter={(e) => {
-                            if (!isActive) {
-                                e.currentTarget.style.background = 'var(--accent-bg)'
-                                e.currentTarget.style.opacity = '1'
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            if (!isActive) {
-                                e.currentTarget.style.background = 'transparent'
-                                e.currentTarget.style.opacity = '0.6'
-                            }
-                        }}
+                        className={buttonClasses(isActive)}
                     >
                         <Icon size={14} />
                     </button>

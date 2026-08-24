@@ -7,6 +7,31 @@ interface ColumnToggleProps {
     onShowAll: () => void
 }
 
+const WRAP_CLASSES = 'relative inline-flex'
+
+const TRIGGER_CLASSES =
+    'flex items-center gap-[5px] px-2.5 py-[5px] rounded-md border border-border-base bg-background text-foreground text-xs font-sans cursor-pointer transition-colors duration-150 hover:border-accent-line'
+
+const HIDDEN_COUNT_CLASSES = 'px-[5px] rounded-[4px] bg-accent text-white text-[10px] font-semibold leading-4'
+
+const POPOVER_CLASSES =
+    'absolute top-[calc(100%+6px)] right-0 z-[200] w-[200px] bg-background border border-border-base rounded-[10px] shadow-[0_4px_12px_rgba(0,0,0,0.1)] overflow-hidden'
+
+const POPOVER_HEADER_CLASSES = 'flex items-center justify-between px-3 py-2 border-b border-border-base'
+const POPOVER_TITLE_CLASSES = 'text-xs font-semibold text-heading'
+const SHOW_ALL_BTN_CLASSES = 'px-1.5 py-0.5 rounded-sm border-none bg-transparent text-accent text-[11px] font-sans cursor-pointer'
+
+const LIST_CLASSES = 'py-1 max-h-60 overflow-y-auto'
+const ITEM_CLASSES = 'flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors duration-100 hover:bg-accent-subtle'
+
+function checkboxClasses(visible: boolean) {
+    return `size-4 rounded-[4px] flex items-center justify-center shrink-0 transition-colors duration-150 border-[1.5px] ${
+        visible ? 'border-accent bg-accent' : 'border-border-base bg-transparent'
+    }`
+}
+
+const ITEM_LABEL_CLASSES = (visible: boolean) => `text-xs ${visible ? 'text-foreground' : 'text-foreground/50'}`
+
 export function ColumnToggle({ columns, onToggle, onShowAll }: ColumnToggleProps) {
     const [isOpen, setIsOpen] = useState(false)
     const popoverRef = useRef<HTMLDivElement>(null)
@@ -29,129 +54,42 @@ export function ColumnToggle({ columns, onToggle, onShowAll }: ColumnToggleProps
     const hiddenCount = columns.filter((c) => !c.visible).length
 
     return (
-        <div style={{ position: 'relative', display: 'inline-flex' }}>
-            <button
-                ref={buttonRef}
-                onClick={() => setIsOpen((p) => !p)}
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    padding: '5px 10px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border)',
-                    background: 'var(--bg)',
-                    color: 'var(--text)',
-                    fontSize: '12px',
-                    fontFamily: 'var(--sans)',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.12s',
-                }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--accent-border)'
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--border)'
-                }}
-            >
+        <div className={WRAP_CLASSES}>
+            <button ref={buttonRef} className={TRIGGER_CLASSES} onClick={() => setIsOpen((p) => !p)}>
                 <LuColumns3 size={14} />
                 Columnas
                 {hiddenCount > 0 && (
-                    <span style={{
-                        padding: '0 5px',
-                        borderRadius: '4px',
-                        background: 'var(--accent)',
-                        color: '#fff',
-                        fontSize: '10px',
-                        fontWeight: 600,
-                    }}>
+                    <span className={HIDDEN_COUNT_CLASSES}>
                         {hiddenCount}
                     </span>
                 )}
             </button>
 
             {isOpen && (
-                <div
-                    ref={popoverRef}
-                    style={{
-                        position: 'absolute',
-                        top: 'calc(100% + 6px)',
-                        right: 0,
-                        zIndex: 200,
-                        width: '200px',
-                        background: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '10px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        overflow: 'hidden',
-                    }}
-                >
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '8px 12px',
-                        borderBottom: '1px solid var(--border)',
-                    }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-h)' }}>
+                <div ref={popoverRef} className={POPOVER_CLASSES}>
+                    <div className={POPOVER_HEADER_CLASSES}>
+                        <span className={POPOVER_TITLE_CLASSES}>
                             Columnas visibles
                         </span>
                         <button
                             onClick={() => { onShowAll(); setIsOpen(false) }}
-                            style={{
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                border: 'none',
-                                background: 'transparent',
-                                color: 'var(--accent)',
-                                fontSize: '11px',
-                                fontFamily: 'var(--sans)',
-                                cursor: 'pointer',
-                            }}
+                            className={SHOW_ALL_BTN_CLASSES}
                         >
                             Mostrar todo
                         </button>
                     </div>
 
-                    <div style={{ padding: '4px 0', maxHeight: '240px', overflowY: 'auto' }}>
+                    <div className={LIST_CLASSES}>
                         {columns.map((col) => (
                             <label
                                 key={col.key}
                                 onClick={() => onToggle(col.key)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '6px 12px',
-                                    cursor: 'pointer',
-                                    transition: 'background 0.1s',
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.background = 'var(--accent-bg)'
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.background = 'transparent'
-                                }}
+                                className={ITEM_CLASSES}
                             >
-                                <div style={{
-                                    width: '16px',
-                                    height: '16px',
-                                    borderRadius: '4px',
-                                    border: `1.5px solid ${col.visible ? 'var(--accent)' : 'var(--border)'}`,
-                                    background: col.visible ? 'var(--accent)' : 'transparent',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    flexShrink: 0,
-                                    transition: 'background 0.12s, border-color 0.12s',
-                                }}>
+                                <div className={checkboxClasses(col.visible)}>
                                     {col.visible && <LuCheck size={10} color="#fff" />}
                                 </div>
-                                <span style={{
-                                    fontSize: '12px',
-                                    color: 'var(--text)',
-                                    opacity: col.visible ? 1 : 0.5,
-                                }}>
+                                <span className={ITEM_LABEL_CLASSES(col.visible)}>
                                     {col.header}
                                 </span>
                             </label>

@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { LuFilter, LuX } from 'react-icons/lu'
 import type { FilterType } from '../types'
-import styles from './FilterDropdown.module.css'
 
 interface FilterDropdownProps {
     header: string
@@ -17,6 +16,45 @@ interface FilterDropdownProps {
     onNumericChange?: (range: { min?: number; max?: number }) => void
     onClear: () => void
 }
+
+/* ─── Styling ──────────────────────────────────────────────
+ * All chrome is Tailwind. The popover POSITION remains JS-computed
+ * (getBoundingClientRect + viewport flip) via the inline style below —
+ * deliberately outside the migration. Entrance reuses the shared
+ * --animate-popover-in token (.12s ease, identical to the legacy rule). */
+const CONTAINER_CLASSES = 'relative inline-flex items-center gap-1'
+
+const TRIGGER_BASE_CLASSES =
+    'flex items-center justify-center size-[22px] rounded-sm border-none bg-transparent cursor-pointer shrink-0 transition-colors duration-150 ease-in-out'
+const TRIGGER_ACTIVE_CLASSES = 'text-accent opacity-100 bg-accent-subtle'
+const TRIGGER_IDLE_CLASSES = 'text-foreground opacity-50 hover:bg-accent-subtle hover:text-accent hover:opacity-100'
+
+const POPOVER_CLASSES =
+    'w-60 bg-background border border-border-base rounded-[10px] shadow-[0_4px_6px_-1px_rgba(0,0,0,0.08),0_10px_20px_-2px_rgba(0,0,0,0.06)] overflow-hidden animate-popover-in'
+
+const POPOVER_HEADER_CLASSES = 'flex items-center justify-between pt-2.5 pb-2 px-3 border-b border-border-base'
+const POPOVER_TITLE_CLASSES = 'text-xs font-semibold text-heading'
+const CLEAR_BTN_CLASSES =
+    'flex items-center gap-1 px-2 py-[3px] rounded-[5px] border-none bg-transparent text-foreground text-[11px] font-sans cursor-pointer transition-colors duration-150 ease-in-out hover:bg-danger-strong/10 hover:text-danger-strong'
+
+const SEARCH_WRAP_CLASSES = 'px-3 py-2 border-b border-border-base'
+const SEARCH_INPUT_CLASSES =
+    'w-full px-2.5 py-1.5 border border-border-base rounded-sm bg-surface text-foreground text-xs font-sans outline-none box-border transition-colors duration-150 ease-in-out focus:border-accent placeholder:text-foreground/50'
+
+const CHECK_ITEM_CLASSES = 'flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors duration-100 ease-in-out hover:bg-accent-subtle'
+const CHECKBOX_CLASSES = 'size-[15px] rounded-[4px] accent-accent cursor-pointer shrink-0'
+const CHECK_LABEL_CLASSES = 'text-xs text-foreground whitespace-nowrap overflow-hidden text-ellipsis'
+
+const DIVIDER_CLASSES = 'h-px bg-border-base m-0'
+const LIST_CLASSES = 'max-h-[200px] overflow-y-auto py-1'
+const NO_RESULTS_CLASSES = 'py-4 px-3 text-xs text-foreground text-center m-0 opacity-60'
+
+const NUMBER_FILTER_CLASSES = 'p-3 flex flex-col gap-2.5'
+const NUMBER_ROW_CLASSES = 'flex items-center gap-2'
+const NUMBER_LABEL_CLASSES = 'text-xs text-foreground min-w-[80px] shrink-0'
+const NUMBER_INPUT_CLASSES =
+    'flex-1 px-2.5 py-1.5 border border-border-base rounded-sm bg-surface text-foreground text-xs font-sans outline-none box-border transition-colors duration-150 ease-in-out focus:border-accent placeholder:text-foreground/50'
+const NUMBER_HINT_CLASSES = 'text-[11px] text-foreground opacity-50 m-0 text-center'
 
 export default function FilterDropdown({
     header,
@@ -124,10 +162,10 @@ export default function FilterDropdown({
     }, [isOpen, position])
 
     return (
-        <div className={styles.container}>
+        <div className={CONTAINER_CLASSES}>
             <button
                 ref={buttonRef}
-                className={`${styles.trigger} ${hasFilter ? styles.triggerActive : ''}`}
+                className={`${TRIGGER_BASE_CLASSES} ${hasFilter ? TRIGGER_ACTIVE_CLASSES : TRIGGER_IDLE_CLASSES}`}
                 onClick={handleOpen}
                 aria-label={`Filtrar ${header}`}
                 aria-expanded={isOpen}
@@ -136,11 +174,11 @@ export default function FilterDropdown({
             </button>
 
             {isOpen && createPortal(
-                <div ref={popoverRef} className={styles.popover} style={popoverStyle}>
-                    <div className={styles.popoverHeader}>
-                        <span className={styles.popoverTitle}>Filtrar: {header}</span>
+                <div ref={popoverRef} className={POPOVER_CLASSES} style={popoverStyle}>
+                    <div className={POPOVER_HEADER_CLASSES}>
+                        <span className={POPOVER_TITLE_CLASSES}>Filtrar: {header}</span>
                         {hasFilter && (
-                            <button className={styles.clearBtn} onClick={() => { onClear(); setIsOpen(false) }}>
+                            <button className={CLEAR_BTN_CLASSES} onClick={() => { onClear(); setIsOpen(false) }}>
                                 <LuX size={14} />
                                 Limpiar
                             </button>
@@ -222,10 +260,10 @@ function TextFilterContent({
 
     return (
         <>
-            <div className={styles.searchWrap}>
+            <div className={SEARCH_WRAP_CLASSES}>
                 <input
                     type="text"
-                    className={styles.searchInput}
+                    className={SEARCH_INPUT_CLASSES}
                     placeholder="Buscar..."
                     value={search}
                     onChange={(e) => handleSearch(e.target.value)}
@@ -233,32 +271,32 @@ function TextFilterContent({
                 />
             </div>
 
-            <label className={styles.checkItem}>
+            <label className={CHECK_ITEM_CLASSES}>
                 <input
                     type="checkbox"
                     checked={allSelected}
                     ref={(el) => { if (el) el.indeterminate = indeterminate }}
                     onChange={toggleAll}
-                    className={styles.checkbox}
+                    className={CHECKBOX_CLASSES}
                 />
-                <span className={styles.checkLabel}>Seleccionar todo</span>
+                <span className={CHECK_LABEL_CLASSES}>Seleccionar todo</span>
             </label>
 
-            <div className={styles.divider} />
+            <div className={DIVIDER_CLASSES} />
 
-            <div className={styles.list}>
+            <div className={LIST_CLASSES}>
                 {filteredValues.length === 0 ? (
-                    <p className={styles.noResults}>Sin resultados</p>
+                    <p className={NO_RESULTS_CLASSES}>Sin resultados</p>
                 ) : (
                     filteredValues.map((value) => (
-                        <label key={value} className={styles.checkItem}>
+                        <label key={value} className={CHECK_ITEM_CLASSES}>
                             <input
                                 type="checkbox"
                                 checked={selectedValues.has(value)}
                                 onChange={() => toggleValue(value)}
-                                className={styles.checkbox}
+                                className={CHECKBOX_CLASSES}
                             />
-                            <span className={styles.checkLabel}>{value}</span>
+                            <span className={CHECK_LABEL_CLASSES}>{value}</span>
                         </label>
                     ))
                 )}
@@ -267,48 +305,7 @@ function TextFilterContent({
     )
 }
 
-// ─── Number filter (mayor/menor que) ───────────────
-function NumberFilterContent({
-    range,
-    onChange,
-}: {
-    range?: { min?: number; max?: number }
-    onChange: (range: { min?: number; max?: number }) => void
-}) {
-    return (
-        <div className={styles.numberFilter}>
-            <div className={styles.numberRow}>
-                <label className={styles.numberLabel}>Mayor que</label>
-                <input
-                    type="number"
-                    className={styles.numberInput}
-                    placeholder="Mínimo"
-                    value={range?.min ?? ''}
-                    onChange={(e) => {
-                        const val = e.target.value === '' ? undefined : Number(e.target.value)
-                        onChange({ ...range, min: val })
-                    }}
-                />
-            </div>
-            <div className={styles.numberRow}>
-                <label className={styles.numberLabel}>Menor que</label>
-                <input
-                    type="number"
-                    className={styles.numberInput}
-                    placeholder="Máximo"
-                    value={range?.max ?? ''}
-                    onChange={(e) => {
-                        const val = e.target.value === '' ? undefined : Number(e.target.value)
-                        onChange({ ...range, max: val })
-                    }}
-                />
-            </div>
-            <p className={styles.numberHint}>Deja vacío para no aplicar límite.</p>
-        </div>
-    )
-}
-
-// ─── Boolean filter (true/false) ───────────────────
+// ─── Boolean filter (Sí/No) ────────────────────────
 function BooleanFilterContent({
     selectedValues,
     onChange,
@@ -335,39 +332,80 @@ function BooleanFilterContent({
 
     return (
         <>
-            <label className={styles.checkItem}>
+            <label className={CHECK_ITEM_CLASSES}>
                 <input
                     type="checkbox"
                     checked={allSelected}
                     ref={(el) => { if (el) el.indeterminate = indeterminate }}
                     onChange={toggleAll}
-                    className={styles.checkbox}
+                    className={CHECKBOX_CLASSES}
                 />
-                <span className={styles.checkLabel}>Seleccionar todo</span>
+                <span className={CHECK_LABEL_CLASSES}>Seleccionar todo</span>
             </label>
 
-            <div className={styles.divider} />
+            <div className={DIVIDER_CLASSES} />
 
-            <div className={styles.list}>
-                <label className={styles.checkItem}>
+            <div className={LIST_CLASSES}>
+                <label className={CHECK_ITEM_CLASSES}>
                     <input
                         type="checkbox"
                         checked={selectedValues.has('true')}
                         onChange={() => toggleValue('true')}
-                        className={styles.checkbox}
+                        className={CHECKBOX_CLASSES}
                     />
-                    <span className={styles.checkLabel}>Sí / Verdadero</span>
+                    <span className={CHECK_LABEL_CLASSES}>Sí / Verdadero</span>
                 </label>
-                <label className={styles.checkItem}>
+                <label className={CHECK_ITEM_CLASSES}>
                     <input
                         type="checkbox"
                         checked={selectedValues.has('false')}
                         onChange={() => toggleValue('false')}
-                        className={styles.checkbox}
+                        className={CHECKBOX_CLASSES}
                     />
-                    <span className={styles.checkLabel}>No / Falso</span>
+                    <span className={CHECK_LABEL_CLASSES}>No / Falso</span>
                 </label>
             </div>
         </>
+    )
+}
+
+// ─── Number filter (mayor/menor que) ───────────────
+function NumberFilterContent({
+    range,
+    onChange,
+}: {
+    range?: { min?: number; max?: number }
+    onChange: (range: { min?: number; max?: number }) => void
+}) {
+    return (
+        <div className={NUMBER_FILTER_CLASSES}>
+            <div className={NUMBER_ROW_CLASSES}>
+                <label className={NUMBER_LABEL_CLASSES}>Mayor que</label>
+                <input
+                    type="number"
+                    className={NUMBER_INPUT_CLASSES}
+                    placeholder="Mínimo"
+                    value={range?.min ?? ''}
+                    onChange={(e) => {
+                        const val = e.target.value === '' ? undefined : Number(e.target.value)
+                        onChange({ ...range, min: val })
+                    }}
+                />
+            </div>
+            <div className={NUMBER_ROW_CLASSES}>
+                <label className={NUMBER_LABEL_CLASSES}>Menor que</label>
+                <input
+                    type="number"
+                    className={NUMBER_INPUT_CLASSES}
+                    placeholder="Máximo"
+                    value={range?.max ?? ''}
+                    onChange={(e) => {
+                        const val = e.target.value === '' ? undefined : Number(e.target.value)
+                        onChange({ ...range, max: val })
+                    }}
+                />
+            </div>
+            <p className={NUMBER_HINT_CLASSES}>Deja vacío para no aplicar límite.</p>
+        </div>
     )
 }

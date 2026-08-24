@@ -1,6 +1,5 @@
 import FilterDropdown from './FilterDropdown'
 import type { FilterHeaderProps } from '../types'
-import styles from './FilterHeader.module.css'
 
 interface FilterHeaderOwnProps {
     label: string
@@ -10,7 +9,7 @@ interface FilterHeaderOwnProps {
 /** Column header label with its filter dropdown — shared by DataTable and ExcelTable */
 export function FilterHeader({ label, filterProps }: FilterHeaderOwnProps) {
     return (
-        <div className={styles.filterHeader}>
+        <div className="flex items-center gap-1.5">
             <span>{label}</span>
             <FilterDropdown
                 header={filterProps.header}

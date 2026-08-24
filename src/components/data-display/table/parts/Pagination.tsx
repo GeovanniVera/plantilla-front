@@ -1,5 +1,4 @@
 import { LuChevronLeft, LuChevronRight } from 'react-icons/lu'
-import styles from './Pagination.module.css'
 
 export interface PaginationProps {
     /** Página actual (1-indexed) */
@@ -15,6 +14,24 @@ export interface PaginationProps {
     /** Callback al cambiar items por página */
     onPageSizeChange?: (size: number) => void
 }
+
+/* Active/disabled resolved as single effective class sets per state. */
+const ROOT_CLASSES = 'flex items-center justify-between px-4 py-3 gap-4'
+const INFO_CLASSES = 'text-[13px] text-foreground whitespace-nowrap'
+const CONTROLS_CLASSES = 'flex items-center gap-1'
+
+const ARROW_BTN_CLASSES =
+    'flex items-center justify-center size-8 rounded-md border border-border-base bg-background text-foreground cursor-pointer transition-colors duration-150 enabled:hover:bg-accent-subtle enabled:hover:border-accent-line enabled:hover:text-accent disabled:opacity-35 disabled:cursor-not-allowed'
+
+const PAGE_BTN_BASE_CLASSES =
+    'flex items-center justify-center min-w-8 h-8 px-2 rounded-md border bg-transparent text-[13px] font-medium font-sans cursor-pointer transition-colors duration-150'
+const PAGE_ACTIVE_CLASSES = 'border-accent bg-accent text-white font-semibold hover:brightness-110'
+const PAGE_INACTIVE_CLASSES = 'border-transparent text-foreground hover:bg-accent-subtle hover:text-accent'
+
+const DOTS_CLASSES = 'flex items-center justify-center w-8 h-8 text-sm text-foreground opacity-50'
+
+const PAGE_SIZE_SELECT_CLASSES =
+    'h-8 px-2 rounded-md border border-border-base bg-background text-foreground text-[13px] font-sans cursor-pointer outline-none ml-2 transition-colors duration-150 ease-in-out hover:border-accent-line focus:border-accent'
 
 export default function Pagination({
     currentPage,
@@ -56,20 +73,20 @@ export default function Pagination({
     const hasNavigation = totalPages > 1
 
     return (
-        <div className={styles.pagination}>
+        <div className={ROOT_CLASSES}>
             {/* Info de registros */}
             {totalItems !== undefined && pageSize !== undefined && (
-                <span className={styles.info}>
+                <span className={INFO_CLASSES}>
                     {totalItems} registros · Página {currentPage} de {totalPages}
                 </span>
             )}
 
-            <div className={styles.controls}>
+            <div className={CONTROLS_CLASSES}>
                 {/* Navegación de páginas — solo si hay más de 1 */}
                 {hasNavigation && (
                     <>
                         <button
-                            className={styles.btn}
+                            className={ARROW_BTN_CLASSES}
                             onClick={() => onPageChange(currentPage - 1)}
                             disabled={currentPage === 1}
                             aria-label="Página anterior"
@@ -79,11 +96,11 @@ export default function Pagination({
 
                         {visiblePages.map((page, i) =>
                             page === '...' ? (
-                                <span key={`dots-${i}`} className={styles.dots}>…</span>
+                                <span key={`dots-${i}`} className={DOTS_CLASSES}>…</span>
                             ) : (
                                 <button
                                     key={page}
-                                    className={`${styles.pageBtn} ${page === currentPage ? styles.pageActive : ''}`}
+                                    className={`${PAGE_BTN_BASE_CLASSES} ${page === currentPage ? PAGE_ACTIVE_CLASSES : PAGE_INACTIVE_CLASSES}`}
                                     onClick={() => onPageChange(page)}
                                     aria-label={`Página ${page}`}
                                     aria-current={page === currentPage ? 'page' : undefined}
@@ -94,7 +111,7 @@ export default function Pagination({
                         )}
 
                         <button
-                            className={styles.btn}
+                            className={ARROW_BTN_CLASSES}
                             onClick={() => onPageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}
                             aria-label="Página siguiente"
@@ -107,7 +124,7 @@ export default function Pagination({
                 {/* Selector de page size — siempre visible si hay callback */}
                 {onPageSizeChange && (
                     <select
-                        className={styles.pageSizeSelect}
+                        className={PAGE_SIZE_SELECT_CLASSES}
                         value={pageSize}
                         onChange={(e) => onPageSizeChange(Number(e.target.value))}
                         aria-label="Registros por página"
