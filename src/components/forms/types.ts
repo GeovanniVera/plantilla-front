@@ -133,6 +133,9 @@ export interface FormFieldProps {
 // ─── Field Config (Form Builder) ─────────────────────────
 export type FieldType = 'text' | 'email' | 'password' | 'number' | 'tel' | 'textarea' | 'select' | 'checkbox' | 'radio'
 
+/** Identificadores serializables de icono para el addon inicial del Input. */
+export type FieldIcon = 'none' | 'search' | 'mail' | 'user'
+
 export interface FieldConfig {
     type: FieldType
     label: string
@@ -145,5 +148,10 @@ export interface FieldConfig {
     helperText?: string
     defaultValue?: string
     layoutSpan?: 1 | 2 | 3
+    /** Decoración del control (solo tipos tipo-texto). Serializable: el builder no guarda ReactNodes. */
+    startIcon?: FieldIcon
+    startAdornmentVariant?: StartAdornmentVariant
+    /** Solo para type='password': toggle mostrar/ocultar. */
+    showPasswordToggle?: boolean
 }
 

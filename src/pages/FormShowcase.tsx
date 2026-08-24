@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { LuEye, LuCode, LuSettings2, LuRotateCcw, LuTrash2, LuPlus, LuChevronRight, LuApple, LuPaintbrush, LuSquarePen, LuStar, LuSearch } from 'react-icons/lu'
+import { LuEye, LuCode, LuSettings2, LuRotateCcw, LuTrash2, LuPlus, LuChevronRight, LuApple, LuPaintbrush, LuSquarePen, LuStar, LuSearch, LuMail, LuUser } from 'react-icons/lu'
 import { CodeBlock } from '@dev/showcase/Showcase'
 import styles from './TablesShowcase.module.css'
 
@@ -9,6 +9,19 @@ import { FormField, type InputVariant, type FieldConfig } from '@components/form
 import { RowBlock } from '@dev/form-builder/FieldCard'
 import type { DragData } from '@dev/form-builder/FieldCard'
 import { FieldConfigModal } from '@dev/form-builder/FieldConfigModal'
+
+// ─── Iconos serializables del builder ─────────────────
+import type { FieldIcon } from '@components/forms/types'
+const FIELD_ICONS: Record<Exclude<FieldIcon, 'none'>, React.ReactNode> = {
+    search: <LuSearch />,
+    mail: <LuMail />,
+    user: <LuUser />,
+}
+const FIELD_ICON_COMPONENTS: Record<Exclude<FieldIcon, 'none'>, string> = {
+    search: 'LuSearch',
+    mail: 'LuMail',
+    user: 'LuUser',
+}
 
 // ─── Types ───────────────────────────────────────────────
 type LabelMode = 'above' | 'placeholder' | 'none'
@@ -153,7 +166,16 @@ function LivePreview({ config }: { config: FormConfig }) {
                 ) : field.type === 'textarea' ? (
                     <Textarea value={formData[key] ?? ''} onChange={(tv) => setField(key, tv)} placeholder={placeholder} variant={v} />
                 ) : (
-                    <Input type={field.type as 'text' | 'email' | 'password' | 'number' | 'tel'} value={formData[key] ?? ''} onChange={(iv) => setField(key, iv)} placeholder={placeholder} variant={v} />
+                    <Input
+                        type={field.type as 'text' | 'email' | 'password' | 'number' | 'tel'}
+                        value={formData[key] ?? ''}
+                        onChange={(iv) => setField(key, iv)}
+                        placeholder={placeholder}
+                        variant={v}
+                        startAdornment={field.startIcon && field.startIcon !== 'none' ? FIELD_ICONS[field.startIcon] : undefined}
+                        startAdornmentVariant={field.startAdornmentVariant}
+                        showPasswordToggle={field.type === 'password' ? field.showPasswordToggle : undefined}
+                    />
                 )}
             </FormField>
         )
@@ -677,6 +699,8 @@ function GeneratedCode({ config }: { config: FormConfig }) {
     usedInputs.forEach((c) => imports.add(`import ${c === 'RadioGroup' ? '{ RadioGroup }' : c} from '@components/primitives/${c === 'RadioGroup' ? 'Radio' : c}'`))
 
     if (config.isMultiStep) imports.add("import { LuChevronLeft, LuChevronRight } from 'react-icons/lu'")
+    const usedIcons = [...new Set(allFields.filter((f) => f.startIcon && f.startIcon !== 'none').map((f) => FIELD_ICON_COMPONENTS[f.startIcon as Exclude<FieldIcon, 'none'>]))]
+    if (usedIcons.length) imports.add(`import { ${usedIcons.join(', ')} } from 'react-icons/lu'`)
 
     const initialState = allFields.map((f) => `        ${fieldToKey(f.label)}: ${f.type === 'checkbox' ? 'false' : "''"}`).join(',\n')
 
@@ -708,7 +732,11 @@ function GeneratedCode({ config }: { config: FormConfig }) {
                 if (f.type === 'radio') return `        <FormField${showLabel ? ` label="${f.label}"` : ''}${errProp}>\n            <RadioGroup value={data.${key}} onChange={(v) => setField('${key}', v)} options={[${(f.options ?? []).map((o) => `{ value: '${o}', label: '${o}' }`).join(', ')}]} />\n        </FormField>`
                 if (f.type === 'select') return `        <FormField${showLabel ? ` label="${f.label}"` : ''}${errProp}${reqProp}>\n            <Select value={data.${key}} onChange={(v) => setField('${key}', v)} options={[${(f.options ?? []).map((o) => `{ value: '${o}', label: '${o}' }`).join(', ')}]} placeholder="${ph}" />\n        </FormField>`
                 if (f.type === 'textarea') return `        <FormField${showLabel ? ` label="${f.label}"` : ''}${errProp}${reqProp}>\n            <Textarea value={data.${key}} onChange={(v) => setField('${key}', v)} placeholder="${ph}" />\n        </FormField>`
-                return `        <FormField${showLabel ? ` label="${f.label}"` : ''}${errProp}${reqProp}>\n            <Input type="${f.type}" value={data.${key}} onChange={(v) => setField('${key}', v)} placeholder="${ph}"${minProp} />\n        </FormField>`
+                const adornment = f.startIcon && f.startIcon !== 'none'
+                    ? ` startAdornment={<${FIELD_ICON_COMPONENTS[f.startIcon]} />} startAdornmentVariant="${f.startAdornmentVariant ?? 'dark'}"`
+                    : ''
+                const pwToggle = f.type === 'password' && f.showPasswordToggle ? ' showPasswordToggle' : ''
+                return `        <FormField${showLabel ? ` label="${f.label}"` : ''}${errProp}${reqProp}>\n            <Input type="${f.type}" value={data.${key}} onChange={(v) => setField('${key}', v)} placeholder="${ph}"${minProp}${adornment}${pwToggle} />\n        </FormField>`
             }).join('\n')
 
             if (row.columns > 1) {
@@ -797,9 +825,9 @@ export default function FormShowcase() {
             </div>
 
             {/* ─── Input enriquecido: demo de capacidades (8E.3) ─── */}
-            <section style={{ marginBottom: 32 }}>
+            <section style={{ marginBottom: 40, padding: 24, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 16 }}>
                 <h2 style={{ fontFamily: 'var(--heading)', fontSize: 22, margin: '0 0 4px', color: 'var(--text-h)' }}>Input</h2>
-                <p style={{ fontSize: 13, color: 'var(--text)', margin: '0 0 16px', opacity: 0.7 }}>
+                <p style={{ fontSize: 13, color: 'var(--text)', margin: '0 0 20px', opacity: 0.7, borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
                     Variantes, tamaños, adornos y estados del control base.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
