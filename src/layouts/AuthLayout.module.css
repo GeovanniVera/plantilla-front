@@ -1,0 +1,272 @@
+/* ─── Auth Layout ─────────────────────────────────────────
+ * Hero animado (izquierda) + form (derecha).
+ * Mobile: solo form. Desktop: split 50/50.
+ * Altura fija: 100vh, nunca scrolla.
+ */
+
+.splitLayout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg);
+  color: var(--fg);
+}
+
+/* ─── Left Panel (Hero) ─────────────────────────────────── */
+.leftPanel {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .leftPanel {
+    display: flex;
+    flex: 0 0 55%;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--surface);
+  }
+}
+
+/* ─── Right Panel (Form) ────────────────────────────────── */
+.rightPanel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .rightPanel {
+    flex: 0 0 45%;
+    max-width: 45%;
+    padding: 3rem 4rem;
+  }
+}
+
+@media (min-width: 1500px) {
+  .rightPanel {
+    flex: 0 0 40%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+/* ─── Brand (mobile only) ───────────────────────────────── */
+.brandMobile {
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .brandMobile {
+    display: none;
+  }
+}
+
+.brandMobileLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.brandLogoMobile {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brandNameMobile {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--fg);
+}
+
+/* ─── Hero Background ───────────────────────────────────── */
+.heroBg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* ─── Hero Content (branding centrado sobre animación) ──── */
+.heroContent {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 3rem;
+  text-align: center;
+}
+
+.heroBrand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  text-decoration: none;
+}
+
+.heroLogo {
+  height: 56px;
+  width: auto;
+  object-fit: contain;
+}
+
+.heroBrandName {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.heroTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  margin: 0 0 0.75rem;
+  max-width: 380px;
+}
+
+.heroDesc {
+  font-size: 0.9375rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 340px;
+}
+
+/* ─── Gradient Layers (color sólido + opacidad) ─────────── */
+.gradientLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.gradient1 {
+  background: var(--accent);
+  opacity: 0.9;
+}
+
+.gradient2 {
+  background: var(--accent);
+  opacity: 0;
+}
+
+.gradient3 {
+  background: var(--accent);
+  opacity: 0;
+}
+
+/* ─── Floating Icons ────────────────────────────────────── */
+.floatingIcon {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.2);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.floatingIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.icon1 {
+  width: 80px;
+  height: 80px;
+  top: 15%;
+  left: 20%;
+  animation: float1 6s ease-in-out infinite;
+}
+
+.icon2 {
+  width: 60px;
+  height: 60px;
+  top: 60%;
+  left: 10%;
+  animation: float2 8s ease-in-out infinite;
+}
+
+.icon3 {
+  width: 100px;
+  height: 100px;
+  top: 30%;
+  right: 15%;
+  animation: float3 7s ease-in-out infinite;
+}
+
+.icon4 {
+  width: 50px;
+  height: 50px;
+  bottom: 20%;
+  right: 25%;
+  animation: float4 9s ease-in-out infinite;
+}
+
+.icon5 {
+  width: 70px;
+  height: 70px;
+  bottom: 35%;
+  left: 40%;
+  animation: float5 11s ease-in-out infinite;
+}
+
+/* ─── Animations ────────────────────────────────────────── */
+@keyframes float1 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(12px, -16px);
+  }
+}
+
+@keyframes float2 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(16px, -12px);
+  }
+}
+
+@keyframes float3 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-14px, 10px);
+  }
+}
+
+@keyframes float4 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-10px, -14px);
+  }
+}
+
+@keyframes float5 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(10px, -18px);
+  }
+}
+
+/* ─── Reduced Motion ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .floatingIcon {
+    animation: none;
+  }
+}

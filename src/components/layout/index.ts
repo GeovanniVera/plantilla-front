@@ -11,13 +11,13 @@
  */
 
 // ─── Card ────────────────────────────────────────────
-export { default as Card } from './Card'
-export type { CardVariant } from './Card'
+export { default as Card } from './Card';
+export type { CardVariant } from './Card';
 
 // ─── StatCard ────────────────────────────────────────
-export { StatCard, StatCardGroup } from './StatCard'
-export type { StatCardProps, StatCardGroupProps } from './StatCard'
+export { StatCard, StatCardGroup } from './StatCard';
+export type { StatCardProps, StatCardGroupProps } from './StatCard';
 
 // ─── FormLayout ──────────────────────────────────────
-export { default as FormLayout } from './FormLayout'
-export type { FormLayoutProps } from '../forms/types'
+export { default as FormLayout } from './FormLayout';
+export type { FormLayoutProps } from '../forms/types';

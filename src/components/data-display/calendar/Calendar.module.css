@@ -16,168 +16,173 @@ rendered DOM.
 
 /* Override react-day-picker v10 variables */
 .calendar :global(.rdp-root) {
-    --rdp-accent-color: var(--accent);
-    --rdp-accent-background-color: var(--accent-bg);
-    --rdp-day-height: 32px;
-    --rdp-day-width: 32px;
-    --rdp-day_button-height: 32px;
-    --rdp-day_button-width: 32px;
-    --rdp-day_button-border-radius: 8px;
-    --rdp-day_button-border: 2px solid transparent;
-    --rdp-disabled-opacity: 0.3;
-    --rdp-outside-opacity: 0.25;
-    --rdp-nav_button-height: 28px;
-    --rdp-nav_button-width: 28px;
-    --rdp-weekday-opacity: 0.5;
+  --rdp-accent-color: var(--accent);
+  --rdp-accent-background-color: var(--accent-bg);
+  --rdp-day-height: 32px;
+  --rdp-day-width: 32px;
+  --rdp-day_button-height: 32px;
+  --rdp-day_button-width: 32px;
+  --rdp-day_button-border-radius: 8px;
+  --rdp-day_button-border: 2px solid transparent;
+  --rdp-disabled-opacity: 0.3;
+  --rdp-outside-opacity: 0.25;
+  --rdp-nav_button-height: 28px;
+  --rdp-nav_button-width: 28px;
+  --rdp-weekday-opacity: 0.5;
 
-    font-family: var(--sans);
-    width: fit-content;
+  font-family: var(--sans);
+  width: fit-content;
 }
 
 /* ─── Caption (month/year) ─── */
 .calendar :global(.rdp-month_caption) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 4px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
 }
 
 .calendar :global(.rdp-caption_label) {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-h);
-    text-transform: capitalize;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  text-transform: capitalize;
 }
 
 .calendar :global(.rdp-nav) {
-    display: flex;
-    gap: 4px;
+  display: flex;
+  gap: 4px;
 }
 
 .calendar :global(.rdp-button_previous),
 .calendar :global(.rdp-button_next) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
-    cursor: pointer;
-    transition: background 0.12s, border-color 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 }
 
 .calendar :global(.rdp-button_previous),
 .calendar :global(.rdp-button_next):hover {
-    background: var(--accent-bg);
-    border-color: var(--accent-border);
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
 }
 
 .calendar :global(.rdp-button_previous),
 .calendar :global(.rdp-button_next):disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* ─── Month grid + weekday headers ─── */
 .calendar :global(.rdp-month) {
-    padding: 0;
+  padding: 0;
 }
 
 .calendar :global(.rdp-month_grid) {
-    width: 100%;
-    border-collapse: collapse;
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .calendar :global(.rdp-weekday) {
-    padding: 6px 0;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    color: var(--text);
-    text-align: center;
+  padding: 6px 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text);
+  text-align: center;
 }
 
 /* ─── Day cells ─── */
 .calendar :global(.rdp-day) {
-    padding: 0;
+  padding: 0;
 }
 
 .calendar :global(.rdp-day_button) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 2px solid transparent;
-    background: transparent;
-    color: var(--text);
-    font-size: 13px;
-    font-family: var(--sans);
-    cursor: pointer;
-    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition:
+    background 0.12s,
+    color 0.12s,
+    border-color 0.12s;
 }
 
 .calendar :global(.rdp-day_button):hover:not(:disabled) {
-    background: var(--accent-bg);
+  background: var(--accent-bg);
 }
 
 .calendar :global(.rdp-day_button):disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* Today */
 .calendar :global(.rdp-today) > :global(.rdp-day_button) {
-    font-weight: 700;
-    color: var(--accent);
+  font-weight: 700;
+  color: var(--accent);
 }
 
 /* Selected */
 .calendar :global(.rdp-selected) > :global(.rdp-day_button) {
-    background: var(--accent) !important;
-    color: #fff !important;
-    font-weight: 600;
-    border-color: var(--accent) !important;
+  background: var(--accent) !important;
+  color: #fff !important;
+  font-weight: 600;
+  border-color: var(--accent) !important;
 }
 
 .calendar :global(.rdp-selected) > :global(.rdp-day_button):hover {
-    filter: brightness(1.1);
+  filter: brightness(1.1);
 }
 
 /* Outside days */
 .calendar :global(.rdp-outside) > :global(.rdp-day_button) {
-    opacity: 0.25;
+  opacity: 0.25;
 }
 
 /* ─── Range mode ─── */
 .calendar :global(.rdp-range_start) > :global(.rdp-day_button),
 .calendar :global(.rdp-range_end) > :global(.rdp-day_button) {
-    background: var(--accent) !important;
-    color: #fff !important;
-    border-radius: 8px;
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-radius: 8px;
 }
 
 .calendar :global(.rdp-range_start) > :global(.rdp-day_button) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .calendar :global(.rdp-range_end) > :global(.rdp-day_button) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .calendar :global(.rdp-range_middle) {
-    background: var(--accent-bg);
-    border-radius: 0;
+  background: var(--accent-bg);
+  border-radius: 0;
 }
 
 .calendar :global(.rdp-range_middle) > :global(.rdp-day_button) {
-    border-radius: 0;
-    background: transparent;
+  border-radius: 0;
+  background: transparent;
 }

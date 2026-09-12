@@ -10,17 +10,17 @@
    exactly like the original module did.
    ================================ */
 .fieldError [data-variant='default'] {
-    border-color: #dc2626;
+  border-color: #dc2626;
 }
 
 .fieldError [data-variant='default']:focus {
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .fieldError [data-variant='filled'] {
-    border-bottom-color: #dc2626;
+  border-bottom-color: #dc2626;
 }
 
 .fieldError [data-variant='outlined'] {
-    border-color: #dc2626;
+  border-color: #dc2626;
 }

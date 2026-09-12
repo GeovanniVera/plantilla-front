@@ -1,0 +1,133 @@
+{
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Enter your credentials to access",
+      "email": "Email",
+      "emailPlaceholder": "you@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••",
+      "submit": "Sign In",
+      "submitting": "Signing in...",
+      "forgotPassword": "Forgot your password?",
+      "noAccount": "Don't have an account?",
+      "register": "Sign up",
+      "backToLogin": "Back to login"
+    },
+    "register": {
+      "title": "Sign Up",
+      "subtitle": "Create your account to get started.",
+      "name": "Full name",
+      "namePlaceholder": "John Doe",
+      "email": "Email",
+      "emailPlaceholder": "you@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "••••••",
+      "submit": "Sign Up",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "login": "Sign in",
+      "termsPrefix": "I accept the",
+      "terms": "terms and conditions"
+    },
+    "forgotPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email and we'll send you a verification code.",
+      "email": "Email",
+      "emailPlaceholder": "you@email.com",
+      "submit": "Send code",
+      "submitting": "Sending...",
+      "successTitle": "Email sent",
+      "successMessage": "Check your inbox and enter the 6-digit code.",
+      "backToLogin": "Back to login"
+    },
+    "resetPassword": {
+      "title": "New Password",
+      "subtitle": "Enter your new password for {{email}}",
+      "password": "New password",
+      "passwordPlaceholder": "••••••",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "••••••",
+      "submit": "Change password",
+      "submitting": "Saving...",
+      "successTitle": "Password updated",
+      "successMessage": "Your password was changed successfully.",
+      "backToLogin": "Back"
+    },
+    "verifyEmail": {
+      "title": "Verify your email",
+      "subtitle": "We sent a verification link to your inbox.",
+      "code": "Verification code",
+      "codePlaceholder": "Enter the code",
+      "submit": "Resend verification email",
+      "submitting": "Sending...",
+      "successTitle": "Email verified!",
+      "successMessage": "Your account was activated successfully.",
+      "resend": "Resend verification email",
+      "resending": "Sending...",
+      "backToLogin": "Back to login"
+    },
+    "verifyOTP": {
+      "title": "Verify code",
+      "subtitle": "We sent a 6-digit code to {{email}}",
+      "code": "Code",
+      "codePlaceholder": "000000",
+      "submit": "Verify code",
+      "submitting": "Verifying...",
+      "resend": "Resend code",
+      "resending": "Resending...",
+      "backToLogin": "Back to login"
+    }
+  },
+  "errors": {
+    "network": "Connection error. Check your internet.",
+    "timeout": "Request timed out. Try again.",
+    "server": "Server error.",
+    "forbidden": "You don't have permission to access this section.",
+    "notFound": "The page you're looking for doesn't exist or was moved.",
+    "unauthorized": "Your session expired. Please sign in again.",
+    "validation": "Please check the fields and try again.",
+    "emailAlreadyExists": "This email is already registered.",
+    "invalidCredentials": "Invalid email or password.",
+    "weakPassword": "Password is too weak. Use at least 8 characters.",
+    "emailNotVerified": "Your email wasn't verified. Check your inbox.",
+    "tokenExpired": "The link expired. Request a new one.",
+    "tooManyRequests": "Too many attempts. Wait a few minutes.",
+    "unknown": "An unexpected error occurred. Try again."
+  },
+  "pages": {
+    "forbidden": {
+      "title": "Access Denied",
+      "message": "You don't have permission to access this section.",
+      "backToHome": "Go to home"
+    },
+    "notFound": {
+      "title": "Page Not Found",
+      "message": "The page you're looking for doesn't exist or was moved.",
+      "backToHome": "Go to home"
+    },
+    "serverError": {
+      "title": "Server Error",
+      "message": "Something went wrong on our end. Our team has been notified.",
+      "backToHome": "Go to home",
+      "retry": "Retry"
+    },
+    "terms": {
+      "title": "Terms and Conditions",
+      "lastUpdated": "Last updated: September 11, 2026"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "optional": "optional"
+  }
+}

@@ -14,11 +14,24 @@
  * keep the cross-family graph acyclic.
  */
 
-export { default as FormField } from './FormField'
+// ─── Form ────────────────────────────────────────────────
+export { Form } from './Form';
+export type { FormProps } from './Form';
+
+// ─── FormField ───────────────────────────────────────────
+export { default as FormField } from './FormField';
+
+// ─── Form hooks ──────────────────────────────────────────
+export { useForm } from './useForm';
+export { useFormContext } from './FormContext';
+export type { UseFormOptions, FormValidator, ZodSchema } from './useForm';
+export type { FormContextValue } from './FormContext';
+
+// ─── Types ───────────────────────────────────────────────
 export type {
-    FormFieldProps,
-    FormFieldVariant,
-    InputVariant,
-    FieldType,
-    FieldConfig,
-} from './types'
+  FormFieldProps,
+  FormFieldVariant,
+  InputVariant,
+  FieldType,
+  FieldConfig,
+} from './types';

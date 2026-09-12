@@ -1,0 +1,133 @@
+{
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Accedé a tu cuenta para continuar.",
+      "email": "Email",
+      "emailPlaceholder": "admin@test.com",
+      "password": "Contraseña",
+      "passwordPlaceholder": "••••••",
+      "submit": "Ingresar",
+      "submitting": "Cargando...",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "noAccount": "¿No tenés cuenta?",
+      "register": "Registrate",
+      "backToLogin": "Volver al login"
+    },
+    "register": {
+      "title": "Registrarse",
+      "subtitle": "Creá tu cuenta para comenzar.",
+      "name": "Nombre completo",
+      "namePlaceholder": "Juan Pérez",
+      "email": "Email",
+      "emailPlaceholder": "tu@email.com",
+      "password": "Contraseña",
+      "passwordPlaceholder": "••••••",
+      "confirmPassword": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "••••••",
+      "submit": "Registrarse",
+      "submitting": "Cargando...",
+      "hasAccount": "¿Ya tenés cuenta?",
+      "login": "Iniciar sesión",
+      "termsPrefix": "Acepto los",
+      "terms": "términos y condiciones"
+    },
+    "forgotPassword": {
+      "title": "Recuperar contraseña",
+      "subtitle": "Ingresa tu email y te enviaremos un código de verificación.",
+      "email": "Email",
+      "emailPlaceholder": "tu@email.com",
+      "submit": "Enviar código",
+      "submitting": "Enviando...",
+      "successTitle": "Email enviado",
+      "successMessage": "Revisa tu bandeja de entrada y ingresa el código de 6 dígitos.",
+      "backToLogin": "Volver al login"
+    },
+    "resetPassword": {
+      "title": "Nueva contraseña",
+      "subtitle": "Ingresa tu nueva contraseña para {{email}}",
+      "password": "Nueva contraseña",
+      "passwordPlaceholder": "••••••",
+      "confirmPassword": "Confirmar contraseña",
+      "confirmPasswordPlaceholder": "••••••",
+      "submit": "Cambiar contraseña",
+      "submitting": "Guardando...",
+      "successTitle": "Contraseña actualizada",
+      "successMessage": "Tu contraseña fue cambiada exitosamente.",
+      "backToLogin": "Volver"
+    },
+    "verifyEmail": {
+      "title": "Verificá tu email",
+      "subtitle": "Te enviamos un enlace de verificación a tu correo.",
+      "code": "Código de verificación",
+      "codePlaceholder": "Ingresá el código",
+      "submit": "Reenviar email de verificación",
+      "submitting": "Enviando...",
+      "successTitle": "¡Email verificado!",
+      "successMessage": "Tu cuenta fue activada exitosamente.",
+      "resend": "Reenviar email de verificación",
+      "resending": "Enviando...",
+      "backToLogin": "Volver al login"
+    },
+    "verifyOTP": {
+      "title": "Verificar código",
+      "subtitle": "Enviamos un código de 6 dígitos a {{email}}",
+      "code": "Código",
+      "codePlaceholder": "000000",
+      "submit": "Verificar código",
+      "submitting": "Verificando...",
+      "resend": "Reenviar código",
+      "resending": "Reenviando...",
+      "backToLogin": "Volver al login"
+    }
+  },
+  "errors": {
+    "network": "Error de conexión con el servidor",
+    "timeout": "La request tardó demasiado. Intentá de nuevo.",
+    "server": "Error del servidor",
+    "forbidden": "No tenés permisos para acceder a esta sección.",
+    "notFound": "La página que buscás no existe o fue movida.",
+    "unauthorized": "Tu sesión expiró. Iniciá sesión nuevamente.",
+    "validation": "Revisá los campos e intentá de nuevo.",
+    "emailAlreadyExists": "Este correo ya está registrado.",
+    "invalidCredentials": "Correo o contraseña incorrectos.",
+    "weakPassword": "La contraseña es muy débil. Usá al menos 8 caracteres.",
+    "emailNotVerified": "Tu correo no fue verificado. Revisa tu bandeja.",
+    "tokenExpired": "El enlace expiró. Solicitá uno nuevo.",
+    "tooManyRequests": "Demasiados intentos. Esperá unos minutos.",
+    "unknown": "Ocurrió un error inesperado. Intentá de nuevo."
+  },
+  "pages": {
+    "forbidden": {
+      "title": "Acceso denegado",
+      "message": "No tenés permisos para acceder a esta sección.",
+      "backToHome": "Ir al inicio"
+    },
+    "notFound": {
+      "title": "Página no encontrada",
+      "message": "La página que buscás no existe o fue movida.",
+      "backToHome": "Ir al inicio"
+    },
+    "serverError": {
+      "title": "Error del servidor",
+      "message": "Algo salió mal de nuestro lado. Nuestro equipo ya fue notificado.",
+      "backToHome": "Ir al inicio",
+      "retry": "Reintentar"
+    },
+    "terms": {
+      "title": "Términos y Condiciones",
+      "lastUpdated": "Última actualización: 11 de septiembre de 2026"
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "retry": "Reintentar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "optional": "opcional"
+  }
+}

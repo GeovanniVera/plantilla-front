@@ -1,83 +1,85 @@
 .main {
-    flex: 1;
-    overflow: auto;
+  flex: 1;
+  overflow: auto;
 }
 
 /* ─── Breadcrumbs ─── */
 
 .breadcrumbs {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 12px 40px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
-    font-size: 13px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px 40px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 13px;
 }
 
 .crumb {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .crumbSep {
-    color: var(--text);
-    opacity: 0.3;
-    margin: 0 2px;
+  color: var(--text);
+  opacity: 0.3;
+  margin: 0 2px;
 }
 
 .crumbLink {
-    color: var(--text);
-    text-decoration: none;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: color 0.15s, background 0.15s;
+  color: var(--text);
+  text-decoration: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .crumbLink:hover {
-    color: var(--accent);
-    background: var(--accent-bg);
+  color: var(--accent);
+  background: var(--accent-bg);
 }
 
 .crumbCurrent {
-    color: var(--text-h);
-    font-weight: 600;
-    padding: 2px 6px;
+  color: var(--text-h);
+  font-weight: 600;
+  padding: 2px 6px;
 }
 
 /* ─── Page Header ─── */
 
 .pageHeader {
-    padding: 32px 40px 0;
+  padding: 32px 40px 0;
 }
 
 .pageTitle {
-    font-family: var(--heading);
-    font-size: 32px;
-    font-weight: 600;
-    color: var(--text-h);
-    margin: 0;
+  font-family: var(--heading);
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0;
 }
 
 .pageSubtitle {
-    font-size: 15px;
-    color: var(--text);
-    margin: 4px 0 0;
-    line-height: 1.5;
+  font-size: 15px;
+  color: var(--text);
+  margin: 4px 0 0;
+  line-height: 1.5;
 }
 
 @media (max-width: 768px) {
-    .main {
-        padding-bottom: 56px;
-    }
+  .main {
+    padding-bottom: 56px;
+  }
 
-    .breadcrumbs {
-        padding: 10px 20px;
-    }
+  .breadcrumbs {
+    padding: 10px 20px;
+  }
 
-    .pageHeader {
-        padding: 24px 20px 0;
-    }
+  .pageHeader {
+    padding: 24px 20px 0;
+  }
 }

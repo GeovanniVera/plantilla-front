@@ -1,0 +1,103 @@
+.panel {
+  margin-top: 32px;
+}
+
+.heading {
+  font-family: var(--heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 4px;
+}
+
+.subtext {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0 0 20px;
+}
+
+/* Grid de combinaciones */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+/* Fila de cada combinación */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  transition: border-color 0.15s ease;
+}
+
+.row:hover {
+  border-color: var(--accent-border);
+}
+
+/* Swatch con "Aa" */
+.swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 700;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Info */
+.info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-h);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ratio {
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--text);
+  margin-top: 2px;
+}
+
+/* Nivel de cumplimiento — colores fijos, NO del tema */
+.level {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.levelAaa {
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+}
+
+.levelAa {
+  background: rgba(234, 179, 8, 0.12);
+  color: #ca8a04;
+}
+
+.levelFail {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}

@@ -16,22 +16,22 @@
  */
 
 // ─── Components ──────────────────────────────────────
-export { BaseTable } from './BaseTable'
-export { default as DataTable } from './DataTable'
-export type { DataTableProps } from './DataTable'
-export { default as ExcelTable } from './ExcelTable'
+export { BaseTable } from './BaseTable';
+export { default as DataTable } from './DataTable';
+export type { DataTableProps } from './DataTable';
+export { default as ExcelTable } from './ExcelTable';
 
 // ─── Types ───────────────────────────────────────────
-export type { BaseTableProps, Column, FilterType } from './types'
-export type { ExcelTableProps, CellPosition } from './excel-types'
+export type { BaseTableProps, Column, FilterType } from './types';
+export type { ExcelTableProps, CellPosition } from './excel-types';
 
 // ─── Composition parts ───────────────────────────────
-export { FilterBar } from './parts/FilterBar'
-export { default as Pagination } from './parts/Pagination'
-export type { PaginationProps } from './parts/Pagination'
-export { ColumnToggle } from './parts/ColumnToggle'
-export { DensitySelector } from './parts/DensitySelector'
-export type { Density } from './parts/DensitySelector'
-export { BulkActionsBar } from './parts/BulkActionsBar'
-export type { BulkAction } from './parts/BulkActionsBar'
-export { SearchHighlight } from './parts/SearchHighlight'
+export { FilterBar } from './parts/FilterBar';
+export { default as Pagination } from './parts/Pagination';
+export type { PaginationProps } from './parts/Pagination';
+export { ColumnToggle } from './parts/ColumnToggle';
+export { DensitySelector } from './parts/DensitySelector';
+export type { Density } from './parts/DensitySelector';
+export { BulkActionsBar } from './parts/BulkActionsBar';
+export type { BulkAction } from './parts/BulkActionsBar';
+export { SearchHighlight } from './parts/SearchHighlight';
