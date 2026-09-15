@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import VerifyEmailPage from './VerifyEmailPage';
 import { AuthProvider } from '../../auth';
 import { server } from '../../test/mocks/server';
-import { http, HttpResponse } from 'msw';
+import { http } from 'msw';
 import '../../lib/i18n/config';
 
 const navigateMock = vi.fn();

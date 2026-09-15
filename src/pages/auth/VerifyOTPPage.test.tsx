@@ -4,7 +4,6 @@ import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import VerifyOTPPage from './VerifyOTPPage';
 import { ForgotPasswordProvider } from '../../auth/ForgotPasswordContext';
-import { server } from '../../test/mocks/server';
 import '../../lib/i18n/config';
 
 const navigateMock = vi.fn();

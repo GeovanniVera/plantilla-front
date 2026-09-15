@@ -40,14 +40,18 @@ function App() {
             </Route>
 
             {/* Forgot password flow (con ForgotPasswordProvider) — GuestOnly */}
-            <Route element={<AuthLayout />}>
+            <Route
+              element={
+                <ForgotPasswordProvider>
+                  <AuthLayout />
+                </ForgotPasswordProvider>
+              }
+            >
               <Route
                 path="/forgot-password"
                 element={
                   <GuestOnly>
-                    <ForgotPasswordProvider>
-                      <ForgotPasswordPage />
-                    </ForgotPasswordProvider>
+                    <ForgotPasswordPage />
                   </GuestOnly>
                 }
               />
@@ -55,9 +59,7 @@ function App() {
                 path="/verify-otp"
                 element={
                   <GuestOnly>
-                    <ForgotPasswordProvider>
-                      <VerifyOTPPage />
-                    </ForgotPasswordProvider>
+                    <VerifyOTPPage />
                   </GuestOnly>
                 }
               />
@@ -65,9 +67,7 @@ function App() {
                 path="/reset-password"
                 element={
                   <GuestOnly>
-                    <ForgotPasswordProvider>
-                      <ResetPasswordPage />
-                    </ForgotPasswordProvider>
+                    <ResetPasswordPage />
                   </GuestOnly>
                 }
               />
