@@ -1,4 +1,4 @@
-import { type ElementType, type ButtonHTMLAttributes, type AnchorHTMLAttributes } from 'react';
+import { type ElementType } from 'react';
 import { Link } from 'react-router';
 import { useSidebar } from './context';
 

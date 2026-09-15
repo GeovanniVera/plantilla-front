@@ -24,7 +24,7 @@ export default function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
 
   // Redirigir si no hay token
-  if (!token) {
+  if (!token && !success) {
     navigate('/forgot-password');
     return null;
   }
@@ -113,7 +113,9 @@ export default function ResetPasswordPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">{t('auth.resetPassword.password')}</label>
+            <label className="text-fg block text-sm font-medium">
+              {t('auth.resetPassword.password')}
+            </label>
             <Input
               type="password"
               value={password}
@@ -128,7 +130,9 @@ export default function ResetPasswordPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">{t('auth.resetPassword.confirmPassword')}</label>
+            <label className="text-fg block text-sm font-medium">
+              {t('auth.resetPassword.confirmPassword')}
+            </label>
             <Input
               type="password"
               value={confirmPassword}

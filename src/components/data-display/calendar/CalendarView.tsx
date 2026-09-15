@@ -1,8 +1,7 @@
-import { useState, useMemo, useCallback } from 'react';
-import { format, addMonths, subMonths, getISOWeek } from 'date-fns';
+import { useState, useCallback } from 'react';
+import { addMonths, subMonths, getISOWeek } from 'date-fns';
 import { useIsMobile } from '@hooks/useIsMobile';
 import type { CalendarEvent, CalendarViewProps } from './types';
-import { groupEventsByDay } from './calendarHelpers';
 import { CalendarHeader } from './CalendarHeader';
 import { CalendarGrid } from './CalendarGrid';
 import { CalendarList } from './CalendarList';
@@ -32,8 +31,6 @@ export function CalendarView({
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
 
   const today = new Date();
-  const monthKey = format(currentMonth, 'yyyy-MM');
-  const eventsByDay = useMemo(() => groupEventsByDay(events), [events, monthKey]);
 
   // Navegación
   const goToPrevMonth = () => setCurrentMonth((m) => subMonths(m, 1));

@@ -31,7 +31,7 @@ export default function CustomSkeleton({
 }: CustomSkeletonProps) {
   return (
     <Skeleton
-      variant={variant}
+      circle={variant === 'circular'}
       width={width}
       height={height}
       count={count}

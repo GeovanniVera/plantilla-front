@@ -16,6 +16,7 @@ Plantilla de front-end para aplicaciones admin, construida con **React + TypeScr
 | i18next | ^26.4.2 | Internacionalización |
 | React Query | ^5.102.8 | Server state management |
 | Storybook | ^10.5.10 | Documentación de componentes |
+| MSW | ^2.15.0 | Mock Service Worker (tests) |
 
 ## Quick Start
 
@@ -55,15 +56,14 @@ La documentación detallada está en [`docs/`](./docs/):
 
 | Documento | Descripción |
 |-----------|-------------|
+| [AUDIT.md](./docs/AUDIT.md) | Auditoría técnica completa |
 | [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Arquitectura y diagramas de capas |
+| [AUTH.md](./docs/AUTH.md) | Sistema de autenticación |
 | [CONFIGURATION.md](./docs/CONFIGURATION.md) | Variables de entorno y configuración |
 | [ADDING_RESOURCES.md](./docs/ADDING_RESOURCES.md) | Cómo añadir un recurso nuevo |
 | [TESTING.md](./docs/TESTING.md) | Estrategia y guía de testing |
+| [STYLING.md](./docs/STYLING.md) | Sistema de temas y estilos |
 | [NEW_PROJECT_CHECKLIST.md](./docs/NEW_PROJECT_CHECKLIST.md) | Checklist para nuevo proyecto |
-| [ROADMAP.md](./docs/ROADMAP.md) | Roadmap y deuda técnica |
-| [STACK.md](./docs/STACK.md) | Stack tecnológico detallado |
-| [STRUCTURE.md](./docs/STRUCTURE.md) | Estructura de directorios |
-| [CONVENTIONS.md](./docs/CONVENTIONS.md) | Convenciones de código |
 
 ## Licencia
 

@@ -1,11 +1,11 @@
 import { forwardRef, useCallback } from 'react';
 import { LuCheck, LuMinus } from 'react-icons/lu';
-import type { ComponentPropsWithoutRef, InputHTMLAttributes } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import type { CheckboxProps, CheckboxSize, CheckboxValidationState } from '@components/forms/types';
 
 export type { CheckboxProps, CheckboxSize, CheckboxValidationState };
 
-type NativeCheckboxProps = Omit<ComponentPropsWithoutRef<'input'>, 'size' | 'type'>;
+type NativeCheckboxProps = Omit<ComponentPropsWithRef<'input'>, 'size' | 'type'>;
 
 /*
  * Close to the metal: a real <input type="checkbox"> with family tokens via

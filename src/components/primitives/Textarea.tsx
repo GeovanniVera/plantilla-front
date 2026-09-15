@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 import type {
   TextareaProps,
   TextareaSize,
@@ -15,7 +16,7 @@ export type TextareaAppearance = TextareaVariant;
  * Native <textarea> props. `size` is not a native textarea attribute, but it
  * is still omitted to keep the visual axis unambiguous, mirroring the family.
  */
-type NativeTextareaProps = Omit<ComponentPropsWithoutRef<'textarea'>, 'size'>;
+type NativeTextareaProps = Omit<ComponentPropsWithRef<'textarea'>, 'size'>;
 
 export interface TextareaBaseProps extends NativeTextareaProps {
   size?: TextareaSize;

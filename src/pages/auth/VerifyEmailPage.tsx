@@ -37,7 +37,11 @@ export default function VerifyEmailPage() {
     setError('');
 
     try {
-      await authService.resendVerification(email);
+      const response = await authService.resendVerification(email);
+      if (!response.success) {
+        setError('Error al reenviar el email. Intentá de nuevo.');
+        return;
+      }
       setSent(true);
       console.log('[Mock] Email de verificación reenviado a:', email);
       console.log('[Mock] Token de verificación: verify-token-abc123');

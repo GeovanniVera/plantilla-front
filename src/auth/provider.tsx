@@ -3,7 +3,7 @@ import { AuthContext } from './context';
 import { authService } from '../lib/api/services/auth.service';
 import { tokenManager } from '../lib/api/client';
 import { authStorage } from '../lib/auth/token-store';
-import type { AuthState, User } from './types';
+import type { AuthState } from './types';
 
 /**
  * Props del AuthProvider.
@@ -38,10 +38,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const restoreSession = async () => {
       // Try localStorage first, then sessionStorage
-      let token = authStorage.getToken(true);  // localStorage
+      let token = authStorage.getToken(true); // localStorage
       let remember = true;
       if (!token) {
-        token = authStorage.getToken(false);  // sessionStorage
+        token = authStorage.getToken(false); // sessionStorage
         remember = false;
       }
 

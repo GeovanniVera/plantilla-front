@@ -37,6 +37,9 @@ export default function VerifyEmailConfirmPage() {
           setTimeout(() => {
             navigate('/login');
           }, 3000);
+        } else if (response.code === 'NETWORK_ERROR' || response.code === 'TIMEOUT') {
+          setStatus('error');
+          setError('Error al verificar el email');
         } else {
           setStatus('error');
           setError('Token inválido o expirado');

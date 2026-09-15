@@ -47,13 +47,16 @@ export const tokenManager = {
  * @param data - Datos adicionales del error (respuesta del servidor)
  */
 export class ApiError extends Error {
-  constructor(
-    public status: number,
-    public statusText: string,
-    public data?: unknown,
-  ) {
+  public status: number;
+  public statusText: string;
+  public data?: unknown;
+
+  constructor(status: number, statusText: string, data?: unknown) {
     super(`API Error ${status}: ${statusText}`);
     this.name = 'ApiError';
+    this.status = status;
+    this.statusText = statusText;
+    this.data = data;
   }
 }
 
@@ -323,7 +326,9 @@ async function request<T>(
 
     return {
       success: false,
-      message: (data as { message?: string }).message || getErrorMessage(mapStatusToErrorCode(response.status)),
+      message:
+        (data as { message?: string }).message ||
+        getErrorMessage(mapStatusToErrorCode(response.status)),
       code: mapStatusToErrorCode(response.status),
     };
   }

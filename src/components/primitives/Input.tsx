@@ -14,7 +14,7 @@ export type { InputProps, InputSize, InputValidationState, InputVariant, StartAd
 
 export type InputAppearance = InputVariant;
 
-type NativeInputProps = Omit<ComponentPropsWithoutRef<'input'>, 'size'>;
+type NativeInputProps = Omit<ComponentPropsWithRef<'input'>, 'size'>;
 
 export interface InputBaseProps extends NativeInputProps {
   size?: InputSize;

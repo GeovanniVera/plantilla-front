@@ -1,6 +1,5 @@
 import { format, isSameMonth, isSameDay, isToday } from 'date-fns';
-import { es } from 'date-fns/locale';
-import type { CalendarEvent, CalendarSubComponentProps } from './types';
+import type { CalendarEvent, CalendarSubComponentProps, EventColor } from './types';
 import { getCalendarDays, groupEventsByDay } from './calendarHelpers';
 
 const WEEKDAYS = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
@@ -79,6 +78,7 @@ export function CalendarGrid({
   dragOverDate,
   onEventClick,
   onMoreClick,
+  onDayClick,
   onDragStart,
   onDragOver,
   onDragLeave,

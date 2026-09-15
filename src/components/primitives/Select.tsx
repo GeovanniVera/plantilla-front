@@ -1,6 +1,6 @@
 import { createContext, forwardRef, useContext } from 'react';
 import { LuChevronDown } from 'react-icons/lu';
-import type { HTMLAttributes } from 'react';
+import type { ComponentPropsWithRef, HTMLAttributes } from 'react';
 import type {
   SelectProps,
   SelectSize,
@@ -26,7 +26,7 @@ export type SelectAppearance = SelectVariant;
  * and is deliberately not exposed: the family shells style single-line
  * controls. A multi-row listbox is a different presentation problem.
  */
-type NativeSelectProps = Omit<ComponentPropsWithoutRef<'select'>, 'size'>;
+type NativeSelectProps = Omit<ComponentPropsWithRef<'select'>, 'size'>;
 
 export interface SelectBaseProps extends NativeSelectProps {
   size?: SelectSize;
