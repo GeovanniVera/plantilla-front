@@ -1,7 +1,5 @@
 /**
  * Página de no encontrado (404).
- *
- * Se muestra cuando la ruta solicitada no existe.
  */
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -19,13 +17,11 @@ export default function NotFoundPage() {
       title={t('pages.notFound.title')}
       description={t('pages.notFound.message')}
     >
-      {/* Acciones */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button variant="primary" onClick={() => navigate(-1)}>
           {t('common.back')}
         </Button>
-
-        <Button variant="secondary" onClick={() => navigate('/')}>
+        <Button variant="secondary" onClick={() => navigate('/dashboard')}>
           {t('pages.notFound.backToHome')}
         </Button>
       </div>

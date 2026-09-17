@@ -21,6 +21,18 @@ const ForbiddenPage = lazy(() => import('./pages/auth/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('./pages/auth/NotFoundPage'));
 const ServerErrorPage = lazy(() => import('./pages/auth/ServerErrorPage'));
 
+// App pages (lazy)
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const AjustesIndex = lazy(() => import('./pages/ajustes/AjustesIndex'));
+const BrandColorSettings = lazy(() => import('./features/settings/BrandColorSettings'));
+const UsersPage = lazy(() => import('./pages/admin/UsersPage'));
+const RolesPage = lazy(() => import('./pages/admin/RolesPage'));
+const PermissionsPage = lazy(() => import('./pages/admin/PermissionsPage'));
+const AdminIndexPage = lazy(() => import('./pages/admin/AdminIndexPage'));
+const PerfilPage = lazy(() => import('./pages/ajustes/PerfilPage'));
+const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage'));
+const MiActividadPage = lazy(() => import('./pages/ajustes/MiActividadPage'));
+
 function App() {
   return (
     <AuthProvider>
@@ -92,22 +104,74 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              {routes.map((route) => {
-                if (route.path?.startsWith('/ajustes')) {
-                  return (
-                    <Route
-                      key={route.path}
-                      path={route.path}
-                      element={
-                        <RequirePrivilege privilege="settings:manage">
-                          {route.element}
-                        </RequirePrivilege>
-                      }
-                    />
-                  );
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route
+                path="/admin"
+                element={
+                  <RequirePrivilege privilege="users.read">
+                    <AdminIndexPage />
+                  </RequirePrivilege>
                 }
-                return <Route key={route.path} path={route.path} element={route.element} />;
-              })}
+              />
+              <Route
+                path="/admin/usuarios"
+                element={
+                  <RequirePrivilege privilege="users.read">
+                    <UsersPage />
+                  </RequirePrivilege>
+                }
+              />
+              <Route
+                path="/admin/roles"
+                element={
+                  <RequirePrivilege privilege="roles.read">
+                    <RolesPage />
+                  </RequirePrivilege>
+                }
+              />
+              <Route
+                path="/admin/permisos"
+                element={
+                  <RequirePrivilege privilege="permissions.read">
+                    <PermissionsPage />
+                  </RequirePrivilege>
+                }
+              />
+              <Route
+                path="/admin/auditoria"
+                element={
+                  <RequirePrivilege anyOf={['audit.read', 'audit.read-mine']}>
+                    <AuditLogsPage />
+                  </RequirePrivilege>
+                }
+              />
+              <Route path="/ajustes" element={<AjustesIndex />} />
+              <Route path="/ajustes/perfil" element={<PerfilPage />} />
+              <Route
+                path="/ajustes/actividad"
+                element={
+                  <RequirePrivilege anyOf={['audit.read', 'audit.read-mine']}>
+                    <MiActividadPage />
+                  </RequirePrivilege>
+                }
+              />
+              <Route
+                path="/ajustes/colores"
+                element={
+                  <RequirePrivilege privilege="settings.brand">
+                    <div
+                      style={{
+                        padding: '32px 40px',
+                        maxWidth: 1440,
+                        width: '100%',
+                        margin: '0 auto',
+                      }}
+                    >
+                      <BrandColorSettings />
+                    </div>
+                  </RequirePrivilege>
+                }
+              />
             </Route>
 
             {/* 404 — Catch all */}

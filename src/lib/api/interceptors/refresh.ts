@@ -20,18 +20,13 @@ export async function tryRefreshToken(): Promise<boolean> {
 }
 
 async function doRefresh(): Promise<boolean> {
-  const refreshToken = authStorage.getRefreshToken();
-
-  if (!refreshToken) {
-    return false;
-  }
-
   try {
     const API_BASE = env.VITE_API_BASE;
+    // No enviamos refreshToken en el body — viene en HttpOnly cookie
     const response = await fetch(`${API_BASE}${env.VITE_AUTH_REFRESH_PATH}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
+      credentials: 'include', // Importante: enviar cookies HttpOnly
     });
 
     if (!response.ok) {
@@ -48,13 +43,11 @@ async function doRefresh(): Promise<boolean> {
       return false;
     }
 
-    const { token, refreshToken: newRefreshToken, expiresIn } = data.data;
+    const { accessToken, expiresIn } = data.data;
 
-    tokenManager.set(token);
-    authStorage.setToken(token, expiresIn);
-    if (newRefreshToken) {
-      authStorage.setRefreshToken(newRefreshToken);
-    }
+    tokenManager.set(accessToken);
+    authStorage.setToken(accessToken, expiresIn);
+    // No hay refreshToken en el body — viene en cookie
 
     return true;
   } catch {

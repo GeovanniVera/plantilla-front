@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router';
 import { LuMail, LuLock, LuCircleAlert } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../auth';
+import { useLogin } from '../../hooks/useAuth';
 import { GuestOnly } from '../../auth/guards';
 import Input from '@components/primitives/Input';
 import {
@@ -15,38 +15,34 @@ import {
  * Página de inicio de sesión.
  *
  * Formulario plano con inputs del design system.
- *
- * Cuentas de prueba:
- * - admin@test.com / admin123
- * - editor@test.com / editor123
- * - viewer@test.com / viewer123
  */
 function LoginPage() {
   const { t } = useTranslation();
-  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const loginMutation = useLogin();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const from = (location.state as { from?: Location })?.from?.pathname || '/';
+  const from = (location.state as { from?: Location })?.from?.pathname || '/dashboard';
+  const suspendedMessage = searchParams.get('error');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      await login(email, password, remember);
-      navigate(from, { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.unknown'));
-    } finally {
-      setLoading(false);
-    }
+    loginMutation.mutate(
+      { email, password, remember },
+      {
+        onSuccess: () => navigate(from, { replace: true }),
+        onError: (err) => {
+          // Si la cuenta no está verificada, redirigir a verificación
+          if (err.message?.includes('no verificada')) {
+            navigate('/verify-email', { state: { email } });
+          }
+        },
+      },
+    );
   };
 
   return (
@@ -55,11 +51,19 @@ function LoginPage() {
         {/* Header */}
         <AuthFormHeader title={t('auth.login.title')} subtitle={t('auth.login.subtitle')} />
 
-        {/* Error */}
-        {error && (
+        {/* Error de suspensión (desde query param) */}
+        {suspendedMessage && (
           <div className="border-danger-line bg-danger-bg text-danger-strong flex items-center gap-2 rounded-lg border px-4 py-3 text-sm">
             <LuCircleAlert size={16} className="shrink-0" />
-            {error}
+            {suspendedMessage}
+          </div>
+        )}
+
+        {/* Error del formulario */}
+        {loginMutation.error && (
+          <div className="border-danger-line bg-danger-bg text-danger-strong flex items-center gap-2 rounded-lg border px-4 py-3 text-sm">
+            <LuCircleAlert size={16} className="shrink-0" />
+            {loginMutation.error.message || t('errors.unknown')}
           </div>
         )}
 
@@ -103,12 +107,11 @@ function LoginPage() {
           {/* Actions */}
           <AuthFormActions
             submitLabel={t('auth.login.submit')}
-            loading={loading}
+            loading={loginMutation.isPending}
             secondaryLabel={`${t('auth.login.noAccount')} ${t('auth.login.register')}`}
             secondaryHref="/register"
           />
         </form>
-
       </div>
     </div>
   );

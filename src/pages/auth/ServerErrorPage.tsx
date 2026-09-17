@@ -1,8 +1,5 @@
 /**
  * Página de error del servidor (500).
- *
- * Diseño diferente: tonos rojos, fondo más opaco,
- * para reflejar la gravedad del error.
  */
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -32,14 +29,11 @@ export default function ServerErrorPage() {
           textAlign: 'center',
         }}
       >
-        {/* Imagen */}
         <img
           src="/500.png"
           alt={t('pages.serverError.title')}
           style={{ marginBottom: 32, width: 288, objectFit: 'contain' }}
         />
-
-        {/* Título */}
         <h1
           style={{
             margin: '0 0 8px',
@@ -50,8 +44,6 @@ export default function ServerErrorPage() {
         >
           {t('pages.serverError.title')}
         </h1>
-
-        {/* Descripción */}
         <p
           style={{
             margin: '0 0 48px',
@@ -62,8 +54,6 @@ export default function ServerErrorPage() {
         >
           {t('pages.serverError.message')}
         </p>
-
-        {/* Acciones */}
         <div
           style={{
             display: 'flex',
@@ -87,9 +77,8 @@ export default function ServerErrorPage() {
           >
             {t('common.back')}
           </button>
-
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/dashboard')}
             style={{
               padding: '10px 20px',
               borderRadius: 10,

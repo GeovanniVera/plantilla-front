@@ -53,8 +53,16 @@ export function ProtectedRoute({
   redirectTo = '/login',
   requireVerification = true,
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, isVerified } = useAuth();
+  const { isAuthenticated, isLoading, isVerified, user } = useAuth();
   const location = useLocation();
+
+  console.log('[GUARD] ProtectedRoute:', {
+    isAuthenticated,
+    isLoading,
+    isVerified: isVerified(),
+    requireVerification,
+    user,
+  });
 
   if (isLoading) return <AuthLoading />;
   if (!isAuthenticated) return <Navigate to={redirectTo} state={{ from: location }} replace />;
@@ -175,7 +183,7 @@ interface GuestOnlyProps {
  * <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
  * ```
  */
-export function GuestOnly({ children, redirectTo = '/' }: GuestOnlyProps) {
+export function GuestOnly({ children, redirectTo = '/dashboard' }: GuestOnlyProps) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return <AuthLoading />;

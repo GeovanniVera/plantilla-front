@@ -14,7 +14,7 @@ const OVERLAY_CLASSES =
   'fixed inset-0 z-[1000] flex justify-end bg-black/35 backdrop-blur-[8px] animate-overlay-fade-in max-[480px]:items-end';
 
 const WINDOW_CLASSES =
-  'flex flex-col h-full bg-background border-l border-border-base shadow-[-25px_0_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(0,0,0,0.05)] overflow-hidden animate-drawer-slide-in max-[480px]:w-full! max-[480px]:max-w-full max-[480px]:border-l-0 max-[480px]:rounded-t-[16px] max-[480px]:max-h-[85vh] max-[480px]:h-auto';
+  'flex flex-col h-full bg-background border-l border-border-base rounded-l-xl shadow-[-25px_0_50px_-12px_rgba(0,0,0,0.25),0_0_0_1px_rgba(0,0,0,0.05)] overflow-hidden animate-drawer-slide-in max-[480px]:w-full! max-[480px]:max-w-full max-[480px]:border-l-0 max-[480px]:rounded-t-[16px] max-[480px]:rounded-l-none max-[480px]:max-h-[85vh] max-[480px]:h-auto';
 
 /* Body/Footer replicate the shared module rules so Drawer no longer
  * depends on them; the module keeps the rules for DrawerStack + Modal. */

@@ -1,21 +1,30 @@
-import { client } from '../client'
-import type { ApiResponse, AuthResponse, User } from '../types/api-response'
+import { client } from '../client';
+import type { ApiResponse, AuthResponse, User } from '../types/api-response';
 
 export const authService = {
   login: (email: string, password: string): Promise<ApiResponse<AuthResponse>> =>
     client.post<AuthResponse>('/auth/login', { email, password }),
 
-  logout: (): Promise<ApiResponse<void>> =>
-    client.post<void>('/auth/logout'),
+  logout: (): Promise<ApiResponse<void>> => client.post<void>('/auth/logout'),
 
-  me: (): Promise<ApiResponse<User>> =>
-    client.get<User>('/auth/me'),
+  me: (): Promise<ApiResponse<User>> => client.get<User>('/auth/me'),
 
-  refreshToken: (refreshToken: string): Promise<ApiResponse<AuthResponse>> =>
-    client.post<AuthResponse>('/auth/refresh', { refreshToken }),
+  /**
+   * Refresh token via HttpOnly cookie.
+   * No envía refreshToken en el body — la cookie se envía automáticamente.
+   */
+  refreshToken: (): Promise<ApiResponse<AuthResponse>> =>
+    client.post<AuthResponse>('/auth/refresh'),
 
-  register: (data: { name: string; email: string; password: string }): Promise<ApiResponse<AuthResponse>> =>
-    client.post<AuthResponse>('/auth/register', data),
+  /**
+   * Register retorna solo mensaje opaco, no user ni token.
+   */
+  register: (data: {
+    name: string;
+    email: string;
+    password: string;
+    acceptedTerms: boolean;
+  }): Promise<ApiResponse<void>> => client.post<void>('/auth/register', data),
 
   forgotPassword: (email: string): Promise<ApiResponse<void>> =>
     client.post<void>('/auth/forgot-password', { email }),
@@ -29,6 +38,9 @@ export const authService = {
   resendVerification: (email: string): Promise<ApiResponse<void>> =>
     client.post<void>('/auth/resend-verification', { email }),
 
-  verifyOtp: (email: string, otp: string): Promise<ApiResponse<{ verified: boolean; token?: string }>> =>
-    client.post<{ verified: boolean; token?: string }>('/auth/verify-otp', { email, otp }),
-}
+  /**
+   * Verify OTP retorna { resetToken } (no { verified, token }).
+   */
+  verifyOtp: (email: string, otp: string): Promise<ApiResponse<{ resetToken: string }>> =>
+    client.post<{ resetToken: string }>('/auth/verify-otp', { email, otp }),
+};

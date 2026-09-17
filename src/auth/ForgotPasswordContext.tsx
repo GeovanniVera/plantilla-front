@@ -37,20 +37,20 @@ export function ForgotPasswordProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, email }));
   }, []);
 
-  const verifyOtp = useCallback(async (otp: string) => {
-    const response = await authService.verifyOtp(state.email, otp);
+  const verifyOtp = useCallback(
+    async (otp: string) => {
+      const response = await authService.verifyOtp(state.email, otp);
 
-    if (!response.success) {
-      return { success: false, error: response.message || 'Código inválido o expirado' };
-    }
+      if (!response.success || !response.data) {
+        return { success: false, error: response.message || 'Código inválido o expirado' };
+      }
 
-    if (response.data?.verified) {
-      setState((prev) => ({ ...prev, token: response.data?.token || `reset-token-${Date.now()}`, otpVerified: true }));
+      // Backend retorna { resetToken: "..." }
+      setState((prev) => ({ ...prev, token: response.data!.resetToken, otpVerified: true }));
       return { success: true };
-    }
-
-    return { success: false, error: 'Código inválido o expirado' };
-  }, [state.email]);
+    },
+    [state.email],
+  );
 
   const resetPassword = useCallback(
     async (password: string) => {

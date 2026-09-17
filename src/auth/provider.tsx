@@ -37,6 +37,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // ─── Restaurar sesión al montar ──────────────────────────
   useEffect(() => {
     const restoreSession = async () => {
+      console.log('[AUTH] Restaurando sesión...');
+
       // Try localStorage first, then sessionStorage
       let token = authStorage.getToken(true); // localStorage
       let remember = true;
@@ -45,15 +47,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
         remember = false;
       }
 
+      console.log('[AUTH] Token encontrado:', {
+        hasToken: !!token,
+        来源: token ? (remember ? 'localStorage' : 'sessionStorage') : 'ninguno',
+      });
+
       if (!token) {
+        console.log('[AUTH] No hay token, sesión no restaurada');
         setState((prev) => ({ ...prev, isLoading: false }));
         return;
       }
 
       try {
         tokenManager.set(token);
+        console.log('[AUTH] Llamando a /auth/me...');
         const meResponse = await authService.me();
+        console.log('[AUTH] Respuesta de /auth/me:', {
+          success: meResponse.success,
+          hasData: !!meResponse.data,
+          user: meResponse.data,
+        });
+
         if (!meResponse.success || !meResponse.data) {
+          console.log('[AUTH] /auth/me falló, limpiando sesión');
           authStorage.clear(remember);
           tokenManager.clear();
           setState({
@@ -64,13 +80,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
           });
           return;
         }
+
+        console.log('[AUTH] Sesión restaurada exitosamente:', { user: meResponse.data });
+        console.log(
+          '[AUTH] isVerified from /me:',
+          meResponse.data?.isVerified,
+          typeof meResponse.data?.isVerified,
+        );
         setState({
           user: meResponse.data,
           token,
           isAuthenticated: true,
           isLoading: false,
         });
-      } catch {
+      } catch (error) {
+        console.error('[AUTH] Error al restaurar sesión:', error);
         // Token inválido o expirado → limpiar sesión
         authStorage.clear(remember);
         tokenManager.clear();
@@ -97,6 +121,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isAuthenticated: false,
         isLoading: false,
       });
+      // Hard redirect intencional: limpia todo el estado de React
+      // y fuerza re-inicialización del AuthProvider
       window.location.href = '/login';
     };
 
@@ -118,13 +144,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       throw new Error(response.message || 'Credenciales inválidas');
     }
 
-    const { user, token: newToken, refreshToken, expiresIn } = response.data;
+    const { user, accessToken: newToken, expiresIn } = response.data;
 
-    // Persistir tokens
+    console.log('[AUTH] Login exitoso:', { user, hasToken: !!newToken, expiresIn, remember });
+    console.log('[AUTH] isVerified:', user?.isVerified, typeof user?.isVerified);
+
+    // Persistir token (refresh token viene en HttpOnly cookie)
     authStorage.setToken(newToken, expiresIn, remember);
-    if (refreshToken) {
-      authStorage.setRefreshToken(refreshToken, remember);
-    }
     tokenManager.set(newToken);
 
     // Actualizar estado
@@ -134,6 +160,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isAuthenticated: true,
       isLoading: false,
     });
+
+    console.log('[AUTH] Estado actualizado:', { user, isAuthenticated: true });
   }, []);
 
   // ─── Logout ──────────────────────────────────────────────
@@ -165,7 +193,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * @returns true si el usuario tiene el privilegio, false si no hay usuario
    */
   const hasPrivilege = useCallback(
-    (privilege: string) => state.user?.privileges.includes(privilege) ?? false,
+    (privilege: string) => state.user?.permissions.includes(privilege) ?? false,
     [state.user],
   );
 
@@ -176,7 +204,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * @returns true si tiene al menos uno, false si no hay usuario
    */
   const hasAnyPrivilege = useCallback(
-    (privileges: string[]) => privileges.some((p) => state.user?.privileges.includes(p)) ?? false,
+    (privileges: string[]) => privileges.some((p) => state.user?.permissions.includes(p)) ?? false,
     [state.user],
   );
 

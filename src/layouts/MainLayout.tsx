@@ -3,19 +3,14 @@ import { Outlet, useLocation, Link, NavLink, useNavigate } from 'react-router';
 import {
   LuSettings,
   LuHouse,
-  LuBlocks,
-  LuMousePointerClick,
-  LuTable2,
-  LuCreditCard,
-  LuTextCursorInput,
-  LuPanelRightOpen,
-  LuBell,
-  LuNavigation,
   LuPalette,
-  LuShield,
-  LuCalendar,
   LuLogOut,
-  LuFolderOpen,
+  LuUser,
+  LuUsers,
+  LuLayoutDashboard,
+  LuShieldCheck,
+  LuKeyRound,
+  LuScrollText,
 } from 'react-icons/lu';
 import Sidebar from '@components/navigation/sidebar/Sidebar';
 import SidebarLogo from '@components/navigation/sidebar/SidebarLogo';
@@ -24,6 +19,8 @@ import UserClock from '@components/navigation/sidebar/UserClock';
 import NavItem from '@components/navigation/sidebar/NavItem';
 import NavGroup from '@components/navigation/sidebar/NavGroup';
 import { useAuth } from '../auth';
+import { Can } from '../auth/Can';
+import { formatDisplayName } from '../lib/utils';
 import styles from './MainLayout.module.css';
 
 // ─── Route config ────────────────────────────────────────
@@ -33,54 +30,12 @@ interface RouteConfig {
 }
 
 const ROUTE_CONFIG: Record<string, RouteConfig> = {
-  '/': {
-    title: 'Inicio',
-    subtitle: 'Librería de UI reutilizable con composición, variantes CSS y theming.',
+  dashboard: {
+    title: 'Dashboard',
+    subtitle: 'Vista general del sistema.',
   },
-  componentes: {
-    title: 'Componentes',
-    subtitle: 'Explora los componentes disponibles del design system.',
-  },
-  botones: {
-    title: 'Botones',
-    subtitle:
-      'Configura variantes, tamaños, formas y animaciones. Genera el código listo para usar.',
-  },
-  cards: { title: 'Cards', subtitle: 'Tarjetas para contenido agrupado con variantes de header.' },
-  tablas: {
-    title: 'Tablas',
-    subtitle:
-      'Configura y personaliza tablas reutilizables. Selecciona el tipo, activa características y preview el resultado en tiempo real.',
-  },
-  formularios: {
-    title: 'Formularios',
-    subtitle: 'Configura formularios por secciones, con validación por campo y modo multi-paso.',
-  },
-  modales: {
-    title: 'Modales',
-    subtitle:
-      'Diálogos modales, drawers laterales, drawers multinivel y confirmaciones. Cada ejemplo es funcional.',
-  },
-  notificaciones: {
-    title: 'Notificaciones',
-    subtitle: 'Toasts para feedback rápido y ConfirmDialogs para acciones importantes.',
-  },
-  navegacion: {
-    title: 'Navegación',
-    subtitle: 'Breadcrumb con migas de pan responsive y Tabs con 3 variantes.',
-  },
-  calendario: { title: 'Calendario', subtitle: 'Calendario Organizacional.' },
   ajustes: { title: 'Ajustes', subtitle: 'Configuración de la aplicación.' },
   colores: { title: 'Colores de marca', subtitle: 'Personaliza los colores de la aplicación.' },
-  auditoria: { title: 'Auditoría', subtitle: 'Logs del sistema, seguridad y reglas de auditoría.' },
-  examples: {
-    title: 'Ejemplos',
-    subtitle: 'Casos de uso reales que combinan múltiples componentes del design system.',
-  },
-  registro: {
-    title: 'Registro',
-    subtitle: 'Formulario de registro con validación completa y addons decorativos.',
-  },
 };
 
 function Breadcrumbs() {
@@ -118,33 +73,6 @@ function Breadcrumbs() {
   );
 }
 
-function PageHeader() {
-  const { pathname } = useLocation();
-
-  // Check home first
-  const homeConfig = ROUTE_CONFIG['/'];
-  if (pathname === '/' && homeConfig) {
-    return (
-      <div className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>{homeConfig.title}</h1>
-        {homeConfig.subtitle && <p className={styles.pageSubtitle}>{homeConfig.subtitle}</p>}
-      </div>
-    );
-  }
-
-  const segments = pathname.split('/').filter(Boolean);
-  const lastSegment = segments[segments.length - 1];
-  const config = ROUTE_CONFIG[lastSegment];
-  const title = config?.title ?? lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
-
-  return (
-    <div className={styles.pageHeader}>
-      <h1 className={styles.pageTitle}>{title}</h1>
-      {config?.subtitle && <p className={styles.pageSubtitle}>{config.subtitle}</p>}
-    </div>
-  );
-}
-
 function useActive(path: string) {
   const { pathname } = useLocation();
   return path === '/' ? pathname === '/' : pathname.startsWith(path);
@@ -152,121 +80,65 @@ function useActive(path: string) {
 
 function AppNavItems() {
   const isActive = useActive;
-  const [componentesOpen, setComponentesOpen] = useState(isActive('/componentes'));
-  const [ejemplosOpen, setEjemplosOpen] = useState(isActive('/examples'));
+  const [adminOpen, setAdminOpen] = useState(isActive('/admin'));
 
   return (
     <>
-      <NavItem to="/" icon={LuHouse} label="Inicio" active={isActive('/')} />
+      <NavItem to="/dashboard" icon={LuHouse} label="Dashboard" active={isActive('/dashboard')} />
 
-      <NavGroup
-        icon={LuBlocks}
-        label="Componentes"
-        open={componentesOpen}
-        active={isActive('/componentes')}
-        onToggle={() => setComponentesOpen((p) => !p)}
-      >
-        <NavItem
-          as={NavLink}
-          to="/componentes"
-          icon={LuBlocks}
-          label="Índice"
-          active={isActive('/componentes') && !isActive('/componentes/')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/componentes/botones"
-          icon={LuMousePointerClick}
-          label="Botones"
-          active={isActive('/componentes/botones')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/componentes/cards"
-          icon={LuCreditCard}
-          label="Cards"
-          active={isActive('/componentes/cards')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/componentes/tablas"
-          icon={LuTable2}
-          label="Tablas"
-          active={isActive('/componentes/tablas')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/componentes/formularios"
-          icon={LuTextCursorInput}
-          label="Formularios"
-          active={isActive('/componentes/formularios')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/componentes/modales"
-          icon={LuPanelRightOpen}
-          label="Modales"
-          active={isActive('/componentes/modales')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/componentes/notificaciones"
-          icon={LuBell}
-          label="Notificaciones"
-          active={isActive('/componentes/notificaciones')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/componentes/navegacion"
-          icon={LuNavigation}
-          label="Navegación"
-          active={isActive('/componentes/navegacion')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/componentes/calendario"
-          icon={LuCalendar}
-          label="Calendario"
-          active={isActive('/componentes/calendario')}
-        />
-      </NavGroup>
-
-      <NavGroup
-        icon={LuFolderOpen}
-        label="Ejemplos"
-        open={ejemplosOpen}
-        active={isActive('/examples')}
-        onToggle={() => setEjemplosOpen((p) => !p)}
-      >
-        <NavItem
-          as={NavLink}
-          to="/examples"
-          icon={LuBlocks}
-          label="Índice"
-          active={isActive('/examples') && !isActive('/examples/')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/examples/registro"
-          icon={LuTextCursorInput}
-          label="Registro"
-          active={isActive('/examples/registro')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/examples/auditoria"
-          icon={LuShield}
-          label="Auditoría"
-          active={isActive('/examples/auditoria')}
-        />
-        <NavItem
-          as={NavLink}
-          to="/examples/calendario"
-          icon={LuCalendar}
-          label="Calendario"
-          active={isActive('/examples/calendario')}
-        />
-      </NavGroup>
+      <Can privilege="users.read">
+        <NavGroup
+          icon={LuShieldCheck}
+          label="Gestión de usuarios"
+          open={adminOpen}
+          active={isActive('/admin')}
+          onToggle={() => setAdminOpen((p) => !p)}
+        >
+          <NavItem
+            as={NavLink}
+            to="/admin"
+            icon={LuLayoutDashboard}
+            label="Índice"
+            active={isActive('/admin') && !isActive('/admin/')}
+          />
+          <Can privilege="users.read">
+            <NavItem
+              as={NavLink}
+              to="/admin/usuarios"
+              icon={LuUsers}
+              label="Usuarios"
+              active={isActive('/admin/usuarios')}
+            />
+          </Can>
+          <Can privilege="roles.read">
+            <NavItem
+              as={NavLink}
+              to="/admin/roles"
+              icon={LuShieldCheck}
+              label="Roles"
+              active={isActive('/admin/roles')}
+            />
+          </Can>
+          <Can privilege="permissions.read">
+            <NavItem
+              as={NavLink}
+              to="/admin/permisos"
+              icon={LuKeyRound}
+              label="Permisos"
+              active={isActive('/admin/permisos')}
+            />
+          </Can>
+          <Can anyOf={['audit.read', 'audit.read-mine']}>
+            <NavItem
+              as={NavLink}
+              to="/admin/auditoria"
+              icon={LuScrollText}
+              label="Auditoría"
+              active={isActive('/admin/auditoria')}
+            />
+          </Can>
+        </NavGroup>
+      </Can>
     </>
   );
 }
@@ -293,11 +165,36 @@ function AppFooter() {
       >
         <NavItem
           as={NavLink}
-          to="/ajustes/colores"
-          icon={LuPalette}
-          label="Colores de marca"
-          active={isActive('/ajustes/colores')}
+          to="/ajustes"
+          icon={LuLayoutDashboard}
+          label="Índice"
+          active={isActive('/ajustes') && !isActive('/ajustes/')}
         />
+        <NavItem
+          as={NavLink}
+          to="/ajustes/perfil"
+          icon={LuUser}
+          label="Mi perfil"
+          active={isActive('/ajustes/perfil')}
+        />
+        <Can anyOf={['audit.read', 'audit.read-mine']}>
+          <NavItem
+            as={NavLink}
+            to="/ajustes/actividad"
+            icon={LuScrollText}
+            label="Mi actividad"
+            active={isActive('/ajustes/actividad')}
+          />
+        </Can>
+        <Can privilege="settings.brand">
+          <NavItem
+            as={NavLink}
+            to="/ajustes/colores"
+            icon={LuPalette}
+            label="Colores de marca"
+            active={isActive('/ajustes/colores')}
+          />
+        </Can>
       </NavGroup>
       <NavItem as="button" icon={LuLogOut} label="Cerrar sesión" danger onClick={handleLogout} />
     </>
@@ -305,12 +202,18 @@ function AppFooter() {
 }
 
 export default function MainLayout() {
+  const { user } = useAuth();
+  const userName = formatDisplayName(user?.name ?? 'Usuario');
+  const userPhoto = user?.photoUrl;
+  const roles = user?.roles ?? [];
+  const userRole = roles.length === 0 ? '' : roles.length === 1 ? roles[0] : 'Multi rol';
+
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
       <Sidebar>
         <Sidebar.Header>
           <SidebarLogo src="/logo.svg" name="Semilla Tecnológica" />
-          <UserAvatar name="Geovanni V." role="Dev" />
+          <UserAvatar name={userName} role={userRole} photoUrl={userPhoto} />
           <UserClock />
         </Sidebar.Header>
 
@@ -327,7 +230,6 @@ export default function MainLayout() {
 
       <main className={styles.main}>
         <Breadcrumbs />
-        <PageHeader />
         <Outlet />
       </main>
     </div>

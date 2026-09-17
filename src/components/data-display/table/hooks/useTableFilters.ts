@@ -86,9 +86,15 @@ export function useTableFilters<T extends object>(
         // Usar las opciones definidas por el dev
         map[col.key] = col.filterOptions;
       } else {
-        // Inferir de los datos
+        // Inferir de los datos — aplanar arrays (ej: roles) para mostrar cada valor individual
         const values = new Set(
-          data.map((row) => String((row as Record<string, unknown>)[col.key] ?? '')),
+          data.flatMap((row) => {
+            const raw = (row as Record<string, unknown>)[col.key];
+            if (Array.isArray(raw)) {
+              return raw.map((v) => String(v ?? ''));
+            }
+            return [String(raw ?? '')];
+          }),
         );
         map[col.key] = Array.from(values).sort();
       }
@@ -106,8 +112,15 @@ export function useTableFilters<T extends object>(
         if (type === 'number') continue; // Se filtra por numericFilters
 
         if (selected.size === 0) return false; // Active filter, no values -> no rows
-        const cellValue = String((row as Record<string, unknown>)[key] ?? '');
-        if (!selected.has(cellValue)) return false;
+        const rawValue = (row as Record<string, unknown>)[key];
+        // Si el valor es un array (ej: roles), matchear si CUALQUIER elemento está seleccionado
+        if (Array.isArray(rawValue)) {
+          const values = rawValue.map((v) => String(v ?? ''));
+          if (!values.some((v) => selected.has(v))) return false;
+        } else {
+          const cellValue = String(rawValue ?? '');
+          if (!selected.has(cellValue)) return false;
+        }
       }
 
       // Filtros numéricos

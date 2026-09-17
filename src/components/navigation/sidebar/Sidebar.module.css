@@ -171,13 +171,13 @@
     top: 0;
     left: 0;
     z-index: 100;
-    width: 280px;
-    max-width: 85vw;
+    width: 100%;
+    max-width: 100vw;
     height: 100vh;
     height: 100dvh;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 24px 16px;
+    padding: 24px 20px;
     align-items: flex-start;
     overflow-y: auto;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
@@ -188,8 +188,8 @@
     transform: translateX(0);
   }
 
-  /* Forzar expanded en mobile */
-  .sidebarMobile.sidebarExpanded,
+  /* Forzar expanded en mobile — el contenedor mantiene su padding,
+   solo el nav no duplica el suyo */
   .sidebarMobile .nav {
     padding: 0;
   }

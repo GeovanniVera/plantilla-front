@@ -15,7 +15,7 @@ import { LuMail, LuLogOut } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth';
 import Spinner from '@components/feedback/Spinner';
-import { authService } from '../../lib/api/services/auth.service';
+import { useResendVerification } from '../../hooks/useAuth';
 import { AuthFormHeader } from '../../layouts/auth/AuthFormLayout';
 
 export default function VerifyEmailPage() {
@@ -23,33 +23,31 @@ export default function VerifyEmailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const resendMutation = useResendVerification();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
   // Email del usuario o del state (post-registration)
   const email = user?.email || (location.state as { email?: string })?.email || '';
 
-  const handleResend = async () => {
+  const handleResend = () => {
     if (!email) return;
-
-    setLoading(true);
     setError('');
 
-    try {
-      const response = await authService.resendVerification(email);
-      if (!response.success) {
+    resendMutation.mutate(email, {
+      onSuccess: (response) => {
+        if (!response.success) {
+          setError('Error al reenviar el email. Intentá de nuevo.');
+          return;
+        }
+        setSent(true);
+        console.log('[Mock] Email de verificación reenviado a:', email);
+        console.log('[Mock] Token de verificación: verify-token-abc123');
+      },
+      onError: () => {
         setError('Error al reenviar el email. Intentá de nuevo.');
-        return;
-      }
-      setSent(true);
-      console.log('[Mock] Email de verificación reenviado a:', email);
-      console.log('[Mock] Token de verificación: verify-token-abc123');
-    } catch {
-      setError('Error al reenviar el email. Intentá de nuevo.');
-    } finally {
-      setLoading(false);
-    }
+      },
+    });
   };
 
   const handleLogout = async () => {
@@ -130,10 +128,10 @@ export default function VerifyEmailPage() {
           <button
             type="button"
             onClick={handleResend}
-            disabled={loading}
+            disabled={resendMutation.isPending}
             className="bg-accent hover:bg-accent-hover flex w-full items-center justify-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
           >
-            {loading ? (
+            {resendMutation.isPending ? (
               <>
                 <Spinner size="sm" color="white" />
                 <span>{t('auth.verifyEmail.submitting')}</span>

@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react';
+import ErrorLayout from '../layouts/ErrorLayout';
 
 interface Props {
   children: ReactNode;
@@ -24,76 +25,37 @@ export default class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null });
   };
 
+  handleGoHome = () => {
+    window.location.href = '/dashboard';
+  };
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 64,
-            gap: 16,
-            textAlign: 'center',
-          }}
-        >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 24,
-            }}
-          >
-            ⚠️
-          </div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: 'var(--text-h)' }}>
-            Ups, algo falló
-          </h2>
-          <p style={{ margin: 0, fontSize: 14, color: 'var(--text)', maxWidth: 400 }}>
-            No se pudo cargar esta sección. Por favor, intentá de nuevo.
-          </p>
-          {this.state.error && (
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                fontFamily: 'var(--mono)',
-                color: 'var(--text)',
-                opacity: 0.5,
-                maxWidth: 500,
-                wordBreak: 'break-all',
-              }}
-            >
-              {this.state.error.message}
-            </p>
-          )}
-          <button
-            onClick={this.handleRetry}
-            style={{
-              marginTop: 8,
-              padding: '10px 20px',
-              borderRadius: 8,
-              border: '1px solid var(--accent-border)',
-              background: 'var(--accent-bg)',
-              color: 'var(--accent)',
-              fontSize: 14,
-              fontWeight: 600,
-              fontFamily: 'var(--sans)',
-              cursor: 'pointer',
-            }}
-          >
-            Reintentar
-          </button>
-        </div>
+        <ErrorLayout
+          image="/500.png"
+          imageAlt="Error"
+          title="Algo salió mal"
+          description="Ocurrió un error inesperado al cargar esta sección. Podés reintentar o volver al inicio."
+          actions={
+            <>
+              <button
+                onClick={this.handleGoHome}
+                className="border-border-base bg-background text-foreground hover:border-accent-line hover:text-heading cursor-pointer rounded-md border px-5 py-2 text-[13px] font-semibold transition-colors"
+              >
+                Ir al dashboard
+              </button>
+              <button
+                onClick={this.handleRetry}
+                className="border-accent-border bg-accent-bg text-accent hover:bg-accent cursor-pointer rounded-md border px-5 py-2 text-[13px] font-semibold transition-colors hover:text-white"
+              >
+                Reintentar
+              </button>
+            </>
+          }
+        />
       );
     }
 

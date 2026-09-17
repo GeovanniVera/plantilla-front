@@ -2,14 +2,15 @@
  * Página de registro.
  *
  * Formulario plano con inputs del design system.
- * Campos mínimos: email, contraseña, aceptar términos.
+ * Campos: nombre, email, contraseña, aceptar términos.
+ * Post-registro: redirección a página de "verifica tu email" (sin auto-login).
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { LuMail, LuLock, LuCircleAlert } from 'react-icons/lu';
+import { LuMail, LuLock, LuCircleAlert, LuUser } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
 import { GuestOnly } from '../../auth/guards';
-import { authService } from '../../lib/api/services/auth.service';
+import { useRegister } from '../../hooks/useAuth';
 import Input from '@components/primitives/Input';
 import Checkbox from '@components/primitives/Checkbox';
 import { AuthFormHeader, AuthFormActions } from '../../layouts/auth/AuthFormLayout';
@@ -17,14 +18,15 @@ import { AuthFormHeader, AuthFormActions } from '../../layouts/auth/AuthFormLayo
 function RegisterPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const registerMutation = useRegister();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -38,21 +40,17 @@ function RegisterPage() {
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const response = await authService.register({ name: email.split('@')[0], email, password });
-      if (!response.success) {
-        setError(response.message || t('errors.unknown'));
-        return;
-      }
-      // Redirigir a verificación de email
-      navigate('/verify-email', { state: { email } });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errors.unknown'));
-    } finally {
-      setLoading(false);
-    }
+    registerMutation.mutate(
+      { name, email, password, acceptedTerms: acceptTerms },
+      {
+        onSuccess: () => {
+          // No auto-login: el backend requiere verificación de email primero
+          // Redirigir a página de "revisa tu email"
+          navigate('/verify-email', { state: { email } });
+        },
+        onError: (err) => setError(err.message || t('errors.unknown')),
+      },
+    );
   };
 
   return (
@@ -72,6 +70,19 @@ function RegisterPage() {
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
+            <label className="text-fg block text-sm font-medium">{t('auth.register.name')}</label>
+            <Input
+              type="text"
+              value={name}
+              onChange={setName}
+              placeholder={t('auth.register.namePlaceholder')}
+              startAdornment={<LuUser size={16} />}
+              startAdornmentVariant="accent"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
             <label className="text-fg block text-sm font-medium">{t('auth.register.email')}</label>
             <Input
               type="email"
@@ -85,7 +96,9 @@ function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">{t('auth.register.password')}</label>
+            <label className="text-fg block text-sm font-medium">
+              {t('auth.register.password')}
+            </label>
             <Input
               type="password"
               value={password}
@@ -100,7 +113,9 @@ function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">{t('auth.register.confirmPassword')}</label>
+            <label className="text-fg block text-sm font-medium">
+              {t('auth.register.confirmPassword')}
+            </label>
             <Input
               type="password"
               value={confirmPassword}
@@ -133,12 +148,11 @@ function RegisterPage() {
           {/* Actions */}
           <AuthFormActions
             submitLabel={t('auth.register.submit')}
-            loading={loading}
+            loading={registerMutation.isPending}
             secondaryLabel={`${t('auth.register.hasAccount')} ${t('auth.register.login')}`}
             secondaryHref="/login"
           />
         </form>
-
       </div>
     </div>
   );

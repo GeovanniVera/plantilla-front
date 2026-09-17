@@ -9,7 +9,7 @@
  * definida en src/api/types.ts (ApiResponse<T>).
  */
 
-import type { ApiResponse, ApiErrorCode } from './types/api-response';
+import type { ApiResponse, ApiError, ApiErrorCode } from './types/api-response';
 import { tryRefreshToken } from './interceptors/refresh';
 import { getErrorMessage } from '../i18n/errors';
 import { authStorage } from '../auth/token-store';
@@ -108,7 +108,10 @@ const defaultConfig: ClientConfig = {
     window.location.href = '/login';
   },
   onForbidden: () => {
-    window.location.href = '/403';
+    // No redirigir a /403 desde login (403 = "Cuenta no verificada")
+    if (!window.location.pathname.includes('/login')) {
+      window.location.href = '/403';
+    }
   },
 };
 
@@ -157,12 +160,15 @@ async function request<T>(
 ): Promise<ApiResponse<T>> {
   const url = `${config.baseUrl}${path}`;
 
+  const isFormData = body instanceof FormData;
+
   // Construir configuración de la petición
   let requestConfig: RequestInit & { url: string } = {
     url,
     method,
     headers: {
-      'Content-Type': 'application/json',
+      // FormData: no forzar Content-Type (fetch setea el boundary automáticamente)
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...options?.headers,
     },
     ...options,
@@ -192,7 +198,8 @@ async function request<T>(
 
   // Serializar cuerpo para peticiones que lo requieran
   if (body && method !== 'GET') {
-    requestConfig.body = JSON.stringify(body);
+    // FormData se envía directo; el resto se serializa a JSON
+    requestConfig.body = isFormData ? (body as FormData) : JSON.stringify(body);
   }
 
   // Ejecutar interceptores de petición (pueden modificar la config)
@@ -284,8 +291,20 @@ async function request<T>(
         window.dispatchEvent(new CustomEvent('auth:logout'));
       }
 
-      // 403: Sin permisos → redirigir a página de acceso denegado
+      // 403: Distinguir suspensión de cuenta vs sin permisos
       if (response.status === 403) {
+        const isSuspended =
+          apiResponse &&
+          'code' in apiResponse &&
+          (apiResponse as ApiError).code === 'ACCOUNT_SUSPENDED';
+        if (isSuspended) {
+          // Cuenta suspendida: limpiar sesión y redirigir a login con mensaje
+          tokenManager.clear();
+          window.dispatchEvent(new CustomEvent('auth:logout'));
+          const message = (apiResponse as ApiError).message || 'Tu cuenta fue suspendida';
+          window.location.href = `/login?error=${encodeURIComponent(message)}`;
+          return apiResponse;
+        }
         config.onForbidden?.();
       }
     }

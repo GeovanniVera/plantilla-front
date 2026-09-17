@@ -1,9 +1,10 @@
 import { useState, useEffect, type ReactNode } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { useMediaQuery } from '@hooks/useMediaQuery';
 import styles from './Sidebar.module.css';
 import { SidebarContext, useSidebar } from './context';
 import { LuPanelLeftClose, LuPanelLeftOpen, LuSettings, LuLogOut, LuMenu } from 'react-icons/lu';
+import { useAuth } from '../../../auth';
 
 // ─── Sidebar Root ─────────────────────────────────────────
 interface SidebarRootProps {
@@ -13,6 +14,8 @@ interface SidebarRootProps {
 
 function SidebarRoot({ children, className = '' }: SidebarRootProps) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [expanded, setExpanded] = useState(false);
 
@@ -35,6 +38,11 @@ function SidebarRoot({ children, className = '' }: SidebarRootProps) {
 
   const toggleExpanded = () => setExpanded((p) => !p);
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   return (
     <SidebarContext.Provider value={{ expanded, toggleExpanded }}>
       {/* Bottom bar — solo en mobile */}
@@ -43,7 +51,12 @@ function SidebarRoot({ children, className = '' }: SidebarRootProps) {
           onOpenMenu={toggleExpanded}
           items={[
             { to: '/ajustes', icon: <LuSettings size={22} />, label: 'Ajustes' },
-            { to: '/logout', icon: <LuLogOut size={22} />, label: 'Cerrar sesión', danger: true },
+            {
+              onClick: handleLogout,
+              icon: <LuLogOut size={22} />,
+              label: 'Cerrar sesión',
+              danger: true,
+            },
           ]}
         />
       )}
@@ -109,7 +122,8 @@ function SidebarFooter({ children, className = '' }: { children: ReactNode; clas
 
 // ─── Mobile Bottom Bar ────────────────────────────────────
 interface MobileBottomBarItem {
-  to: string;
+  to?: string;
+  onClick?: () => void;
   icon: ReactNode;
   label: string;
   danger?: boolean;
@@ -122,6 +136,15 @@ interface MobileBottomBarProps {
 
 function MobileBottomBar({ onOpenMenu, items = [] }: MobileBottomBarProps) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  const handleItem = (item: MobileBottomBarItem) => {
+    if (item.onClick) {
+      item.onClick();
+    } else if (item.to) {
+      navigate(item.to);
+    }
+  };
 
   return (
     <nav className={styles.mobileBar} aria-label="Navegación móvil">
@@ -130,17 +153,17 @@ function MobileBottomBar({ onOpenMenu, items = [] }: MobileBottomBarProps) {
       </button>
 
       {items.map((item) => {
-        const isActive = pathname === item.to;
+        const isActive = !!item.to && pathname === item.to;
         return (
-          <a
-            key={item.to}
-            href={item.to}
+          <button
+            key={item.label}
+            onClick={() => handleItem(item)}
             className={`${styles.mobileItem} ${isActive ? styles.mobileItemActive : ''} ${item.danger ? styles.mobileItemDanger : ''}`}
             aria-label={item.label}
             aria-current={isActive ? 'page' : undefined}
           >
             {item.icon}
-          </a>
+          </button>
         );
       })}
     </nav>

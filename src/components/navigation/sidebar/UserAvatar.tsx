@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSidebar } from './context';
 
 interface UserAvatarProps {
@@ -5,6 +6,8 @@ interface UserAvatarProps {
   name: string;
   /** Rol del usuario */
   role?: string;
+  /** URL de la foto de perfil (opcional) */
+  photoUrl?: string;
 }
 
 function getInitial(name: string) {
@@ -20,7 +23,9 @@ const CARD_BASE_CLASSES =
 const CARD_EXPANDED_CLASSES = 'flex-row items-center gap-3';
 
 const AVATAR_CLASSES =
-  'size-10 rounded-[10px] bg-accent text-white font-bold text-[15px] flex items-center justify-center shrink-0';
+  'size-10 rounded-full bg-accent text-white font-bold text-[15px] flex items-center justify-center shrink-0';
+
+const AVATAR_IMG_CLASSES = 'size-10 rounded-full object-cover shrink-0';
 
 const INFO_COLLAPSED_CLASSES = 'hidden flex-col items-center whitespace-nowrap';
 const INFO_EXPANDED_CLASSES = 'flex flex-col items-start whitespace-nowrap';
@@ -29,12 +34,24 @@ const NAME_CLASSES =
   'text-[13px] font-semibold text-heading leading-[1.3] overflow-hidden text-ellipsis max-w-[140px]';
 const ROLE_CLASSES = 'text-[11px] font-medium text-secondary leading-[1.3] flex items-center gap-1';
 
-export default function UserAvatar({ name, role }: UserAvatarProps) {
+export default function UserAvatar({ name, role, photoUrl }: UserAvatarProps) {
   const { expanded } = useSidebar();
+  const [imgError, setImgError] = useState(false);
+
+  const showImg = photoUrl && !imgError;
 
   return (
     <div className={`${CARD_BASE_CLASSES} ${expanded ? CARD_EXPANDED_CLASSES : ''}`}>
-      <div className={AVATAR_CLASSES}>{getInitial(name)}</div>
+      {showImg ? (
+        <img
+          src={photoUrl}
+          alt={name}
+          className={AVATAR_IMG_CLASSES}
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <div className={AVATAR_CLASSES}>{getInitial(name)}</div>
+      )}
       <div className={expanded ? INFO_EXPANDED_CLASSES : INFO_COLLAPSED_CLASSES}>
         <span className={NAME_CLASSES}>{name}</span>
         {role && <span className={ROLE_CLASSES}>{role}</span>}

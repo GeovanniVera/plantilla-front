@@ -22,7 +22,10 @@ export default function SidebarLogo({ src, name }: SidebarLogoProps) {
   const { expanded } = useSidebar();
 
   return (
-    <Link to="/" className={`${LOGO_BASE_CLASSES} ${expanded ? LOGO_EXPANDED_CLASSES : ''}`}>
+    <Link
+      to="/dashboard"
+      className={`${LOGO_BASE_CLASSES} ${expanded ? LOGO_EXPANDED_CLASSES : ''}`}
+    >
       <img src={src} alt={name} className={IMG_CLASSES} />
       <span className={`${NAME_BASE_CLASSES} ${expanded ? NAME_VISIBLE_CLASSES : ''}`}>{name}</span>
     </Link>

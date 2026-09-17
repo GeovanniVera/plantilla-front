@@ -11,15 +11,16 @@ import { useTranslation } from 'react-i18next';
 import Input from '@components/primitives/Input';
 import Spinner from '@components/feedback/Spinner';
 import { useForgotPassword } from '../../auth/ForgotPasswordContext';
+import { useResetPassword } from '../../hooks/useAuth';
 import { AuthFormHeader } from '../../layouts/auth/AuthFormLayout';
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { email, token, resetPassword, reset } = useForgotPassword();
+  const { email, token, reset } = useForgotPassword();
+  const resetPasswordMutation = useResetPassword();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
@@ -29,7 +30,7 @@ export default function ResetPasswordPage() {
     return null;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -43,21 +44,27 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setLoading(true);
+    if (!token) return;
 
-    const result = await resetPassword(password);
-
-    if (result.success) {
-      setSuccess(true);
-      reset(); // Limpiar estado
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
-    } else {
-      setError(result.error || 'Error al cambiar la contraseña');
-    }
-
-    setLoading(false);
+    resetPasswordMutation.mutate(
+      { token, password },
+      {
+        onSuccess: (response) => {
+          if (response.success) {
+            setSuccess(true);
+            reset();
+            setTimeout(() => {
+              navigate('/login');
+            }, 3000);
+          } else {
+            setError(response.message || 'Error al cambiar la contraseña');
+          }
+        },
+        onError: (err) => {
+          setError(err.message || 'Error al cambiar la contraseña');
+        },
+      },
+    );
   };
 
   if (success) {
@@ -161,10 +168,10 @@ export default function ResetPasswordPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={resetPasswordMutation.isPending}
             className="bg-accent hover:bg-accent-hover flex w-full items-center justify-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
           >
-            {loading ? (
+            {resetPasswordMutation.isPending ? (
               <>
                 <Spinner size="sm" color="white" />
                 <span>{t('auth.resetPassword.submitting')}</span>

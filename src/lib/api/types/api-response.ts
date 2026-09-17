@@ -147,35 +147,43 @@ export interface PaginatedResponse<T> {
 // ─── Tipos de autenticación ────────────────────────────────
 /**
  * Usuario autenticado.
+ *
+ * Nota: El backend retorna `permissions` (no `privileges`).
+ * Este tipo se alinea con el contrato del backend.
  */
 export interface User {
   id: string;
   email: string;
   name: string;
   roles: string[];
-  privileges: string[];
+  /** Permisos efectivos del usuario (unión de permisos de todos sus roles) */
+  permissions: string[];
   isVerified: boolean;
-  avatar?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  /** URL de la foto de perfil (si tiene) */
+  photoUrl?: string;
 }
 
 /**
  * Respuesta de login.
+ *
+ * El refresh token se maneja via HttpOnly cookie, no en el body.
  */
 export interface AuthResponse {
   user: User;
-  token: string;
-  refreshToken?: string;
+  /** Access token JWT de vida corta */
+  accessToken: string;
+  /** Tiempo de vida del access token en segundos */
   expiresIn?: number;
 }
 
 /**
  * Respuesta de refresh token.
+ *
+ * El refresh token viene en HttpOnly cookie, no en el body.
  */
 export interface RefreshResponse {
-  token: string;
-  refreshToken?: string;
+  user: User;
+  accessToken: string;
   expiresIn?: number;
 }
 

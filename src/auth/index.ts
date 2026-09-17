@@ -30,7 +30,16 @@ export { AuthProvider } from './provider';
 export { useAuth, useHasPrivilege, useHasAnyPrivilege, useHasRole } from './hooks';
 
 // Guards (componentes de protección de rutas)
-export { ProtectedRoute, RequirePrivilege, RequireRole, GuestOnly, RequireVerification } from './guards';
+export {
+  ProtectedRoute,
+  RequirePrivilege,
+  RequireRole,
+  GuestOnly,
+  RequireVerification,
+} from './guards';
+
+// Control de acceso basado en permisos
+export { Can } from './Can';
 
 // Tipos
 export type { User, AuthState, AuthContextValue } from './types';
