@@ -1,13 +1,11 @@
-# Plantilla Front — React Admin Template
+# Frontend — Plantilla Admin (React + TypeScript)
 
-[![CI](https://github.com/GeovanniVera/plantilla-front/actions/workflows/ci.yml/badge.svg)](https://github.com/GeovanniVera/plantilla-front/actions/workflows/ci.yml)
-
-Plantilla de front-end para aplicaciones admin, construida con **React + TypeScript**. Incluye design system, autenticación, theming, i18n y CI/CD configurado.
+Plantilla de frontend para aplicaciones admin, conectada al **backend Spring Boot** (`backend-spring`).
 
 ## Stack
 
 | Tecnología | Versión | Propósito |
-|------------|---------|-----------|
+|---|---|---|
 | React | ^19.2.8 | Framework UI |
 | TypeScript | ~6.0.2 | Tipado estático |
 | Vite | ^8.2.0 | Build tool y dev server |
@@ -16,30 +14,29 @@ Plantilla de front-end para aplicaciones admin, construida con **React + TypeScr
 | i18next | ^26.4.2 | Internacionalización |
 | React Query | ^5.102.8 | Server state management |
 | Storybook | ^10.5.10 | Documentación de componentes |
-| MSW | ^2.15.0 | Mock Service Worker (tests) |
+| Vitest + MSW | — | Testing |
 
 ## Quick Start
 
 ```bash
-# Instalar dependencias
+# 1. Instalar dependencias
 npm install
 
-# Crear archivo .env
+# 2. Configurar entorno
 cp .env.example .env
+#    VITE_API_BASE=http://localhost:8080/api   ← apunta al backend
 
-# Dev server
+# 3. Dev server
 npm run dev
-
-# Storybook
-npm run storybook
 ```
 
-Credenciales mock: `admin@test.com` / `admin123`
+> Requiere el backend corriendo en `http://localhost:8080`
+> (ver README de `backend-spring` para levantar infraestructura).
 
 ## Scripts
 
 | Script | Descripción |
-|--------|-------------|
+|---|---|
 | `npm run dev` | Dev server (Vite) |
 | `npm run build` | Type-check + build producción |
 | `npm run test` | Ejecutar tests |
@@ -48,22 +45,39 @@ Credenciales mock: `admin@test.com` / `admin123`
 | `npm run format` | Formatear código (prettier) |
 | `npm run typecheck` | Type-check sin emitir |
 | `npm run storybook` | Storybook dev server |
-| `npm run build-storybook` | Build estático de Storybook |
+
+## Módulos implementados (v1)
+
+| Módulo | Ruta | Permisos |
+|---|---|---|
+| Dashboard | `/dashboard` | auth |
+| Usuarios | `/admin/usuarios` | `users.read` / `users.write` |
+| Roles | `/admin/roles` | `roles.read` / `roles.write` |
+| Permisos | `/admin/permisos` | `permissions.read` |
+| Auditoría (admin) | `/admin/auditoria` | `audit.read` / `audit.read-mine` |
+| Mi perfil | `/ajustes/perfil` | auth |
+| Mi actividad | `/ajustes/actividad` | `audit.read` / `audit.read-mine` |
+| Colores de marca | `/ajustes/colores` | `settings.brand` |
+
+## Autorización por permisos
+
+- **Rutas**: `RequirePrivilege` redirige a `/403` si no tiene el permiso
+- **Componentes**: `Can` oculta sin redirigir
+- Los permisos vienen del backend en `user.permissions`
+
+```tsx
+import { Can } from './auth'
+
+<Can privilege="users.write">
+  <button>Suspender</button>
+</Can>
+```
 
 ## Documentación
 
-La documentación detallada está en [`docs/`](./docs/):
+La documentación detallada del template está en [`docs/`](./docs/README.md).
 
-| Documento | Descripción |
-|-----------|-------------|
-| [AUDIT.md](./docs/AUDIT.md) | Auditoría técnica completa |
-| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Arquitectura y diagramas de capas |
-| [AUTH.md](./docs/AUTH.md) | Sistema de autenticación |
-| [CONFIGURATION.md](./docs/CONFIGURATION.md) | Variables de entorno y configuración |
-| [ADDING_RESOURCES.md](./docs/ADDING_RESOURCES.md) | Cómo añadir un recurso nuevo |
-| [TESTING.md](./docs/TESTING.md) | Estrategia y guía de testing |
-| [STYLING.md](./docs/STYLING.md) | Sistema de temas y estilos |
-| [NEW_PROJECT_CHECKLIST.md](./docs/NEW_PROJECT_CHECKLIST.md) | Checklist para nuevo proyecto |
+Pendientes de la v1: [PENDIENTES.md](./PENDIENTES.md)
 
 ## Licencia
 
