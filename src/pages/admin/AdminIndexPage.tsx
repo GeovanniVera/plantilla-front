@@ -29,7 +29,7 @@ const adminSections = [
     icon: LuScrollText,
     label: 'Auditoría',
     desc: 'Consulta de eventos de seguridad y negocio (solo lectura).',
-    privileges: ['audit.read', 'audit.read-mine'],
+    privilege: 'audit.read',
   },
 ];
 
@@ -54,7 +54,7 @@ export default function AdminIndexPage() {
           {adminSections.map((item) => {
             const Icon = item.icon;
             return (
-              <Can key={item.to} anyOf={item.privileges ?? [item.privilege!]}>
+              <Can key={item.to} privilege={item.privilege}>
                 <Link
                   to={item.to}
                   style={{

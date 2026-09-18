@@ -37,6 +37,14 @@ export function getActionLabel(action: string): AuditLabel {
   return ACTION_LABELS[action] ?? DEFAULT_LABEL;
 }
 
+/** Opciones para el filtro de tipo de evento (fuente única: ACTION_LABELS). */
+export function getActionFilterOptions(): { value: string; label: string }[] {
+  return Object.entries(ACTION_LABELS).map(([value, label]) => ({
+    value,
+    label: label.text,
+  }));
+}
+
 /** Describe la entidad afectada en lenguaje legible. */
 export function describeEntity(entityType?: string, entityId?: string): string {
   if (!entityType) return '';

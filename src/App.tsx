@@ -146,7 +146,7 @@ function App() {
               <Route
                 path="/admin/auditoria"
                 element={
-                  <RequirePrivilege anyOf={['audit.read', 'audit.read-mine']}>
+                  <RequirePrivilege privilege="audit.read">
                     <AuditLogsPage />
                   </RequirePrivilege>
                 }

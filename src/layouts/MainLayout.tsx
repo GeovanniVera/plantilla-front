@@ -128,7 +128,7 @@ function AppNavItems() {
               active={isActive('/admin/permisos')}
             />
           </Can>
-          <Can anyOf={['audit.read', 'audit.read-mine']}>
+          <Can privilege="audit.read">
             <NavItem
               as={NavLink}
               to="/admin/auditoria"

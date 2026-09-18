@@ -1,28 +1,31 @@
-import { useAuditLogs } from '../../features/audit/hooks/useAudit';
-import { getActionLabel, describeEntity } from '../../features/audit/utils/audit-labels';
-import type { AuditLog } from '../../features/audit/services/audit.service';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { useState } from 'react';
+import { LuFilter } from 'react-icons/lu';
+import { useMyAuditLogs } from '../../features/audit/hooks/useAudit';
+import AuditActivityItem from '../../features/audit/components/AuditActivityItem';
+import { getActionFilterOptions } from '../../features/audit/utils/audit-labels';
+import Select from '@components/primitives/Select';
+import Pagination from '@components/data-display/table/parts/Pagination';
 
-const TONE_CLASSES: Record<string, string> = {
-  success: 'bg-success-bg text-success',
-  danger: 'bg-danger-bg text-danger-strong',
-  warning: 'bg-warning-bg text-warning-strong',
-  info: 'bg-info-bg text-info-strong',
-  neutral: 'bg-accent-subtle text-accent',
-};
+const PAGE_SIZE = 5;
 
-function formatDate(value: string): string {
-  try {
-    return format(new Date(value), "d 'de' MMMM 'de' yyyy, HH:mm", { locale: es });
-  } catch {
-    return value;
-  }
-}
+/* Opción real (seleccionable) para volver a "todos", no placeholder
+ * disabled: el placeholder no permite re-seleccionar una vez filtrado. */
+const EVENT_OPTIONS = [{ value: '', label: 'Todos los eventos' }, ...getActionFilterOptions()];
 
 export default function MiActividadPage() {
-  const { data, isLoading } = useAuditLogs(0, 50);
+  const [action, setAction] = useState('');
+  const [page, setPage] = useState(0);
+  const { data, isLoading, isFetching } = useMyAuditLogs(
+    page,
+    PAGE_SIZE,
+    action ? { action } : undefined,
+  );
   const logs = data?.content ?? [];
+
+  const handleActionChange = (value: string) => {
+    setAction(value);
+    setPage(0);
+  };
 
   if (isLoading) {
     return (
@@ -42,42 +45,46 @@ export default function MiActividadPage() {
           </p>
         </div>
 
+        <div className="flex flex-wrap items-center gap-3">
+          <Select
+            value={action}
+            onChange={handleActionChange}
+            options={EVENT_OPTIONS}
+            size="sm"
+            className="w-full sm:w-64"
+            startAdornment={<LuFilter size={16} />}
+            startAdornmentVariant="accent"
+          />
+          {isFetching && <span className="text-fg-muted text-xs">Cargando...</span>}
+        </div>
+
         {logs.length === 0 ? (
           <div className="bg-surface border-border-base flex flex-col items-center justify-center rounded-lg border px-4 py-12 text-center">
-            <p className="text-fg text-sm font-medium">Sin actividad registrada</p>
+            <p className="text-fg text-sm font-medium">
+              {action ? 'Sin resultados para este filtro' : 'Sin actividad registrada'}
+            </p>
             <p className="text-fg-muted mt-1 text-xs">
-              Cuando realices acciones de seguridad, aparecerán aquí.
+              {action
+                ? 'Probá con otro tipo de evento.'
+                : 'Cuando realices acciones de seguridad, aparecerán aquí.'}
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {logs.map((log: AuditLog) => {
-              const label = getActionLabel(log.action);
-              const Icon = label.icon;
-              const entity = describeEntity(log.entityType, log.entityId);
+          <>
+            <div className="flex flex-col gap-3">
+              {logs.map((log) => (
+                <AuditActivityItem key={log.id} log={log} />
+              ))}
+            </div>
 
-              return (
-                <div
-                  key={log.id}
-                  className="bg-surface border-border-base flex items-start gap-3 rounded-lg border p-4"
-                >
-                  <div
-                    className={`flex size-9 shrink-0 items-center justify-center rounded-full ${TONE_CLASSES[label.tone]}`}
-                  >
-                    <Icon size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-fg text-sm font-medium">{label.text}</p>
-                    <p className="text-fg-muted mt-0.5 text-xs">{formatDate(log.createdAt)}</p>
-                    {entity && <p className="text-fg-muted mt-0.5 text-xs">{entity}</p>}
-                    {log.ipAddress && (
-                      <p className="text-fg-muted mt-0.5 text-xs">Desde la IP {log.ipAddress}</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            <Pagination
+              currentPage={page + 1}
+              totalPages={data?.totalPages ?? 1}
+              onPageChange={(p) => setPage(p - 1)}
+              totalItems={data?.totalElements}
+              pageSize={PAGE_SIZE}
+            />
+          </>
         )}
       </div>
     </div>
