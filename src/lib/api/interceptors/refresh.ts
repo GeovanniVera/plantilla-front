@@ -20,6 +20,12 @@ export async function tryRefreshToken(): Promise<boolean> {
 }
 
 async function doRefresh(): Promise<boolean> {
+  // La sesión renovada debe quedarse en el mismo storage donde fue creada.
+  // Si la procedencia es desconocida, se asume sessionStorage (tab-scoped):
+  // nunca se promueve implícitamente una sesión a localStorage.
+  const activeSession = authStorage.getActiveSession();
+  const remember = activeSession?.remember ?? false;
+
   try {
     const API_BASE = env.VITE_API_BASE;
     // No enviamos refreshToken en el body — viene en HttpOnly cookie
@@ -30,29 +36,40 @@ async function doRefresh(): Promise<boolean> {
     });
 
     if (!response.ok) {
-      authStorage.clear();
-      tokenManager.clear();
-      return false;
+      return invalidate(activeSession);
     }
 
     const data = await response.json();
 
     if (!data || typeof data !== 'object' || !data.success || !data.data) {
-      authStorage.clear();
-      tokenManager.clear();
-      return false;
+      return invalidate(activeSession);
     }
 
     const { accessToken, expiresIn } = data.data;
 
     tokenManager.set(accessToken);
-    authStorage.setToken(accessToken, expiresIn);
+    authStorage.setToken(accessToken, expiresIn, remember);
     // No hay refreshToken en el body — viene en cookie
 
     return true;
   } catch {
-    authStorage.clear();
-    tokenManager.clear();
-    return false;
+    return invalidate(activeSession);
   }
+}
+
+/**
+ * Invalida la sesión tras un refresh fallido.
+ *
+ * Limpia el storage donde vive la sesión activa (no siempre localStorage) para
+ * no dejar tokens huérfanos en sessionStorage. Si no hay sesión identificable,
+ * aplica una invalidación dura sobre ambos storages.
+ */
+function invalidate(activeSession: { token: string; remember: boolean } | null): false {
+  if (activeSession) {
+    authStorage.clear(activeSession.remember);
+  } else {
+    authStorage.clearAll();
+  }
+  tokenManager.clear();
+  return false;
 }

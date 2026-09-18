@@ -6,7 +6,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './auth';
 import { ForgotPasswordProvider } from './auth/ForgotPasswordContext';
 import { ProtectedRoute, RequirePrivilege, GuestOnly } from './auth/guards';
-import { routes } from './routes';
 
 // Auth pages (lazy)
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));

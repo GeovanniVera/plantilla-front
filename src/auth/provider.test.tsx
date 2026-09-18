@@ -36,6 +36,8 @@ function AuthConsumer() {
         {String(canReadUsers)}:{String(canExportOrManage)}:{String(isAdmin)}:{String(isVerified())}
       </output>
       <button onClick={() => login('admin@test.com', 'admin123', false)}>Log in</button>
+      <button onClick={() => login('admin@test.com', 'admin123', true)}>Log in remembered</button>
+      <button onClick={() => login('admin@test.com', 'admin123', false)}>Log in session</button>
       <button onClick={() => logout()}>Log out</button>
     </>
   );
@@ -102,5 +104,80 @@ describe('AuthProvider', () => {
     expect(await screen.findByText('anonymous')).toBeInTheDocument();
     expect(localStorage.getItem('auth_token')).toBeNull();
     expect(tokenManager.get()).toBeNull();
+  });
+
+  it('does not leave a localStorage token after a session-only login follows a remembered login', async () => {
+    const user = userEvent.setup();
+    const apiUser = {
+      id: '2',
+      email: 'editor@test.com',
+      name: 'Editor User',
+      roles: ['editor'],
+      permissions: ['users:read'],
+      isVerified: true,
+    };
+
+    server.use(
+      http.post('*/auth/login', () =>
+        HttpResponse.json({
+          success: true,
+          message: 'Login exitoso',
+          data: { user: apiUser, accessToken: 'login-token', expiresIn: 3600 },
+        }),
+      ),
+    );
+
+    renderProvider();
+    await screen.findByText('anonymous');
+
+    await user.click(screen.getByRole('button', { name: 'Log in remembered' }));
+    expect(await screen.findByText('editor@test.com')).toBeInTheDocument();
+    expect(localStorage.getItem('auth_token')).toBe('login-token');
+
+    // Segundo login sin "Recuérdeme": debe dejar exactamente un token, en sessionStorage.
+    await user.click(screen.getByRole('button', { name: 'Log in session' }));
+    expect(localStorage.getItem('auth_token')).toBeNull();
+    expect(sessionStorage.getItem('auth_token')).toBe('login-token');
+  });
+
+  it('restores the sessionStorage session when both storages hold a token', async () => {
+    const sessionToken = btoa(JSON.stringify({ sub: '2' }));
+    const localToken = btoa(JSON.stringify({ sub: '1' }));
+
+    server.use(
+      http.get('*/auth/me', ({ request }) => {
+        const authHeader = request.headers.get('Authorization') ?? '';
+        const payload = JSON.parse(atob(authHeader.slice(7))) as { sub: string };
+        const user =
+          payload.sub === '2'
+            ? {
+                id: '2',
+                email: 'editor@test.com',
+                name: 'Editor User',
+                roles: ['editor'],
+                permissions: ['users:read'],
+                isVerified: true,
+              }
+            : {
+                id: '1',
+                email: 'admin@test.com',
+                name: 'Admin User',
+                roles: ['admin'],
+                permissions: ['users:read'],
+                isVerified: true,
+              };
+        return HttpResponse.json({ success: true, message: 'Usuario obtenido', data: user });
+      }),
+    );
+
+    sessionStorage.setItem('auth_token', sessionToken);
+    localStorage.setItem('auth_token', localToken);
+
+    renderProvider();
+
+    expect(await screen.findByText('editor@test.com')).toBeInTheDocument();
+    expect(tokenManager.get()).toBe(sessionToken);
+    // El token profile-wide de localStorage queda intacto pero NO se adopta.
+    expect(localStorage.getItem('auth_token')).toBe(localToken);
   });
 });

@@ -10,13 +10,6 @@ export const authService = {
   me: (): Promise<ApiResponse<User>> => client.get<User>('/auth/me'),
 
   /**
-   * Refresh token via HttpOnly cookie.
-   * No envía refreshToken en el body — la cookie se envía automáticamente.
-   */
-  refreshToken: (): Promise<ApiResponse<AuthResponse>> =>
-    client.post<AuthResponse>('/auth/refresh'),
-
-  /**
    * Register retorna solo mensaje opaco, no user ni token.
    */
   register: (data: {

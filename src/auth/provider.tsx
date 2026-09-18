@@ -39,17 +39,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const restoreSession = async () => {
       console.log('[AUTH] Restaurando sesión...');
 
-      // Try localStorage first, then sessionStorage
-      let token = authStorage.getToken(true); // localStorage
-      let remember = true;
-      if (!token) {
-        token = authStorage.getToken(false); // sessionStorage
-        remember = false;
-      }
+      // Adoptar la MISMA sesión y storage donde fue creada. sessionStorage tiene
+      // prioridad: una sesión tab-scoped no debe ser secuestrada por un token
+      // profile-wide que otro login dejó en localStorage.
+      const activeSession = authStorage.getActiveSession();
+      const token = activeSession?.token ?? null;
+      const remember = activeSession?.remember ?? false;
 
       console.log('[AUTH] Token encontrado:', {
         hasToken: !!token,
-        来源: token ? (remember ? 'localStorage' : 'sessionStorage') : 'ninguno',
+        source: token ? (remember ? 'localStorage' : 'sessionStorage') : 'ninguno',
       });
 
       if (!token) {
@@ -150,6 +149,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     console.log('[AUTH] isVerified:', user?.isVerified, typeof user?.isVerified);
 
     // Persistir token (refresh token viene en HttpOnly cookie)
+    // Un login debe dejar exactamente un token en exactamente un storage:
+    // limpiar ambos antes de escribir evita que un token viejo secuestre el restore.
+    authStorage.clearAll();
     authStorage.setToken(newToken, expiresIn, remember);
     tokenManager.set(newToken);
 
