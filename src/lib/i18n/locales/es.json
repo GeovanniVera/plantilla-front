@@ -86,6 +86,7 @@
     "timeout": "La request tardó demasiado. Intentá de nuevo.",
     "server": "Error del servidor",
     "forbidden": "No tenés permisos para acceder a esta sección.",
+    "accountSuspended": "Tu cuenta está suspendida. Contactá a soporte.",
     "notFound": "La página que buscás no existe o fue movida.",
     "unauthorized": "Tu sesión expiró. Iniciá sesión nuevamente.",
     "validation": "Revisá los campos e intentá de nuevo.",

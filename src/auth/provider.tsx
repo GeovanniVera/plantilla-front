@@ -61,10 +61,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         tokenManager.set(token);
         console.log('[AUTH] Llamando a /auth/me...');
         const meResponse = await authService.me();
+        // Discriminar por `success` antes de leer `data`: la variante de error
+        // del union no expone el campo, y accederlo sin narrow rompe el typecheck.
         console.log('[AUTH] Respuesta de /auth/me:', {
           success: meResponse.success,
-          hasData: !!meResponse.data,
-          user: meResponse.data,
+          hasData: meResponse.success && !!meResponse.data,
+          user: meResponse.success ? meResponse.data : undefined,
         });
 
         if (!meResponse.success || !meResponse.data) {

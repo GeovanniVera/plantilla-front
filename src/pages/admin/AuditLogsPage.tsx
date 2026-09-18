@@ -1,7 +1,6 @@
 import ResponsiveTable from '@components/data-display/table/ResponsiveTable';
 import Badge from '@components/primitives/Badge';
 import { useAuditLogs } from '../../features/audit/hooks/useAudit';
-import type { AuditLog } from '../../features/audit/services/audit.service';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 

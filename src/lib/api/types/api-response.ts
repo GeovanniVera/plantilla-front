@@ -17,6 +17,7 @@ export type ApiErrorCode =
   | 'VALIDATION_ERROR'
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
+  | 'ACCOUNT_SUSPENDED'
   | 'NOT_FOUND'
   | 'CONFLICT'
   | 'RATE_LIMITED'

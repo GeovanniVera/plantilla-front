@@ -53,7 +53,7 @@ export function UserTable({ users, onSuspend, onReactivate, onRowClick }: UserTa
       minWidth: '120px',
       filterType: 'select' as const,
       filterOptions: ['Activo', 'Suspendido', 'Sin verificar'],
-      render: (value: unknown, row: AdminUser) => (
+      render: (_: unknown, row: AdminUser) => (
         <UserStatusBadge suspended={row.suspended} isVerified={row.isVerified} />
       ),
     },

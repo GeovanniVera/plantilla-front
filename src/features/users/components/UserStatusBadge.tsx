@@ -1,5 +1,5 @@
 import Badge from '@components/primitives/Badge';
-import { LuCheck, LuShield, LuShieldOff } from 'react-icons/lu';
+import { LuCheck, LuShieldOff } from 'react-icons/lu';
 
 interface UserStatusBadgeProps {
   suspended: boolean;

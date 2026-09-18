@@ -1,13 +1,10 @@
-import { useCallback } from 'react';
 import DataTable from './DataTable';
-import { BaseTable } from './BaseTable';
 import { FilterBar } from './parts/FilterBar';
 import Pagination from './parts/Pagination';
-import { useFilterableColumns } from './hooks/useFilterableColumns';
 import { useTableFilters } from './hooks/useTableFilters';
 import { useTablePagination } from './hooks/useTablePagination';
 import { useMediaQuery } from '@hooks/useMediaQuery';
-import type { BaseTableProps, Column } from './types';
+import type { BaseTableProps } from './types';
 
 export interface ResponsiveTableProps<T extends object> extends BaseTableProps<T> {
   /** Habilitar filtros en cabeceras */
@@ -45,7 +42,7 @@ export default function ResponsiveTable<T extends object>({
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Filtros
-  const { filteredData, filterHeaderProps, clearAllFilters, hasActiveFilters } = useTableFilters<T>(
+  const { filteredData, clearAllFilters, hasActiveFilters } = useTableFilters<T>(
     enableFilters ? columns : [],
     enableFilters ? data : [],
   );
@@ -58,16 +55,6 @@ export default function ResponsiveTable<T extends object>({
   const displayData = enablePagination
     ? baseData.slice(pagination.startIndex, pagination.endIndex)
     : baseData;
-
-  // Columnas con filtro inyectado (para el modo desktop)
-  const composedColumns = useFilterableColumns(columns, enableFilters, filterHeaderProps);
-
-  const composeHeader = useCallback(
-    ({ column }: { column: Column<T> }) => ({
-      style: { textAlign: column.align ?? 'left' },
-    }),
-    [],
-  );
 
   // ─── Desktop: DataTable completo ─────────────────────────
   if (!isMobile) {

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { userService, type PaginatedUsers } from '../services/user.service';
+import { userService } from '../services/user.service';
 
 export function useUsers(page = 0, size = 10) {
   return useQuery({

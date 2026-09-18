@@ -86,6 +86,7 @@
     "timeout": "Request timed out. Try again.",
     "server": "Server error.",
     "forbidden": "You don't have permission to access this section.",
+    "accountSuspended": "Your account is suspended. Contact support.",
     "notFound": "The page you're looking for doesn't exist or was moved.",
     "unauthorized": "Your session expired. Please sign in again.",
     "validation": "Please check the fields and try again.",
