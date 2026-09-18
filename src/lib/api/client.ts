@@ -9,7 +9,7 @@
  * definida en src/api/types.ts (ApiResponse<T>).
  */
 
-import type { ApiResponse, ApiError, ApiErrorCode } from './types/api-response';
+import type { ApiResponse, ApiError as ApiErrorResponse, ApiErrorCode } from './types/api-response';
 import { tryRefreshToken } from './interceptors/refresh';
 import { getErrorMessage } from '../i18n/errors';
 import { authStorage } from '../auth/token-store';
@@ -101,6 +101,19 @@ interface ClientConfig {
   onForbidden?: () => void;
 }
 
+/**
+ * Decide si un 403 debe navegar a /403.
+ *
+ * Excluye /login (un 403 ahí significa "cuenta no verificada") y /403 mismo:
+ * si ya estamos en /403, la navegación dura recargaba el documento en cada
+ * 403 y convertía un desajuste de permisos en un loop de recargas.
+ *
+ * @param pathname - Ruta actual; por defecto, la del navegador
+ */
+export function shouldRedirectToForbidden(pathname: string = window.location.pathname): boolean {
+  return !pathname.includes('/login') && pathname !== '/403';
+}
+
 /** Configuración por defecto del cliente */
 const defaultConfig: ClientConfig = {
   baseUrl: API_BASE,
@@ -108,14 +121,29 @@ const defaultConfig: ClientConfig = {
     window.location.href = '/login';
   },
   onForbidden: () => {
-    // No redirigir a /403 desde login (403 = "Cuenta no verificada")
-    if (!window.location.pathname.includes('/login')) {
+    if (shouldRedirectToForbidden()) {
       window.location.href = '/403';
     }
   },
 };
 
 let config = { ...defaultConfig };
+
+// ─── Helper: sesión activa ─────────────────────────────────
+/**
+ * Indica si la petición podía llevar sesión (token en memoria o persistido).
+ *
+ * Un 401 solo es "sesión expirada" cuando la request enviaba un token.
+ * En endpoints públicos (login, register), un 401 es credenciales
+ * inválidas y NO debe disparar refresh ni logout (que recargan la página).
+ *
+ * La procedencia del token se resuelve a través de la sesión activa
+ * (sessionStorage primero): si hay token en cualquier storage, la request
+ * podía llevar sesión. El resultado es el mismo que consultar ambos storages.
+ */
+function hasSessionToken(): boolean {
+  return Boolean(accessToken) || authStorage.getActiveSession() !== null;
+}
 
 // ─── Helper: Mapear status HTTP a ApiErrorCode ─────────────
 function mapStatusToErrorCode(status: number): ApiErrorCode {
@@ -268,8 +296,10 @@ async function request<T>(
 
     // Manejar códigos de error HTTP específicos
     if (!response.ok) {
-      // 401: Sesión expirada → intentar refresh y reintentar
-      if (response.status === 401) {
+      // 401: Sesión expirada → intentar refresh y reintentar.
+      // Solo si la petición tenía sesión: en endpoints públicos un 401
+      // es credenciales inválidas y no debe desloguear/recargar.
+      if (response.status === 401 && hasSessionToken()) {
         const isRetry = options?.headers && '_retry' in options.headers;
 
         if (!isRetry) {
@@ -296,12 +326,12 @@ async function request<T>(
         const isSuspended =
           apiResponse &&
           'code' in apiResponse &&
-          (apiResponse as ApiError).code === 'ACCOUNT_SUSPENDED';
+          (apiResponse as ApiErrorResponse).code === 'ACCOUNT_SUSPENDED';
         if (isSuspended) {
           // Cuenta suspendida: limpiar sesión y redirigir a login con mensaje
           tokenManager.clear();
           window.dispatchEvent(new CustomEvent('auth:logout'));
-          const message = (apiResponse as ApiError).message || 'Tu cuenta fue suspendida';
+          const message = (apiResponse as ApiErrorResponse).message || 'Tu cuenta fue suspendida';
           window.location.href = `/login?error=${encodeURIComponent(message)}`;
           return apiResponse;
         }
@@ -315,8 +345,9 @@ async function request<T>(
   // Si la respuesta NO tiene la estructura ApiResponse, adaptarla
   // Esto es para compatibilidad con backends que no siguen el contrato
   if (!response.ok) {
-    // 401: Sesión expirada → intentar refresh y reintentar
-    if (response.status === 401) {
+    // 401: Sesión expirada → intentar refresh y reintentar.
+    // Solo si la petición tenía sesión (ver hasSessionToken).
+    if (response.status === 401 && hasSessionToken()) {
       const isRetry = options?.headers && '_retry' in options.headers;
 
       if (!isRetry) {
