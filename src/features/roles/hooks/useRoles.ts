@@ -1,13 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  roleService,
-  type Role,
-  type Permission,
-  type CreateRoleData,
-  type UpdateRoleData,
-} from '../services/role.service';
+import { roleService, type CreateRoleData, type UpdateRoleData } from '../services/role.service';
 
-export function useRoles() {
+/**
+ * Opciones para las queries de administración.
+ * Permiten gatear el fetch según el privilegio del usuario.
+ *
+ * La plantilla no tiene el `useProducts.ts` de la app (donde vivía este tipo),
+ * así que se define localmente: sus únicos consumidores son estos hooks.
+ */
+export interface UseAdminQueryOptions {
+  /** Si es false, la query no se ejecuta (no dispara peticiones). Default: true */
+  enabled?: boolean;
+}
+
+export function useRoles({ enabled = true }: UseAdminQueryOptions = {}) {
   return useQuery({
     queryKey: ['admin', 'roles'],
     queryFn: async () => {
@@ -17,10 +23,11 @@ export function useRoles() {
       }
       return response.data;
     },
+    enabled,
   });
 }
 
-export function usePermissions() {
+export function usePermissions({ enabled = true }: UseAdminQueryOptions = {}) {
   return useQuery({
     queryKey: ['admin', 'permissions'],
     queryFn: async () => {
@@ -30,6 +37,7 @@ export function usePermissions() {
       }
       return response.data;
     },
+    enabled,
   });
 }
 

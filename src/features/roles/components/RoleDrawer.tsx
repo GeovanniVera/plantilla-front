@@ -3,6 +3,7 @@ import { Drawer } from '@components/overlays/Drawer';
 import Button from '@components/primitives/Button';
 import Input from '@components/primitives/Input';
 import { Can } from '../../../auth/Can';
+import { useHasPrivilege } from '../../../auth/hooks';
 import { CheckboxSearchList } from '../../../components/forms/CheckboxSearchList';
 import { useToast } from '@components/feedback';
 import { useCreateRole, useUpdateRole, usePermissions } from '../hooks/useRoles';
@@ -21,7 +22,13 @@ export function RoleDrawer({ isOpen, onClose, role }: RoleDrawerProps) {
   const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set());
   const createRole = useCreateRole();
   const updateRole = useUpdateRole();
-  const { data: permissions = [] } = usePermissions();
+  // La ruta solo exige roles.read: /admin/permissions requiere permissions.read
+  // y, sin él, el backend responde 403 y onForbidden redirige. Se gatea por
+  // privilegio y por drawer abierto.
+  const canReadPermissions = useHasPrivilege('permissions.read');
+  const { data: permissions = [] } = usePermissions({
+    enabled: canReadPermissions && isOpen,
+  });
 
   useEffect(() => {
     if (role) {

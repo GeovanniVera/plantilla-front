@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { useAuth } from '../../auth';
-import { Can } from '../../auth/Can';
 import { UserTable } from '../../features/users/components/UserTable';
 import { UserRolesDrawer } from '../../features/users/components/UserRolesDrawer';
 import { useUsers, useSuspendUser, useReactivateUser } from '../../features/users/hooks/useUsers';
@@ -9,7 +7,6 @@ import { useToast } from '@components/feedback';
 import type { AdminUser } from '../../features/users/services/user.service';
 
 export default function UsersPage() {
-  const { user: currentUser } = useAuth();
   const toast = useToast();
   const [confirmAction, setConfirmAction] = useState<{
     type: 'suspend' | 'reactivate';
