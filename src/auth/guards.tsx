@@ -74,17 +74,29 @@ export function ProtectedRoute({
 // ─── RequirePrivilege ──────────────────────────────────────
 /**
  * Props de RequirePrivilege.
+ *
+ * Exige exactamente una de las dos formas: `privilege` (con `anyOf` opcional
+ * que, si se indica, tiene prioridad) o `anyOf` por sí solo.
  */
-interface RequirePrivilegeProps {
-  /** Privilegio requerido para acceder */
-  privilege: string;
-  /** Lista alternativa: requiere cualquiera de estos privilegios */
-  anyOf?: string[];
+type RequirePrivilegeProps = {
   /** Componentes hijos a renderizar si tiene el privilegio */
   children: ReactNode;
   /** Ruta de redirección si no tiene permisos (default: '/403') */
   redirectTo?: string;
-}
+} & (
+  | {
+      /** Privilegio requerido para acceder */
+      privilege: string;
+      /** Lista alternativa: requiere cualquiera de estos privilegios */
+      anyOf?: string[];
+    }
+  | {
+      /** No aplica en esta variante */
+      privilege?: never;
+      /** Lista alternativa: requiere cualquiera de estos privilegios */
+      anyOf: string[];
+    }
+);
 
 /**
  * Guard que requiere un privilegio específico (o cualquiera de varios).
@@ -105,12 +117,8 @@ interface RequirePrivilegeProps {
  * </RequirePrivilege>
  * ```
  */
-export function RequirePrivilege({
-  privilege,
-  anyOf,
-  children,
-  redirectTo = '/403',
-}: RequirePrivilegeProps) {
+export function RequirePrivilege(props: RequirePrivilegeProps) {
+  const { children, redirectTo = '/403' } = props;
   const { isAuthenticated, isLoading, hasPrivilege, hasAnyPrivilege } = useAuth();
   const location = useLocation();
 
@@ -118,8 +126,10 @@ export function RequirePrivilege({
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
 
   // Verificar permisos: anyOf usa OR, de lo contrario requiere el privilegio exacto
-  const privilegesToCheck = anyOf ?? [privilege];
-  const hasAccess = anyOf ? hasAnyPrivilege(privilegesToCheck) : hasPrivilege(privilege);
+  const hasAccess =
+    props.anyOf !== undefined
+      ? hasAnyPrivilege(props.anyOf)
+      : props.privilege !== undefined && hasPrivilege(props.privilege);
 
   if (!hasAccess) return <Navigate to={redirectTo} replace />;
 
@@ -188,6 +198,50 @@ export function GuestOnly({ children, redirectTo = '/dashboard' }: GuestOnlyProp
 
   if (isLoading) return <AuthLoading />;
   if (isAuthenticated) return <Navigate to={redirectTo} replace />;
+
+  return <>{children}</>;
+}
+
+// ─── RedirectIfVerified ────────────────────────────────────
+/**
+ * Props de RedirectIfVerified.
+ */
+interface RedirectIfVerifiedProps {
+  /** Componentes hijos a renderizar si el email no está verificado */
+  children: ReactNode;
+  /** Ruta de redirección si el email ya está verificado (default: '/dashboard') */
+  redirectTo?: string;
+}
+
+/**
+ * Guard para las rutas de verificación de email.
+ *
+ * A diferencia de GuestOnly, NO expulsa a un usuario autenticado sin verificar:
+ * la condición es exactamente la contraria. Solo redirige cuando el email YA
+ * está verificado y el usuario autenticado, caso en el que la pantalla de
+ * verificación no tiene sentido. Un usuario anónimo o autenticado sin verificar
+ * sigue viendo la pantalla.
+ *
+ * @example
+ * ```tsx
+ * <Route
+ *   path="/verify-email"
+ *   element={
+ *     <RedirectIfVerified>
+ *       <VerifyEmailPage />
+ *     </RedirectIfVerified>
+ *   }
+ * />
+ * ```
+ */
+export function RedirectIfVerified({
+  children,
+  redirectTo = '/dashboard',
+}: RedirectIfVerifiedProps) {
+  const { isAuthenticated, isLoading, isVerified } = useAuth();
+
+  if (isLoading) return <AuthLoading />;
+  if (isAuthenticated && isVerified()) return <Navigate to={redirectTo} replace />;
 
   return <>{children}</>;
 }

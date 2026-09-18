@@ -9,7 +9,7 @@
  * - Botón para reenviar email
  * - Botón para cerrar sesión
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { LuMail, LuLogOut } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
@@ -22,10 +22,22 @@ export default function VerifyEmailPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, isVerified } = useAuth();
   const resendMutation = useResendVerification();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+
+  // Si el usuario ya está verificado, no debería ver esta pantalla
+  useEffect(() => {
+    if (user?.isVerified) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
+
+  // Un usuario autenticado ya verificado no puede reenviar: el backend responde
+  // 200 opaco (anti-enumeración) sin hacer nada, y la UI mostraría un falso
+  // "Email reenviado exitosamente".
+  const canResend = !(isAuthenticated && isVerified());
 
   // Email del usuario o del state (post-registration)
   const email = user?.email || (location.state as { email?: string })?.email || '';
@@ -125,21 +137,23 @@ export default function VerifyEmailPage() {
 
         {/* Actions */}
         <div className="space-y-3">
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={resendMutation.isPending}
-            className="bg-accent hover:bg-accent-hover flex w-full items-center justify-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
-          >
-            {resendMutation.isPending ? (
-              <>
-                <Spinner size="sm" color="white" />
-                <span>{t('auth.verifyEmail.submitting')}</span>
-              </>
-            ) : (
-              t('auth.verifyEmail.submit')
-            )}
-          </button>
+          {canResend && (
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resendMutation.isPending}
+              className="bg-accent hover:bg-accent-hover flex w-full items-center justify-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
+            >
+              {resendMutation.isPending ? (
+                <>
+                  <Spinner size="sm" color="white" />
+                  <span>{t('auth.verifyEmail.submitting')}</span>
+                </>
+              ) : (
+                t('auth.verifyEmail.submit')
+              )}
+            </button>
+          )}
 
           <button
             type="button"

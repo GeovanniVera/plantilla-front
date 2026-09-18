@@ -5,7 +5,7 @@ import AuthLayout from './layouts/AuthLayout';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './auth';
 import { ForgotPasswordProvider } from './auth/ForgotPasswordContext';
-import { ProtectedRoute, RequirePrivilege, GuestOnly } from './auth/guards';
+import { ProtectedRoute, RequirePrivilege, GuestOnly, RedirectIfVerified } from './auth/guards';
 
 // Auth pages (lazy)
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -86,7 +86,14 @@ function App() {
 
             {/* Email verification flow */}
             <Route element={<AuthLayout />}>
-              <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route
+                path="/verify-email"
+                element={
+                  <RedirectIfVerified>
+                    <VerifyEmailPage />
+                  </RedirectIfVerified>
+                }
+              />
               <Route path="/verify-email/confirm" element={<VerifyEmailConfirmPage />} />
             </Route>
 

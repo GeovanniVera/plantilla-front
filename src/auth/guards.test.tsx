@@ -7,6 +7,7 @@ import type { AuthContextValue, User } from './types';
 import {
   GuestOnly,
   ProtectedRoute,
+  RedirectIfVerified,
   RequirePrivilege,
   RequireRole,
   RequireVerification,
@@ -17,7 +18,7 @@ const admin: User = {
   email: 'admin@test.com',
   name: 'Admin User',
   roles: ['admin'],
-  privileges: ['users:read', 'settings:manage'],
+  permissions: ['users:read', 'settings:manage'],
   isVerified: true,
 };
 
@@ -30,9 +31,9 @@ function authValue(overrides: Partial<AuthContextValue> = {}): AuthContextValue 
     isLoading: false,
     login: vi.fn(),
     logout: vi.fn(),
-    hasPrivilege: (privilege) => user?.privileges.includes(privilege) ?? false,
+    hasPrivilege: (privilege) => user?.permissions.includes(privilege) ?? false,
     hasAnyPrivilege: (privileges) =>
-      privileges.some((privilege) => user?.privileges.includes(privilege)),
+      privileges.some((privilege) => user?.permissions.includes(privilege)),
     hasRole: (role) => user?.roles.includes(role) ?? false,
     isVerified: () => user?.isVerified ?? false,
     ...overrides,
@@ -184,5 +185,45 @@ describe('RequireRole', () => {
   it('redirects users without the required role', () => {
     renderGuard(<RequireRole role="owner">Admin Content</RequireRole>, authValue({ user: admin }));
     expect(screen.getByText('Forbidden Page')).toBeInTheDocument();
+  });
+});
+
+describe('RedirectIfVerified', () => {
+  it('shows the session loading state', () => {
+    renderGuard(
+      <RedirectIfVerified>Verification Content</RedirectIfVerified>,
+      authValue({ isLoading: true }),
+    );
+    expect(screen.getByText('Verificando sesión...')).toBeInTheDocument();
+  });
+
+  it('redirects verified authenticated users to the dashboard', () => {
+    renderGuard(
+      <RedirectIfVerified>Verification Content</RedirectIfVerified>,
+      authValue({ user: admin }),
+    );
+    expect(screen.getByText('Dashboard Page')).toBeInTheDocument();
+    expect(screen.queryByText('Verification Content')).not.toBeInTheDocument();
+  });
+
+  it('renders authenticated users without email verification', () => {
+    renderGuard(
+      <RedirectIfVerified>Verification Content</RedirectIfVerified>,
+      authValue({ user: { ...admin, isVerified: false } }),
+    );
+    expect(screen.getByText('Verification Content')).toBeInTheDocument();
+  });
+
+  it('renders anonymous users', () => {
+    renderGuard(<RedirectIfVerified>Verification Content</RedirectIfVerified>);
+    expect(screen.getByText('Verification Content')).toBeInTheDocument();
+  });
+
+  it('honors a custom redirect target', () => {
+    renderGuard(
+      <RedirectIfVerified redirectTo="/login">Verification Content</RedirectIfVerified>,
+      authValue({ user: admin }),
+    );
+    expect(screen.getByText('Login Page')).toBeInTheDocument();
   });
 });
