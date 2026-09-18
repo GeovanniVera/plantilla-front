@@ -4,7 +4,6 @@ import Badge from '@components/primitives/Badge';
 import Button from '@components/primitives/Button';
 import Input from '@components/primitives/Input';
 import Card from '@components/layout/Card';
-import { ConfirmDialog } from '@components/overlays/ConfirmDialog';
 import { useToast } from '@components/feedback';
 import { useUpdateProfile } from '../../features/profile/hooks/useProfile';
 import { LuCamera, LuShieldCheck } from 'react-icons/lu';
@@ -18,7 +17,6 @@ export default function PerfilPage() {
   const [email, setEmail] = useState(user?.email ?? '');
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(user?.photoUrl ?? null);
-  const [confirmEmailOpen, setConfirmEmailOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,20 +30,14 @@ export default function PerfilPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Si el email cambió, pedir confirmación primero
-    if (email.trim().toLowerCase() !== user?.email?.toLowerCase()) {
-      setConfirmEmailOpen(true);
-      return;
-    }
-
+    // El email no es editable: no puede haber diferencia de email que gatille
+    // una confirmación. Solo nombre y foto viajan al backend (ver doSave).
     doSave();
   };
 
   const doSave = async () => {
-    setConfirmEmailOpen(false);
     try {
-      await updateProfile.mutateAsync({ name, email, photo: photo ?? undefined });
+      await updateProfile.mutateAsync({ name, photo: photo ?? undefined });
       toast.success('Perfil actualizado correctamente');
     } catch {
       toast.error('Error al actualizar el perfil');
@@ -127,9 +119,10 @@ export default function PerfilPage() {
                     type="email"
                     value={email}
                     onChange={setEmail}
+                    readOnly
                     placeholder="tu@email.com"
-                    required
                   />
+                  <p className="text-fg-muted mt-1 text-xs">El email no se puede cambiar.</p>
                 </div>
 
                 <div className="bg-surface border-border-base text-fg-muted flex items-center gap-2 rounded-md border px-3 py-2 text-xs">
@@ -146,16 +139,6 @@ export default function PerfilPage() {
           </Card>
         </form>
       </div>
-
-      <ConfirmDialog
-        isOpen={confirmEmailOpen}
-        onClose={() => setConfirmEmailOpen(false)}
-        onConfirm={doSave}
-        title="Cambiar email"
-        message={`Vas a cambiar tu email a "${email}". Perderás la verificación y recibirás un email para verificar la nueva dirección. ¿Continuar?`}
-        confirmLabel="Cambiar email"
-        variant="warning"
-      />
     </div>
   );
 }
