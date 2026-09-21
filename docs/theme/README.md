@@ -1,93 +1,72 @@
-# Theme Module
+# Módulo `theme` — Sistema de theming
 
-Sistema de diseño y theming con generación de paletas semánticas accesibles.
+El módulo `src/theme/` centraliza la definición, aplicación, derivación semántica y persistencia del tema visual de la aplicación. Es la única fuente de verdad de los tokens de color: el `ThemeProvider` los aplica al DOM como CSS variables y persiste los cambios del usuario.
 
-## Visión General
+## Cómo funciona en una línea
 
-El módulo Theme provee:
-- **Tokens de diseño** con CSS variables
-- **Theming dinámico** con persistencia automática
-- **Paletas semánticas** generadas en OKLCH (success, warning, danger, info)
-- **Verificación de contraste** WCAG 2.1 (AA/AAA)
-- **Persistencia** via Strategy Pattern (localStorage, API remota, etc.)
+`ThemeProvider` inicializa los tokens (por defecto o guardados), los escribe como CSS variables en `document.documentElement` y persiste cada cambio — todo el sistema es **light-only** por diseño actual (ver [architecture.md](./architecture.md)).
 
-## Estructura
+## Quick start
 
-```
-src/theme/
-├── ThemeProvider.tsx    # Orquestador: state + effects + DOM binding
-├── theme-context.ts     # React Context definition
-├── useTheme.ts          # Hook público de consumo
-├── tokens.ts            # Definición de constantes y mapeo a CSS vars
-├── persistence.ts       # Adaptador de persistencia (Strategy Pattern)
-├── semantic.ts          # Generador de paletas semánticas en OKLCH
-└── contrast.ts          # Motor WCAG 2.1 (luminancia + ratio)
-```
-
-## Quick Start
+1. Envolver la aplicación con `ThemeProvider`:
 
 ```tsx
-// 1. Envolver la app con ThemeProvider
-import { ThemeProvider } from '@theme/ThemeProvider';
+import { ThemeProvider } from './theme/ThemeProvider';
 
-<App>
-  <ThemeProvider>
-    <Router />
-  </ThemeProvider>
-</App>
-
-// 2. Usar en componentes
-import { useTheme } from '@theme/useTheme';
-
-function MiComponente() {
-  const { tokens, setColor, resetTheme } = useTheme();
-  
+function App() {
   return (
-    <div style={{ color: tokens.text }}>
-      <p>Color primario: {tokens.primary}</p>
-      <button onClick={() => setColor('primary', '#ff0000')}>
-        Cambiar a rojo
-      </button>
-      <button onClick={resetTheme}>
-        Resetear tema
-      </button>
-    </div>
+    <ThemeProvider>
+      <YourApp />
+    </ThemeProvider>
   );
 }
 ```
 
+2. Consumir el tema desde cualquier componente con `useTheme()`:
+
+```tsx
+import { useTheme } from './theme/useTheme';
+
+function BrandBar() {
+  const { tokens, setColor, resetTheme } = useTheme();
+
+  return (
+    <button onClick={() => setColor('primary', '#123456')}>
+      Cambiar color primario
+    </button>
+  );
+}
+```
+
+> `useTheme()` lanza un `Error` si se usa fuera de `<ThemeProvider>`.
+
+## Mapa de archivos
+
+| Archivo | Responsabilidad |
+|---|---|
+| `tokens.ts` | 8 tokens por defecto y su mapeo a CSS variables (`TokenKey`, `tokenToVar`) |
+| `contrast.ts` | Motor WCAG 2.1: ratio de contraste y niveles AA/AAA |
+| `semantic.ts` | Generador de paletas semánticas accesibles en OKLCH |
+| `persistence.ts` | Persistencia del tema (strategy pattern sobre `ThemeStorage`) |
+| `theme-context.ts` | Contexto de React y su tipo (`ThemeContextValue`, `TokenValues`) |
+| `ThemeProvider.tsx` | Orquestador: init → aplicar al DOM → persistir |
+| `useTheme.ts` | Hook de acceso al contexto |
+| `contrast.test.ts`, `semantic.test.ts`, `persistence.test.ts`, `ThemeProvider.test.tsx` | Tests del módulo |
+
+> No existe un barrel `index.ts` en `src/theme/`; los imports se hacen directamente desde cada archivo.
+
 ## Documentación
 
-- [Arquitectura](./architecture.md) - Flujo de datos, effects, orquestación
-- [Tokens](./tokens.md) - Tokens disponibles y CSS variables generadas
-- [Semantic](./semantic.md) - Generador de paletas OKLCH
-- [Contrast](./contrast.md) - Motor WCAG 2.1
-- [Persistence](./persistence.md) - Strategy Pattern para persistencia
+| Documento | Contenido |
+|---|---|
+| [architecture.md](./architecture.md) | Flujo de datos, variables derivadas, nota light-only |
+| [tokens.md](./tokens.md) | Tabla de tokens, aplicación vía `setColor`, mapeo a CSS vars |
+| [semantic.md](./semantic.md) | API del generador OKLCH y contratos de contraste por rol |
+| [contrast.md](./contrast.md) | API del motor WCAG (`contrastRatio`, `wcagLevel`, `formatRatio`) |
+| [persistence.md](./persistence.md) | `ThemeStorage`, `localStorageAdapter`, `setStorageAdapter` |
 
-## CSS Variables Generadas
+## Deudas conocidas
 
-### Base (8)
-```
---primary, --secondary, --accent, --bg, --code-bg, --text, --text-h, --border
-```
-
-### Derivadas (3)
-```
---accent-bg, --accent-border, --secondary-bg
-```
-
-### Semánticas (24)
-```
---success, --success-strong, --success-bg, --success-border, --success-row, --success-solid-fg
---warning, --warning-strong, --warning-bg, --warning-border, --warning-row, --warning-solid-fg
---danger,  --danger-strong,  --danger-bg,  --danger-border,  --danger-row,  --danger-solid-fg
---info,    --info-strong,    --info-bg,    --info-border,    --info-row,    --info-solid-fg
-```
-
-**Total: 35 CSS variables**
-
-## Testing
-
-```bash
-npm run test -- src/theme/
-```
+- `tokenToVar.surface` apunta a `--code-bg`: al montar, `ThemeProvider` sobreescribe la variable con `tokens.surface = '#ffffff'`, divergiendo del default CSS `#f6f5f1` (detalle en [tokens.md](./tokens.md)).
+- No existe modo oscuro en ninguna capa del módulo (detalle en [architecture.md](./architecture.md)).
+- `primary`, `secondary` y `accent` tienen el mismo valor por defecto (`#044311`).

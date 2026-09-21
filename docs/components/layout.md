@@ -1,176 +1,89 @@
-# Layout
+# Layout (`src/components/layout/`)
 
-Componentes de estructura: Card, StatCard, FormLayout.
+Estructura de página: tarjetas, tarjetas de estadística y grillas de formulario.
 
-## Card (Compound Pattern)
+## Barrel (`layout/index.ts`)
 
-### Props
+Exporta: `Card` (+ `CardVariant`), `StatCard`/`StatCardGroup` (+ tipos) y `FormLayout` (+ `FormLayoutProps` re-exportado desde `../forms/types` — single source of truth).
+
+## Card
+
+Tarjeta de contenido con 6 piezas compound.
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `variant` | `'default' \| 'outlined' \| 'elevated' \| 'flat'` | `'default'` | Variante visual |
-| `onClick` | `() => void` | — | Hace la card clickable |
+|---|---|---|---|
+| `variant` | `'default' \| 'outlined' \| 'elevated' \| 'flat'` | `'default'` | Superficie |
+| `onClick` | `() => void` | — | Con `onClick` la card se vuelve clicable |
+| `children` / `className` | — | — | Contenido |
 
-### Sub-componentes
+Piezas: `Card.Image`, `Card.Header`, `Card.Title`, `Card.Description`, `Card.Body`, `Card.Footer`.
 
-| Componente | Descripción |
-|------------|-------------|
-| `Card.Image` | `<img>` con wrapper `aspect-video` |
-| `Card.Header` | Cabecera de la card |
-| `Card.Title` | Título (h3) |
-| `Card.Description` | Descripción |
-| `Card.Body` | Cuerpo (`flex-1`) |
-| `Card.Footer` | Pie con borde superior |
-
-### Variantes
-
-| Variante | Estilo |
-|----------|--------|
-| `default` | Bordes redondeados, sombra sutil |
-| `outlined` | Solo bordes, sin sombra |
-| `elevated` | Sombra pronunciada |
-| `flat` | Sin bordes ni sombra |
-
-### Accesibilidad (Click)
-
-- `role="button"`
-- `tabIndex={0}`
-- `onKeyDown` Enter/Space
-
-### Uso
+- **Clickable**: con `onClick` aplica `role="button"`, `tabIndex={0}` y activación por Enter/Space (además del hover/focus elevado).
+- `Card.Image` es wrapper `aspect-video` con `overflow-hidden`.
 
 ```tsx
-// Básica
-<Card variant="outlined">
+<Card variant="elevated" onClick={open}>
+  <Card.Image src={cover} alt="Portada" />
   <Card.Header>
-    <Card.Title>Título</Card.Title>
-    <Card.Description>Descripción</Card.Description>
+    <Card.Title>Proyecto</Card.Title>
+    <Card.Description>Descripción breve</Card.Description>
   </Card.Header>
-  <Card.Body>
-    <p>Contenido</p>
-  </Card.Body>
+  <Card.Body>Contenido</Card.Body>
   <Card.Footer>
-    <Button>Action</Button>
+    <Button size="sm">Ver más</Button>
   </Card.Footer>
-</Card>
-
-// Con imagen
-<Card>
-  <Card.Image src="/photo.jpg" alt="Foto" />
-  <Card.Body>
-    <Card.Title>Foto</Card.Title>
-  </Card.Body>
-</Card>
-
-// Clickable
-<Card onClick={() => navigate('/detail')}>
-  <Card.Body>
-    <Card.Title>Haz click</Card.Title>
-  </Card.Body>
 </Card>
 ```
 
----
+## StatCard
 
-## StatCard + StatCardGroup
-
-### StatCard Props
+Tarjeta de estadística estilo dashboard corporativo.
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `value` | `number` | required | Valor numérico |
-| `label` | `string` | required | Descripción (uppercase) |
+|---|---|---|---|
+| `value` | `number` | — | Valor numérico destacado |
+| `label` | `string` | — | Label (se muestra en mayúsculas vía CSS) |
 | `accent` | `string` | `'#94a3b8'` | Color de acento (borde superior + ícono) |
-| `icon` | `IconType` | — | Ícono react-icons |
+| `icon` | `IconType` | — | Componente de react-icons |
+
+- ⚠️ **Prop-driven, NO tokens**: los colores se aplican como **CSS vars inline** `--accent-color` y `--icon-bg` (`${accent}12`, tint al 12%). Son valores por instancia, no design tokens.
+- El ícono se renderiza en una caja `bg-(--icon-bg) text-(--accent-color)`.
+
+```tsx
+<StatCard value={25} label="Total" icon={LuCalendar} accent="#64748b" />
+```
 
 ### StatCardGroup
 
-Grid responsivo `auto-fit minmax(200px, 1fr)`.
-
-### Uso
+Contenedor responsivo: `grid` con `repeat(auto-fit, minmax(200px, 1fr))` — 4 columnas desktop, 2 tablet, 1 móvil.
 
 ```tsx
 <StatCardGroup>
-  <StatCard value={1234} label="Usuarios" accent="#22c55e" icon={LuUsers} />
-  <StatCard value={567} label="Pedidos" accent="#3b82f6" icon={LuShoppingCart} />
-  <StatCard value={89} label="Ventas" accent="#f59e0b" icon={LuDollarSign} />
+  <StatCard value={5} label="Disponibles" icon={LuCheck} accent="#10b981" />
+  <StatCard value={2} label="Pendientes" icon={LuClock} accent="#f59e0b" />
 </StatCardGroup>
 ```
 
----
-
 ## FormLayout
 
-### Props
+Grilla de formulario.
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `columns` | `1 \| 2 \| 3 \| 4` | `1` | Columnas del grid |
-| `gap` | `string` | `'20px'` | Separación |
-| `children` | `ReactNode` | required | Contenido |
+|---|---|---|---|
+| `columns` | `1 \| 2 \| 3 \| 4` | `1` | Columnas en desktop |
+| `gap` | `string` | `'20px'` | Separación (style inline) |
+| `children` / `className` | — | — | Contenido |
 
-### Responsive
-
-`max-[640px]:grid-cols-1` (colapsa a 1 columna en móvil).
-
-### Uso
+Breakpoint `max-[640px]`: colapsa a `grid-cols-1`.
 
 ```tsx
 <FormLayout columns={2}>
-  <FormField label="Nombre">
-    <Input value={name} onChange={setName} />
-  </FormField>
-  <FormField label="Email">
-    <Input value={email} onChange={setEmail} />
-  </FormField>
-  <FormField label="Teléfono">
-    <Input value={phone} onChange={setPhone} />
-  </FormField>
-  <FormField label="Dirección">
-    <Input value={address} onChange={setAddress} />
-  </FormField>
-</FormLayout>
-
-<FormLayout columns={3} gap="16px">
-  {/* ... */}
+  <FormField label="Nombre" name="name">...</FormField>
+  <FormField label="Email" name="email">...</FormField>
 </FormLayout>
 ```
 
----
+## Gotchas
 
-## Ejemplo: Dashboard Layout
-
-```tsx
-function Dashboard() {
-  return (
-    <div className="space-y-6">
-      {/* Stats */}
-      <StatCardGroup>
-        <StatCard value={users} label="Usuarios" icon={LuUsers} accent="#22c55e" />
-        <StatCard value={orders} label="Pedidos" icon={LuShoppingCart} accent="#3b82f6" />
-      </StatCardGroup>
-
-      {/* Contenido principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <Card.Header>
-            <Card.Title>Actividad reciente</Card.Title>
-          </Card.Header>
-          <Card.Body>
-            <ActivityList />
-          </Card.Body>
-        </Card>
-
-        <Card>
-          <Card.Header>
-            <Card.Title>Resumen</Card.Title>
-          </Card.Header>
-          <Card.Body>
-            <SummaryStats />
-          </Card.Body>
-        </Card>
-      </div>
-    </div>
-  );
-}
-```
+- `StatCard` usa CSS vars inline prop-driven (`--accent-color`, `--icon-bg`), no tokens del theme — al overridear con `accent` se espera un color CSS válido.
+- `FormLayoutProps` se declara en `forms/types.ts` y se re-exporta aquí (no hay declaraciones duplicadas).

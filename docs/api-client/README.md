@@ -1,110 +1,61 @@
-# API Client Module
+# API Client — Documentación del módulo
 
-Cliente HTTP centralizado para comunicación con el backend.
+## Propósito
 
-## Visión General
+El módulo `src/lib/api/` es el cliente HTTP centralizado de la aplicación. **Todas** las peticiones a la API deben pasar por él: inyecta el JWT, maneja expiración y refresh de token, normaliza errores según el contrato `ApiResponse` y ejecuta interceptores de request/response.
 
-El módulo API Client provee:
-- **Cliente HTTP** centralizado basado en Fetch API (sin axios)
-- **Inyección automática de JWT** en cada request
-- **Refresh token** automático con deduplicación de requests concurrentes
-- **Manejo normalizado de errores** con códigos estandarizados
-- **Timeout** configurable (default 15s)
-- **Interceptores** request/response extensibles
-- **Compatibilidad** con backends que usen `ApiResponse<T>` o JSON plano
+Esta carpeta documenta su arquitectura, su contrato de tipos y el mecanismo de refresh.
 
-## Estructura
+## Quick path
 
-```
-src/lib/api/
-├── index.ts                    # Barrel exports
-├── client.ts                   # Cliente HTTP centralizado
-├── types/
-│   └── api-response.ts         # Contratos de respuesta
-├── interceptors/
-│   └── refresh.ts              # Refresh token con deduplicación
-└── services/
-    ├── auth.service.ts         # Servicio de autenticación
-    └── _template.service.ts    # Template para nuevos servicios
-```
+1. Lee `architecture.md` para entender el pipeline de una petición de principio a fin.
+2. Lee `types.md` para conocer el contrato `ApiResponse<T>` que el backend DEBE cumplir.
+3. Lee `interceptors.md` para el flujo de refresh de token y las políticas de storage.
 
-## Quick Start
+## Vista rápida del módulo
 
-```typescript
-import { client, isApiSuccess, isApiError } from '@lib/api';
-import type { User, ApiResponse } from '@lib/api';
+| Archivo | Responsabilidad |
+|---|---|
+| `src/lib/api/client.ts` | Cliente HTTP (`client`), `tokenManager`, `ApiError`, `configureClient`, interceptores, pipeline `request<T>()` |
+| `src/lib/api/index.ts` | Re-exporta la API pública: `client`, `tokenManager`, `ApiError`, `configureClient`, `addRequestInterceptor`, `addResponseInterceptor`, tipos y guards |
+| `src/lib/api/interceptors/refresh.ts` | `tryRefreshToken()`: refresh proactivo y reactivo con deduplicación |
+| `src/lib/api/services/auth.service.ts` | Servicio de autenticación (`authService`) |
+| `src/lib/api/services/_template.service.ts` | Plantilla CRUD genérico (no usado en runtime) |
+| `src/lib/api/services/index.ts` | Re-exporta `authService` |
+| `src/lib/api/types/api-response.ts` | **Fuente de verdad** del contrato de respuesta (`ApiResponse<T>` y compañía) |
 
-// GET simple
-const response = await client.get<User>('/users/1');
-if (isApiSuccess(response)) {
-  console.log(response.data.name);
-}
+## API pública (resumen)
 
-// POST con body
-const response = await client.post<AuthResponse>('/auth/login', {
-  email: 'user@test.com',
-  password: '123'
-});
+```ts
+// Cliente HTTP
+client.get<T>(path, options?): Promise<ApiResponse<T>>
+client.post<T>(path, body?, options?): Promise<ApiResponse<T>>
+client.put<T>(path, body?, options?): Promise<ApiResponse<T>>
+client.patch<T>(path, body?, options?): Promise<ApiResponse<T>>
+client.delete<T>(path, options?): Promise<ApiResponse<T>>
 
-// Manejo de errores
-if (isApiError(response)) {
-  console.error(response.message, response.code);
-}
+// Token en memoria
+tokenManager.get(): string | null
+tokenManager.set(token: string): void
+tokenManager.clear(): void
+
+// Error tipado
+class ApiError extends Error { status: number; statusText: string; data?: unknown }
+
+// Configuración
+configureClient(config: Partial<ClientConfig>): void
+addRequestInterceptor(interceptor: RequestInterceptor): void
+addResponseInterceptor(interceptor: ResponseInterceptor): void
+shouldRedirectToForbidden(pathname?: string): boolean
 ```
 
-## Documentación
+## Documentos relacionados
 
-- [Arquitectura](./architecture.md) - Diseño del cliente, pipeline de requests, interceptores
-- [Types](./types.md) - Contratos TypeScript (ApiResponse, User, AuthResponse, etc.)
-- [Interceptors](./interceptors.md) - Refresh token, deduplicación, anti-bucle
+- [architecture.md](architecture.md) — pipeline de una petición, manejo de 401/403, timeout y configuración.
+- [types.md](types.md) — contrato `ApiResponse`, códigos de error, tipos de autenticación, paginación y tema.
+- [interceptors.md](interceptors.md) — refresh de token, deduplicación y políticas de storage.
+- [../support/lib.md](../support/lib.md) — resumen de `src/lib/` completo (API client + token store + servicios).
 
-## Configuración
+## Deudas conocidas
 
-### Variables de Entorno
-
-| Variable | Default | Descripción |
-|----------|---------|-------------|
-| `VITE_API_BASE` | `/api` | Base URL del backend |
-| `VITE_REQUEST_TIMEOUT` | `15000` | Timeout en milisegundos |
-| `VITE_AUTH_REFRESH_PATH` | `/auth/refresh` | Path del endpoint de refresh |
-
-### Configuración en Runtime
-
-```typescript
-import { configureClient } from '@lib/api';
-
-configureClient({
-  baseUrl: 'https://api.miapp.com',
-  onUnauthorized: () => { /* custom handler */ },
-  onForbidden: () => { /* custom handler */ },
-});
-```
-
-## Dependencias Externas
-
-| Paquete | Uso |
-|---------|-----|
-| Ninguna | Fetch API nativa del browser |
-
-## Dependencias Internas
-
-| Módulo | Uso |
-|--------|-----|
-| `src/config/env.ts` | Variables de entorno validadas |
-| `src/lib/auth/token-store.ts` | Persistencia de tokens |
-| `src/lib/i18n/errors.ts` | Mensajes de error traducidos |
-
-## Testing
-
-```bash
-# Tests del cliente
-npm run test -- src/lib/api/client.test.ts
-```
-
-## Patrones Clave
-
-1. **Dual token storage**: Memoria (requests) + localStorage/sessionStorage (persistencia)
-2. **Refresh deduplicado**: Si múltiples requests fallan con 401, solo se hace UN refresh
-3. **Anti-bucle**: Flag `_retry` previene retry infinito (máximo 2 intentos)
-4. **Event-driven logout**: Usa `CustomEvent('auth:logout')` para desacoplar de UI
-5. **Compatibilidad dual**: Maneja backends con `ApiResponse<T>` o JSON plano
+- **Dos fuentes de verdad para la configuración**: `client.ts` lee `import.meta.env.VITE_API_BASE` y `VITE_REQUEST_TIMEOUT` directamente, mientras que `interceptors/refresh.ts` usa `env` de `src/config/env.ts`. Ver [architecture.md](architecture.md#deudas-conocidas).

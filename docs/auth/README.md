@@ -1,102 +1,84 @@
-# Auth Module
+# Módulo de autenticación (`src/auth/`)
 
-Módulo de autenticación y autorización de la aplicación.
+Documentación del módulo de autenticación: proveedor de contexto, hooks, guards de rutas y control de acceso por permisos.
 
-## Visión General
+## Quick start
 
-El módulo Auth maneja:
-- **Sesión**: Login, logout, restauración de sesión al iniciar la app
-- **Tokens**: JWT de acceso + refresh token con persistencia dual
-- **Protección de rutas**: Guards basados en autenticación, verificación, roles y privilegios
-- **Recuperación de contraseña**: Flujo multi-paso (email → OTP → reset)
+1. Envuelva la aplicación con `AuthProvider` (debe estar por encima de cualquier componente que use `useAuth`):
 
-## Estructura
+   ```tsx
+   import { AuthProvider } from '@/auth';
 
-```
-src/auth/
-├── types.ts                    # Contratos de dominio (AuthState, AuthContextValue)
-├── context.ts                  # React Context creation
-├── provider.tsx                # AuthProvider: sesión, login, logout, permisos
-├── hooks.ts                    # useAuth, useHasPrivilege, useHasAnyPrivilege, useHasRole
-├── guards.tsx                  # ProtectedRoute, RequirePrivilege, RequireRole, GuestOnly
-├── ForgotPasswordContext.tsx   # Contexto para flujo forgot→OTP→reset
-└── index.ts                    # Barrel exports
+   <AuthProvider>
+     <App />
+   </AuthProvider>
+   ```
 
-src/hooks/
-└── useAuth.ts                  # Hooks React Query integrados con AuthContext
+2. Acceda al estado y métodos desde cualquier componente:
 
-src/lib/auth/
-└── token-store.ts              # Persistencia dual localStorage/sessionStorage
+   ```tsx
+   import { useAuth } from '@/auth';
 
-src/lib/api/services/
-└── auth.service.ts             # 9 llamadas API: login, logout, me, refresh, register, etc.
-```
+   const { user, isAuthenticated, login, logout } = useAuth();
+   ```
 
-## Quick Start
+3. Proteja rutas y oculte UI según permisos:
 
-```tsx
-// 1. Envolver la app con AuthProvider
-import { AuthProvider } from '@auth/provider';
+   ```tsx
+   import { ProtectedRoute, RequirePrivilege, Can } from '@/auth';
 
-<App>
-  <AuthProvider>
-    <Router />
-  </AuthProvider>
-</App>
+   <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+     <Route path="/dashboard" element={<Dashboard />} />
+   </Route>
 
-// 2. Usar en componentes
-import { useAuth } from '@auth/hooks';
+   <RequirePrivilege privilege="settings.brand"><Configuracion /></RequirePrivilege>
+   <Can privilege="users.write"><button>Editar</button></Can>
+   ```
 
-function MiComponente() {
-  const { user, isAuthenticated, logout } = useAuth();
-  
-  if (!isAuthenticated) return <Login />;
-  return <p>Hola {user.name}</p>;
-}
+> `useAuth()` lanza un `Error` si se usa fuera de `AuthProvider`.
 
-// 3. Proteger rutas
-import { ProtectedRoute, RequirePrivilege } from '@auth/guards';
+## Mapa de archivos del módulo
 
-<Route element={<ProtectedRoute />}>
-  <Route path="/dashboard" element={<Dashboard />} />
-</Route>
+| Archivo | Responsabilidad | Exporta |
+|---|---|---|
+| `index.ts` | Barrel público del módulo | `AuthProvider`, `useAuth`, `useHasPrivilege`, `useHasAnyPrivilege`, `useHasRole`, guards, `Can`, tipos |
+| `provider.tsx` | `AuthProvider`: estado global, restauración de sesión, login, logout, verificaciones | `AuthProvider` |
+| `context.tsx` | `AuthContext` (React context) | `AuthContext` (uso interno, no va por el barrel) |
+| `hooks.ts` | Hooks de acceso al contexto | `useAuth`, `useHasPrivilege`, `useHasAnyPrivilege`, `useHasRole` |
+| `guards.tsx` | Guards de rutas (redirección) | `ProtectedRoute`, `RequirePrivilege`, `RequireRole`, `GuestOnly`, `RedirectIfVerified`, `RequireVerification`, `AuthLoading` |
+| `Can.tsx` | Control de acceso por renderizado (oculta, no redirige) | `Can` |
+| `types.ts` | Tipos del dominio (`User`, `AuthState`, `AuthContextValue`) | tipos |
+| `ForgotPasswordContext.tsx` | Máquina de estado del flujo forgot → OTP → reset | `ForgotPasswordProvider`, `useForgotPassword` (no van por el barrel) |
 
-<Route element={<RequirePrivilege privilege="settings:manage" />}>
-  <Route path="/settings" element={<Settings />} />
-</Route>
-```
+### No exportados por el barrel (`src/auth/index.ts`)
 
-## Documentación
+Estos símbolos existen en el módulo pero **no** se exportan desde `index.ts`; deben importarse desde su archivo de origen:
 
-- [Arquitectura](./architecture.md) - Estructura, contratos y diseño
-- [Flujos](./flows.md) - Secuencias paso a paso de cada proceso
-- [API Reference](./api-reference.md) - Firmas de entrada/salida de cada endpoint
-- [Guards](./guards.md) - Sistema de protección de rutas
+- `AuthContext` → `src/auth/context.tsx` (uso interno; prefiera `useAuth()`).
+- `ForgotPasswordProvider` y `useForgotPassword` (contexto) → `src/auth/ForgotPasswordContext.tsx`.
+- `AuthLoading` → `src/auth/guards.tsx`.
 
-## Dependencias Externas
+> ⚠ Gotcha: `useForgotPassword` también existe en `src/hooks/useAuth.ts` como mutación de React Query. Vea [Notas de uso del barrel de hooks](../hooks/gaps.md).
 
-| Paquete | Uso |
-|---------|-----|
-| `react-router` | Navegación, rutas, Navigate, useLocation |
-| `@tanstack/react-query` | Cache de server state (via hooks/useAuth.ts) |
-| `react-i18next` | Traducciones (opcional) |
+## Dependencias externas
 
-## Testing
+| Dependencia | Uso |
+|---|---|
+| `src/lib/api/services/auth.service` | `login`, `me`, `logout`, `verifyOtp`, `resetPassword`, `forgotPassword`, `register`, `verifyEmail`, `resendVerification` |
+| `src/lib/api/client` | `tokenManager` (access token en memoria del cliente HTTP) |
+| `src/lib/auth/token-store.ts` | `authStorage` (persistencia en `localStorage`/`sessionStorage`) |
 
-```bash
-# Tests unitarios del módulo
-npm run test -- src/auth/
+## Documentación del módulo
 
-# Tests de integración
-npm run test -- src/hooks/useAuth.test.ts
-```
+- [Arquitectura](architecture.md) — contratos, persistencia, eventos y flujo de datos del provider.
+- [Referencia de API](api-reference.md) — tabla completa de exportaciones públicas con firmas y tipos.
+- [Flujos](flows.md) — login, registro, recuperación de contraseña, verificación de email, logout y restauración de sesión.
+- [Guards de rutas](guards.md) — tabla de guards, comportamiento de redirección y ejemplos de uso.
+- [Flujo de sesión (full-stack)](session-flow.md) — secuencia unificada React UI → AuthContext → tokenManager → authStorage → HTTP client → backend /api/auth → DB.
+- Hooks de auth con React Query: [README de hooks](../hooks/README.md) y [usoAuth.md](../hooks/useAuth.md).
 
-## Notas de Implementación
+## Deudas conocidas
 
-1. **Dual hook system**: Exist `src/auth/hooks.ts` (Context) y `src/hooks/useAuth.ts` (React Query). Las páginas usan React Query hooks que internamente llaman al AuthContext.
-
-2. **Persistencia dual**: `remember=true` → localStorage, `remember=false` → sessionStorage. `clearAll()` limpia ambos.
-
-3. **Logout forzado**: El listener de `auth:logout` usa `window.location.href` (hard redirect) para limpiar completamente el estado de React.
-
-4. **Refresh token**: El interceptor deduplica requests concurrentes — si múltiples requests fallan con 401, solo se hace UN refresh.
+- `console.log` / `console.error` de depuración (`[AUTH] ...`, `[GUARD] ...`) quedan activos en producción en `provider.tsx` y `guards.tsx`.
+- `GuestOnly` documenta en su JSDoc `redirectTo = '/'`, pero el código usa `'/dashboard'`.
+- `ProtectedRoute` exige email verificado por defecto (`requireVerification = true`), lo que duplica el rol de `RequireVerification` en rutas protegidas.

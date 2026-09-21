@@ -1,127 +1,85 @@
-# Test
+# Testing (`vite.config.ts` + `src/test/`)
 
-Infraestructura de testing del proyecto plantilla-front.
+## Propósito
 
-## Archivos
+Infraestructura de testing basada en Vitest con **dos proyectos** (`unit` y `storybook`) y cobertura v8. Los mocks HTTP corren con MSW.
 
-| Archivo | Función |
-|---------|---------|
-| `src/test/setup.ts` | Setup global de Vitest |
-| `src/test/mocks/server.ts` | Instancia MSW |
-| `src/test/mocks/handlers/auth.ts` | 8 handlers MSW para auth |
+## Proyectos Vitest
 
-## Setup
+| Proyecto | Alcance | Entorno |
+|---|---|---|
+| `unit` | `src/**/*.test.{ts,tsx}` | jsdom, `setupFiles: src/test/setup.ts`, `globals: true` |
+| `storybook` | historias de Storybook (plugin `storybookTest`, `configDir: .storybook`) | browser mode — Playwright `chromium` headless |
 
-```typescript
-// src/test/setup.ts
-import '@testing-library/jest-dom/vitest';
-import { beforeAll, afterEach, afterAll } from 'vitest';
-import { server } from './mocks/server';
+### Cobertura (v8)
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+- `include`: `src/**/*.tsx`, `src/**/*.ts`
+- `exclude`: `src/**/*.test.{ts,tsx}`, `src/**/*.stories.{ts,tsx}`, `src/test/**`, `src/vite-env.d.ts`
+
+### Aliases de path (compartidos con `tsconfig.app.json`)
+
+| Alias | Ruta |
+|---|---|
+| `@components` | `src/components` |
+| `@hooks` | `src/hooks` |
+| `@theme` | `src/theme` |
+| `@config` | `src/config` |
+| `@lib` | `src/lib` |
+
+> Storybook's Vite builder lee `vite.config.ts` automáticamente, no requiere `viteFinal`.
+
+## Setup (`src/test/setup.ts`)
+
+```ts
+import '@testing-library/jest-dom/vitest'
+beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }))
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
 ```
 
-## MSW Server
+- Agrega los matchers de `@testing-library/jest-dom`.
+- Levanta el servidor MSW con `onUnhandledRequest: 'bypass'` (las requests no mockeadas pasan a la red).
+- Reinicia handlers entre tests y cierra el servidor al final.
 
-```typescript
-// src/test/mocks/server.ts
-import { setupServer } from 'msw/node';
-import { authHandlers } from './handlers/auth';
+## Mocks MSW (`src/test/mocks/`)
 
-export const server = setupServer(...authHandlers);
-```
+`mocks/server.ts` exporta `setupServer(...authHandlers)`; los handlers viven en `mocks/handlers/auth.ts` y mockean `*/auth/*`:
 
-## Auth Handlers
+| Endpoint | Comportamiento |
+|---|---|
+| `POST /auth/login` | Valida email/contraseña; 401 si no coincide |
+| `POST /auth/logout` | `success: true` |
+| `GET /auth/me` | Valida `Authorization: Bearer` (token = `btoa({ sub, exp })`) |
+| `POST /auth/refresh` | Devuelve nuevo access token |
+| `POST /auth/register` | Crea usuario `viewer` |
+| `POST /auth/forgot-password`, `reset-password` | `success: true` |
+| `POST /auth/verify-email` | Token mágico `verify-token-abc123` → éxito; otro → 400 `VALIDATION_ERROR` |
+| `POST /auth/resend-verification` | `success: true` |
+| `POST /auth/verify-otp` | OTP mágico `123456` → éxito; `000000` → expirado; otro → inválido |
 
-### Usuarios Predefinidos
+### Usuarios de prueba
 
-| Email | Password | Roles |
-|-------|----------|-------|
-| `admin@test.com` | `admin123` | `['admin']` |
-| `editor@test.com` | `editor123` | `['editor']` |
+| Email | Contraseña | Rol | Permisos |
+|---|---|---|---|
+| `admin@test.com` | `admin123` | `admin` | `users:read`, `users:write`, `users:delete`, `reports:view`, `reports:export`, `settings:manage` |
+| `editor@test.com` | `editor123` | `editor` | `users:read`, `reports:view` |
 
-### Handlers
+## Tests existentes (inventario)
 
-| Handler | Método | Endpoint |
-|---------|--------|----------|
-| `loginHandler` | POST | `/auth/login` |
-| `logoutHandler` | POST | `/auth/logout` |
-| `meHandler` | GET | `/auth/me` |
-| `refreshHandler` | POST | `/auth/refresh` |
-| `registerHandler` | POST | `/auth/register` |
-| `forgotPasswordHandler` | POST | `/auth/forgot-password` |
-| `resetPasswordHandler` | POST | `/auth/reset-password` |
-| `verifyEmailHandler` | POST | `/auth/verify-email` |
-| `resendVerificationHandler` | POST | `/auth/resend-verification` |
-| `verifyOtpHandler` | POST | `/auth/verify-otp` |
+| Área | Tests |
+|---|---|
+| Auth | `provider`, `guards`, `ForgotPasswordContext`, `index`, `token-store` |
+| API | `client`, `client.forbidden`, `refresh` |
+| i18n | `config` |
+| Theme | 4 tests |
+| Feedback | `toast` |
+| Pages auth | 11 tests |
+| Admin | `UsersPage`, `RolesPage` |
+| Ajustes | `PerfilPage` |
+| App | `password-reset-flow`, `verify-email-guard` |
 
-### Tokens Fake
+## Deudas conocidas
 
-```typescript
-function createToken(user: User): string {
-  return btoa(JSON.stringify({
-    sub: user.id,
-    email: user.email,
-    roles: user.roles,
-    exp: Math.floor(Date.now() / 1000) + 3600,
-  }));
-}
-```
-
-## Uso en Tests
-
-```typescript
-import { render, screen } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
-import { server } from '../test/mocks/server';
-
-test('login exitoso', async () => {
-  render(<LoginPage />);
-  
-  await userEvent.type(screen.getByLabelText(/email/i), 'admin@test.com');
-  await userEvent.type(screen.getByLabelText(/password/i), 'admin123');
-  await userEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
-  
-  await waitFor(() => {
-    expect(mockNavigate).toHaveBeenCalledWith('/');
-  });
-});
-
-test('login fallido', async () => {
-  server.use(
-    http.post('/auth/login', () => {
-      return HttpResponse.json({
-        success: false,
-        message: 'Credenciales inválidas',
-        code: 'UNAUTHORIZED',
-      }, { status: 401 });
-    })
-  );
-  
-  render(<LoginPage />);
-  
-  await userEvent.type(screen.getByLabelText(/email/i), 'wrong@test.com');
-  await userEvent.type(screen.getByLabelText(/password/i), 'wrong');
-  await userEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
-  
-  await waitFor(() => {
-    expect(screen.getByText(/credenciales inválidas/i)).toBeInTheDocument();
-  });
-});
-```
-
-## Patrones
-
-### MSW (Mock Service Worker)
-
-Intercepts a nivel de red, no de módulo. Los tests no saben que están usando mocks.
-
-### Contract Testing
-
-Los mocks responden con la misma estructura que el backend real (`ApiResponse<T>`).
-
-### Deterministic Fixtures
-
-Tokens predecibles, usuarios hardcoded. Cada test tiene el mismo resultado.
+- **Permisos con separador distinto**: los mocks declaran permisos con DOS PUNTOS (`users:read`), pero los guards y rutas reales usan PUNTO (`users.read`). Un test que dependa de los permisos del mock no refleja el contrato real de la app.
+- **Contrato viejo en los mocks**: los mocks devuelven `refreshToken`/`token` en los bodies (el contrato actual maneja el refresh token vía HttpOnly cookie) y `verify-otp` responde `{ verified, token }` mientras el servicio espera `{ resetToken }`. Los mocks están desincronizados con `src/lib/api/types/api-response.ts` y `auth.service.ts`.
+- `setup.ts` usa `bypass` para requests no mockeadas: los tests pueden golpear la red real si un handler queda mal escrito (considerar `'error'` para detectar handlers faltantes).

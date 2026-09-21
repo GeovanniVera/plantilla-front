@@ -1,133 +1,92 @@
-# Theme Architecture
+# Arquitectura del módulo `theme`
 
-## Diagrama de Componentes
+El módulo sigue un flujo de una sola dirección: **init → aplicar al DOM → persistir**. `ThemeProvider` es el único orquestador; los demás archivos son piezas desacopladas (tokens, contraste, semántica, persistencia).
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     App Bootstrap                               │
-│  <ThemeProvider>                                                │
-│    │                                                            │
-│    ├─ useState(() => merge(defaultTokens, loadSaved()))        │
-│    │   └─ ThemeMap: { primary: '#...', secondary: '#...', ... } │
-│    │                                                            │
-│    ├─ useEffect #1: applyTokensToDOM(tokens)                   │
-│    │   ├─ tokenToVar → setProperty per token                    │
-│    │   ├─ hexToRgb → --accent-bg, --accent-border              │
-│    │   ├─ hexToRgb → --secondary-bg                            │
-│    │   └─ SEMANTIC_BASES.forEach:                               │
-│    │       deriveSemanticPalette({base, surface, bg})           │
-│    │       → 6 CSS vars per status                              │
-│    │                                                            │
-│    ├─ useEffect #2: saveSaved(tokens)                           │
-│    │                                                            │
-│    ├─ setColor(key, val) → setTokens(merge)                    │
-│    └─ resetTheme() → resetSaved() + setTokens(defaults)        │
-│                                                                  │
-│    Context value: { tokens, setColor, resetTheme }              │
-│                                                                  │
-│  ┌─ Consumers ──────────────────────────────────────┐          │
-│  │  useTheme() → { tokens, setColor, resetTheme }   │          │
-│  └──────────────────────────────────────────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Flujo de Datos
+## Flujo de datos
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Montaje del ThemeProvider                                    │
-│    │                                                            │
-│    ├─ loadSaved() → lee de localStorage                         │
-│    │   └─ Si no existe o falla → retorna {}                     │
-│    │                                                            │
-│    ├─ merge(defaultTokens, saved)                               │
-│    │   └─ Defaults completados con valores guardados            │
-│    │                                                            │
-│    └─ useState → tokens iniciales                               │
-└───────────────────────────┬─────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ 2. Effect #1: DOM Binding                                       │
-│    │                                                            │
-│    ├─ Para cada token:                                          │
-│    │   document.documentElement.style.setProperty(cssVar, value)│
-│    │                                                            │
-│    ├─ Derivar variantes translúcidas:                           │
-│    │   --accent-bg: rgba(r, g, b, 0.1)                         │
-│    │   --accent-border: rgba(r, g, b, 0.35)                    │
-│    │   --secondary-bg: rgba(r, g, b, 0.1)                      │
-│    │                                                            │
-│    └─ Generar paletas semánticas:                               │
-│        SEMANTIC_BASES.forEach(status =>                         │
-│          deriveSemanticPalette({ base, surface, bg })           │
-│          → 6 CSS vars: base, strong, bg, line, row, solidFg    │
-│        )                                                       │
-└───────────────────────────┬─────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ 3. Effect #2: Persistencia                                      │
-│    │                                                            │
-│    └─ saveTheme(tokens) → localStorage                          │
-│        └─ Clave: 'brand-theme-v1'                              │
-└───────────────────────────┬─────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ 4. Consumer Interaction                                         │
-│    │                                                            │
-│    ├─ setColor('primary', '#ff0000')                            │
-│    │   └─ setTokens(prev => ({ ...prev, primary: '#ff0000' })) │
-│    │       └─ React re-render → Effects se re-ejecutan         │
-│    │                                                            │
-│    └─ resetTheme()                                              │
-│        ├─ resetSaved() → localStorage.removeItem()              │
-│        └─ setTokens(defaultTokens)                              │
-└─────────────────────────────────────────────────────────────────┘
+ThemeProvider (montaje)
+  │
+  ├─ 1. INIT (useState)
+  │     loadSaved() → {...defaultTokens, ...saved}   ← merge: guardado gana
+  │
+  ├─ 2. APLICAR AL DOM (useEffect [tokens])
+  │     applyTokensToDOM(tokens)
+  │       ├─ 8 variables base          (tokenToVar)
+  │       ├─ 3 variables translúcidas  (--accent-bg, --accent-border, --secondary-bg)
+  │       └─ 24 variables semánticas   (4 estados × 6 roles)
+  │
+  └─ 3. PERSISTIR (useEffect [tokens], separado del paso 2)
+        saveSaved(tokens)
 ```
 
-## Separación de Effects
+Los dos `useEffect` dependen del mismo estado `tokens` pero están separados a propósito: aplicar al DOM y persistir son side effects independientes.
 
-Los effects están separados intencionalmente:
+### 1. Init
 
-```typescript
-// Effect #1: DOM binding
-useEffect(() => {
-  applyTokensToDOM(tokens);
-}, [tokens]);
+`useState` inicializa el estado leyendo el tema guardado (`loadSaved()`) y haciendo merge con los tokens por defecto:
 
-// Effect #2: Persistencia
-useEffect(() => {
-  saveSaved(tokens);
-}, [tokens]);
+```ts
+const saved = loadSaved();
+return { ...defaultTokens, ...saved };
 ```
 
-**Razón**: Evitar side-effect chains. Si estuvieran juntos, el save podría triggerar re-renders innecesarios.
+El merge garantiza que un tema guardado parcialmente (p. ej. solo `primary`) no rompa el resto de tokens.
 
-## Callbacks Memoizados
+### 2. Aplicar al DOM
 
-```typescript
-const setColor = useCallback((variable: TokenKey, value: string) => {
-  setTokens(prev => ({ ...prev, [variable]: value }));
-}, []);
+`applyTokensToDOM` escribe directamente en `document.documentElement.style`:
 
-const resetTheme = useCallback(() => {
-  resetSaved();
-  setTokens({ ...defaultTokens });
-}, []);
+- **8 variables base**: cada entrada de `tokenToVar` (`--primary`, `--secondary`, `--accent`, `--bg`, `--code-bg`, `--text`, `--text-h`, `--border`).
+- **3 variables translúcidas** derivadas de los tokens:
+  - `--accent-bg` → `rgba(accent, 0.1)`
+  - `--accent-border` → `rgba(accent, 0.35)`
+  - `--secondary-bg` → `rgba(secondary, 0.1)`
+- **24 variables semánticas**: por cada estado en `SEMANTIC_BASES` (success, warning, danger, info), `deriveSemanticPalette` genera una paleta contra las superficies resueltas (`tokens.surface`, `tokens.background`) y se escriben 6 variables:
 
-const value = useMemo(() => ({ tokens, setColor, resetTheme }), [tokens, setColor, resetTheme]);
+| Sufijo | Rol |
+|---|---|
+| `--success`, `--warning`, `--danger`, `--info` | `base` — color gráfico del estado |
+| `--*-strong` | `strong` — texto semántico |
+| `--*-bg` | `bg` — superficie sólida suave |
+| `--*-border` | `line` — borde con estado |
+| `--*-row` | `row` — wash ultra-suave |
+| `--*-solid-fg` | `solidForeground` — texto sobre botones sólidos |
+
+Total: 4 estados × 6 roles = 24 variables.
+
+### 3. Persistir
+
+Un segundo `useEffect` llama a `saveSaved(tokens)` cada vez que el estado cambia. La escritura es atómica vía el adaptador de persistencia (ver [persistence.md](./persistence.md)).
+
+## API expuesta por el contexto
+
+`ThemeContext` (valor memoizado con `useMemo`) expone:
+
+| Miembro | Tipo | Descripción |
+|---|---|---|
+| `tokens` | `TokenValues` | Mapa completo `Record<TokenKey, string>` vigente |
+| `setColor` | `(variable: TokenKey, value: string) => void` | Actualiza un token; dispara re-aplicación y re-persistencia |
+| `resetTheme` | `() => void` | Limpia el storage y restaura `{...defaultTokens}` |
+
+`useTheme()` es el hook de acceso; lanza `Error` fuera de `<ThemeProvider>`.
+
+## Nota: sistema light-only
+
+**No existe modo oscuro.** No hay `prefers-color-scheme`, ni `data-theme`, ni toggle en todo el módulo `theme` ni en `src/index.css` (que solo define un `:root` fijo). El sistema es light-only por diseño actual: `ThemeProvider` sobreescribe las mismas variables con los mismos tokens siempre, independientemente de la preferencia del sistema operativo.
+
+## Dependencias entre módulos
+
+```
+ThemeProvider.tsx ──► tokens.ts (defaultTokens, tokenToVar)
+            ├──────► persistence.ts (loadTheme, saveTheme, resetTheme)
+            ├──────► semantic.ts (deriveSemanticPalette, SEMANTIC_BASES)
+            └──────► theme-context.ts (ThemeContext)
+useTheme.ts ───────► theme-context.ts
+semantic.ts ───────► contrast.ts (contrastRatio)   ← contraste es la única autoridad WCAG
+persistence.ts ────► tokens.ts (solo tipos, TokenKey)
 ```
 
-**Beneficio**: Los consumers no se re-renderizan除非 el tema cambie realmente.
+## Deuda conocida
 
-## Dependencias
-
-```
-ThemeProvider.tsx
-├── tokens.ts          (defaultTokens, tokenToVar, TokenKey)
-├── persistence.ts     (loadTheme, saveTheme, resetTheme)
-├── theme-context.ts   (ThemeContext, TokenValues)
-└── semantic.ts        (deriveSemanticPalette, SEMANTIC_BASES)
-
-useTheme.ts
-└── theme-context.ts   (ThemeContext)
-```
+- El paso 2 sobreescribe `--code-bg` (default CSS `#f6f5f1` en `:root`) con `tokens.surface = '#ffffff'`: la variable del bloque de código de la app queda gobernada por el token `surface`, no por el CSS. Detalle en [tokens.md](./tokens.md).

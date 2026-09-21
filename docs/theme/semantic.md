@@ -1,199 +1,84 @@
-# Semantic Palette Generator
+# Paletas semánticas (generador OKLCH)
 
-Generador de paletas semánticas accesibles usando OKLCH como espacio de trabajo perceptual.
+`semantic.ts` deriva paletas de color accesibles para estados (success, warning, danger, info) a partir de un color identidad y las superficies resueltas del tema. La generación ocurre en el espacio de color **OKLCH**: el hue se conserva como identidad del estado, el croma está acotado y la luminosidad es la principal palanca de contraste. La salida es sRGB hex para que las CSS variables existentes sigan funcionando.
 
-## Concepto
+## API pública
 
-El generador toma 3 colores hex (status base, surface, background) y genera 6 variantes accesibles que cumplen WCAG 2.1.
+### Conversiones
 
-## Input
+| Función | Firma | Descripción |
+|---|---|---|
+| `hexToOklch` | `(hex: string) => Oklch` | Convierte hex → `{ L, C, H }` |
+| `oklchToHex` | `({ L, C, H }: Oklch) => string` | Convierte OKLCH → hex (clamp duro a sRGB) |
+| `oklchToHexInGamut` | `({ L, C, H }: Oklch) => string` | Convierte reduciendo croma progresivamente hasta quedar dentro de sRGB (evita saltos perceptuales grandes del clamp crudo) |
 
-```typescript
-interface SemanticInput {
-  baseHex: string;       // Color identitario del status (ej: #22c55e para success)
-  surfaceHex: string;    // Surface resuelta (--code-bg)
-  backgroundHex: string; // Background resuelto (--bg)
+```ts
+export interface Oklch {
+  L: number; // luminosidad
+  C: number; // croma
+  H: number; // hue en grados (0-360)
 }
 ```
 
-## Output
+Las conversiones son manuales (hex → linear → OKLab → OKLCH y vuelta), sin librerías externas.
 
-```typescript
-interface SemanticPalette {
-  base: string;           // Iconos/dots (>= 3:1 vs superficies)
-  strong: string;         // Texto semántico (>= 4.5:1 vs bg + surface)
-  bg: string;             // Superficie suave semántica
-  line: string;           // Borde de estado (>= 3:1 vs surface)
-  row: string;            // Lavado ultra-suave
-  solidForeground: string; // Texto sobre base sólida (>= 4.5:1 vs base & strong)
-}
-```
+### Bases de estados
 
-## Bases por Status
-
-```typescript
+```ts
 export const SEMANTIC_BASES: Record<string, string> = {
-  success: '#22c55e',  // Verde
-  warning: '#f59e0b',  // Amarillo
-  danger:  '#ef4444',  // Rojo
-  info:    '#3b82f6',  // Azul
+  success: '#22c55e',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  info: '#3b82f6',
 };
 ```
 
-## Pipeline de Conversión
+Son colores identidad **independientes de la marca** por diseño; sus tonos emparentan con la familia de `--text-h` (ink del tema).
 
-```
-hex → linear sRGB → Oklab (L, a, b) → OKLCH (L, C, H)
-```
+### Generador
 
-### Funciones de Conversión
-
-```typescript
-function hexToOklch(hex: string): Oklch
-function oklchToHex({ L, C, H }: Oklch): string
-function oklchToHexInGamut(color: Oklch): string  // Gamut mapping inteligente
-```
-
-## Algoritmo por Rol
-
-### 1. `bg` (Superficie suave)
-
-Toma `surfaceOk.L`, aplica ±0.02 según light/dark, fija `C=0.03`.
-
-```
-surfaceOk.L + 0.02 (light) o -0.02 (dark)
-C = 0.03
-H = status hue
-```
-
-**Resultado**: Tint suave del surface hacia el status hue.
-
-### 2. `strong` (Texto semántico AA)
-
-Busca L tal que `min(ratio_vs_bg, ratio_vs_surface) >= 4.5`.
-
-```
-Start: L = 0.75 (light) o L = 0.35 (dark)
-C = min(base.C, 0.15)
-
-Loop:
-  ├─ Evaluar ratio
-  ├─ Si >= 4.5 → return
-  └─ Si < 4.5 → L += 0.01 o -= 0.01
-
-Anti-mud:
-  ├─ Si L llega a floor (0.45)
-  ├─ Reduce C en 0.01
-  └─ Reset L al band inicial
-
-Max iteraciones: 200
-```
-
-### 3. `base` (Gráficos)
-
-Busca L tal que `min(ratio_vs_bg, ratio_vs_surface) >= 3.0`.
-
-```
-L bounds: [0.6, 0.75]
-C bounds: [0.09, 0.16]
-
-Loop:
-  ├─ Evaluar ratio
-  ├─ Si >= 3.0 → return
-  └─ Si < 3.0 → L += 0.01 o -= 0.01
-
-Max iteraciones: 100
-```
-
-### 4. `line` (Borde de estado)
-
-Interpola entre `bgL` y `strongL` hasta `ratio_vs_surface >= 3.0`.
-
-```
-mix = 0.35 (inicial)
-delta = 0.08 (incremento)
-
-Loop:
-  ├─ L = bgL + (strongL - bgL) * mix
-  ├─ Evaluar ratio
-  ├─ Si >= 3.0 → return
-  └─ Si < 3.0 → mix += delta
-
-Max iteraciones: 10
-```
-
-### 5. `solidForeground` (Texto sobre base sólida)
-
-Evalúa `#ffffff` vs `#1a1525` (INK) como candidatos.
-
-```
-Candidatos: [white, INK]
-
-Para cada candidato:
-  score = min(contrast_vs_base, contrast_vs_strong)
-
-Si max_score >= 4.5 → return mejor candidato
-
-Si no:
-  Buscar nueva L para base donde exista par válido
-  (±delta de 0.02 a 0.25)
-```
-
-### 6. `row` (Lavado ultra-suave)
-
-```
-L = bgL
-C = 0.015
-H = status hue
-```
-
-## Gamut Mapping
-
-`oklchToHexInGamut` reduce chroma progresivamente para evitar colores fuera de gamut:
-
-```typescript
-function oklchToHexInGamut(color: Oklch): string {
-  let { L, C, H } = color;
-  
-  while (gamutOverflow(linear) > 0.02 && C > 0.005) {
-    C *= 0.9;  // Reducir chroma en 10%
-    // Recalcular...
-  }
-  
-  return linearToHex(linear);
+```ts
+export interface SemanticInput {
+  baseHex: string;        // color identidad del estado (dueño del hue)
+  surfaceHex: string;     // superficie bajo el control (p. ej. --code-bg)
+  backgroundHex: string;  // fondo de página (p. ej. --bg)
 }
+
+export interface SemanticPalette {
+  base: string;            // gráficos: iconos, dots, elementos gráficos
+  strong: string;          // texto semántico
+  bg: string;              // superficie sólida suave (backdrop de strong)
+  line: string;            // borde con estado
+  row: string;             // wash ultra-suave
+  solidForeground: string; // texto accesible sobre botones sólidos
+}
+
+export function deriveSemanticPalette(input: SemanticInput): SemanticPalette;
+export function chooseForeground(bgHex: string): '#ffffff' | string; // '#ffffff' o INK ('#1a1525')
 ```
 
-**Ventaja**: Preserva la integridad perceptual del color vs clampar crudo.
+`deriveSemanticPalette` es **pura y determinista**: mismos inputs → misma paleta. `chooseForeground` elige entre blanco y tinta del tema el que maximiza contraste sobre `bgHex`.
 
-## Constantes
+## Contratos de contraste por rol
 
-```typescript
-const TEXT_TARGET = 4.5;       // WCAG AA para texto
-const GRAPHIC_TARGET = 3.0;    // WCAG AA para gráficos
-const INK = '#1a1525';         // Tinta oscura del tema
-const STRONG_L_FLOOR = 0.45;  // L mínimo para strong (anti-mud)
-const BASE_L_BAND: [0.6, 0.75]; // Rango de L para base
-```
+La generación resuelve cada rol contra un objetivo WCAG 2.1 (medido con `contrastRatio` de `contrast.ts`):
 
-## Ejemplo de Uso
+| Rol | Variable (`--<estado>-*`) | Requisito mínimo | Vs. |
+|---|---|---|---|
+| `base` | sin sufijo | ≥ 3:1 | superficies (bg y surface) |
+| `strong` | `-strong` | ≥ 4.5:1 | bg, surface y `bg` de la paleta |
+| `bg` | `-bg` | sin requisito propio | — (tinte suave hacia el hue del estado) |
+| `line` | `-border` | ≥ 3:1 | surface |
+| `row` | `-row` | sin requisito | — (wash ultra-suave, mitad de croma de `bg`) |
+| `solidForeground` | `-solid-fg` | ≥ 4.5:1 | `base` y `strong` |
 
-```typescript
-import { deriveSemanticPalette, SEMANTIC_BASES } from '@theme/semantic';
+Mecanismos de resolución destacados:
 
-const palette = deriveSemanticPalette({
-  baseHex: SEMANTIC_BASES.success,
-  surfaceHex: '#ffffff',
-  backgroundHex: '#f8f9fa',
-});
+- **`strong`**: resuelve la luminosidad por pasos hasta cumplir AA contra las tres superficies; si se estanca ("anti-mud"), reduce croma y reintenta en la banda.
+- **`base`**: empieza en la banda de luminosidad `[0.6, 0.75]` y se aleja de la superficie hasta cumplir ≥ 3:1.
+- **`solidForeground`**: co-resuelto con `base` — si ningún candidato (blanco/tinta) llega a 4.5:1 sobre `base`, desliza la luminosidad de `base` fuera de la zona muerta (manteniendo hue, banda de croma y el contrato ≥ 3:1) hasta que exista un par válido.
 
-console.log(palette);
-// {
-//   base: '#22c55e',
-//   strong: '#15803d',
-//   bg: '#f0fdf4',
-//   line: '#86efac',
-//   row: '#f0fdf4',
-//   solidForeground: '#ffffff'
-// }
-```
+## Referencias
+
+- Motor de contraste usado como autoridad WCAG: [contrast.md](./contrast.md)
+- Consumo desde `ThemeProvider` (24 variables derivadas): [architecture.md](./architecture.md)

@@ -1,378 +1,84 @@
-# Auth Pages
+# Páginas de autenticación (`src/pages/auth/`)
 
-Páginas de autenticación: Login, Register, ForgotPassword, VerifyOTP, ResetPassword, VerifyEmail, VerifyEmailConfirm.
+La carpeta contiene **11 páginas funcionales**: el flujo de auth (login, registro, recovery, verificación de email) más las páginas de términos y de error, que **viven físicamente aquí** (no en la raíz). Todas se cargan con lazy import.
 
----
+## Flujo completo
+
+```
+Registro
+  └─ sin auto-login → /verify-email
+
+Login
+  ├─ cuenta no verificada → /verify-email (redirect con state.email)
+  ├─ cuenta suspendida → banner vía /login?error=…
+  └─ ok → /dashboard (o la ruta original en location.state.from)
+
+Recovery de contraseña (3 pasos, ForgotPasswordProvider + GuestOnly)
+  1. /forgot-password  → email → OTP
+  2. /verify-otp       → OTP de 6 dígitos → resetToken
+  3. /reset-password   → nueva contraseña con token
+
+Verificación de email
+  /verify-email (RedirectIfVerified) → reenviar / logout
+  /verify-email/confirm?token= → valida token (bug conocido: no redirige)
+```
+
+Los pasos 1–3 de recovery comparten `ForgotPasswordProvider` (que sostiene el estado entre pasos) y están envueltos en `GuestOnly` y `AuthLayout`.
+
+## Inventario
+
+| Página | Ruta | Propósito | Acceso | Lazy |
+|---|---|---|---|---|
+| [LoginPage](#loginpage) | `/login` | Login; redirige a `/verify-email` si la cuenta "no está verificada"; banner de suspensión vía `?error=` | Público (`AuthLayout` + `GuestOnly` en wrapper) | Sí |
+| [RegisterPage](#registerpage) | `/register` | Registro; **sin auto-login** → `/verify-email` | Público | Sí |
+| [ForgotPasswordPage](#forgotpasswordpage) | `/forgot-password` | Paso 1: email → OTP | Público (`GuestOnly` + `ForgotPasswordProvider`) | Sí |
+| [VerifyOTPPage](#verifyotppage) | `/verify-otp` | Paso 2: OTP de 6 dígitos → obtiene `resetToken` | Público (`GuestOnly`) | Sí |
+| [ResetPasswordPage](#resetpasswordpage) | `/reset-password` | Paso 3: nueva contraseña con token | Público (`GuestOnly`) | Sí |
+| [VerifyEmailPage](#verifyemailpage) | `/verify-email` | "Revisá tu email" + reenviar + logout | Autenticado sin verificar (`RedirectIfVerified`) | Sí |
+| [VerifyEmailConfirmPage](#verifyemailconfirmpage) | `/verify-email/confirm?token=` | Valida token; **bug conocido: no redirige a `/login`** | Público | Sí |
+| [TermsPage](#termspage) | `/terms` | Términos estáticos (cuerpo hardcodeado en español, no i18n) | Público | Sí |
+| [ForbiddenPage](#forbiddenpage) | `/403` | Acceso denegado (target de `onForbidden` del client) | Público | Sí |
+| [NotFoundPage](#notfoundpage) | `*` (catch-all) | 404 | Público | Sí |
+| [ServerErrorPage](#servererrorpage) | `/500` | Error de servidor (estilos inline propios) | Público | Sí |
+
+Detalles de las páginas de error y términos en [errors.md](./errors.md) y [other.md](./other.md).
 
 ## LoginPage
 
-### Componente
+Formulario de login con `useLogin` (de `src/hooks/useAuth.ts`). Comportamientos clave:
 
-Formulario con email + password + "Recordarme" + link "Forgot Password".
-
-### Guard
-
-`GuestOnly` — redirige a `/` si ya está autenticado.
-
-### Hooks
-
-- `useLogin()` → POST `/auth/login`
-
-### Estado Local
-
-- `email`, `password`, `remember`
-
-### Navegación
-
-- Post-login: `navigate(from)` donde `from` = ruta previa o `/`
-- Link: `/forgot-password`
-- Link secundario: `/register`
-
-### i18n Keys
-
-- `auth.login.title`
-- `auth.login.subtitle`
-- `auth.login.email`
-- `auth.login.emailPlaceholder`
-- `auth.login.password`
-- `auth.login.passwordPlaceholder`
-- `auth.login.forgotPassword`
-- `auth.login.submit`
-- `auth.login.noAccount`
-- `auth.login.register`
-- `errors.unknown`
-
-### Validación
-
-Solo HTML5 (`required`, `type="email"`). Sin schema.
-
-### Uso
-
-```tsx
-const login = useLogin();
-
-const handleSubmit = () => {
-  login.mutate({ email, password, remember }, {
-    onSuccess: () => navigate(from),
-  });
-};
-```
-
----
+- **Redirección post-login**: usa `location.state.from` (seteado por `ProtectedRoute`) o `/dashboard` por defecto.
+- **Cuenta no verificada**: si el error del login contiene "no verificada", navega a `/verify-email` con `state: { email }`.
+- **Banner de suspensión**: lee `?error=` de la query string (`searchParams.get('error')`), poblado por el client HTTP al recibir un 403 con `ACCOUNT_SUSPENDED`.
 
 ## RegisterPage
 
-### Componente
+Formulario de registro con `useRegister`. Tras registrarse **no hay auto-login**: se redirige a `/verify-email`.
 
-Formulario con name + email + password + confirmPassword + checkbox de términos.
+## ForgotPasswordPage / VerifyOTPPage / ResetPasswordPage
 
-### Guard
+Flujo de recovery en 3 pasos bajo `ForgotPasswordProvider`:
 
-`GuestOnly`
+1. **ForgotPasswordPage** — pide el email y dispara el OTP.
+2. **VerifyOTPPage** — valida el OTP de 6 dígitos y obtiene el `resetToken`.
+3. **ResetPasswordPage** — envía la nueva contraseña junto con el token.
 
-### Hooks
-
-- `useRegister()` → POST `/auth/register`
-- `useLogin()` → POST `/auth/login` (auto-login post-registro)
-
-### Flujo
-
-1. Registrar
-2. Login automático (`remember: true`)
-3. Navigate a `/verify-email` con `state.email`
-
-### Navegación
-
-- Post-registro: `/verify-email` (con email en state)
-- Si falla login post-registro: `/login`
-- Link secundario: `/login`
-- Link a `/terms` (target="_blank")
-
-### i18n Keys
-
-- `auth.register.title`
-- `auth.register.subtitle`
-- `auth.register.name`
-- `auth.register.namePlaceholder`
-- `auth.register.email`
-- `auth.register.password`
-- `auth.register.passwordPlaceholder`
-- `auth.register.confirmPassword`
-- `auth.register.confirmPasswordPlaceholder`
-- `auth.register.termsPrefix`
-- `auth.register.terms`
-- `auth.register.submit`
-- `auth.register.hasAccount`
-- `auth.register.login`
-- `errors.unknown`
-
-### Validación
-
-Manual: `acceptTerms` check, `password === confirmPassword`. Sin schema.
-
-### Uso
-
-```tsx
-const register = useRegister();
-const login = useLogin();
-
-const handleSubmit = async () => {
-  if (!acceptTerms) {
-    setError("Debés aceptar los términos");
-    return;
-  }
-  if (password !== confirmPassword) {
-    setError("Las contraseñas no coinciden");
-    return;
-  }
-
-  register.mutate({ name, email, password, acceptedTerms: true }, {
-    onSuccess: () => {
-      login.mutate({ email, password, remember: true }, {
-        onSuccess: () => navigate('/verify-email', { state: { email } }),
-      });
-    },
-  });
-};
-```
-
----
-
-## ForgotPasswordPage (Paso 1/3)
-
-### Componente
-
-Formulario de un solo campo (email). Vista de "sent" con icono check y redirección automática.
-
-### Guard
-
-`GuestOnly`
-
-### Hooks
-
-- `useForgotPassword()` → POST `/auth/forgot-password`
-- `useForgotPasswordContext()` → para `setEmail` en el context
-
-### Contexto Compartido
-
-Guarda el email en `ForgotPasswordContext` para los pasos 2 y 3.
-
-### Flujo
-
-1. Submit email → mutate
-2. OnSuccess: guarda email en context → `setSent(true)`
-3. setTimeout 2s → navigate `/verify-otp`
-
-### Navegación
-
-- Back: `/login`
-- Siguiente paso: `/verify-otp` (auto after 2s)
-
-### i18n Keys
-
-- `auth.forgotPassword.title`
-- `auth.forgotPassword.subtitle`
-- `auth.forgotPassword.email`
-- `auth.forgotPassword.submit`
-- `auth.forgotPassword.submitting`
-- `auth.forgotPassword.successTitle`
-- `auth.forgotPassword.successMessage`
-- `auth.forgotPassword.backToLogin`
-- `errors.network`
-- `errors.unknown`
-
-### Uso
-
-```tsx
-const forgotPassword = useForgotPassword();
-const { setEmail } = useForgotPasswordContext();
-
-const handleSubmit = () => {
-  forgotPassword.mutate(email, {
-    onSuccess: () => {
-      setEmail(email);
-      setSent(true);
-      setTimeout(() => navigate('/verify-otp'), 2000);
-    },
-  });
-};
-```
-
----
-
-## VerifyOTPPage (Paso 2/3)
-
-### Componente
-
-6 inputs individuales para OTP. Auto-avance entre inputs, auto-submit al completar, soporte paste.
-
-### Guard
-
-`GuestOnly`
-
-### Contexto
-
-Lee `email` de `ForgotPasswordContext`. Llama `verifyOtp()` del mismo context.
-
-### Flujo
-
-1. Si no hay `email` en context → redirect `/forgot-password`
-2. Si OTP completo → auto-submit
-3. On success → navigate `/reset-password`
-
-### Navegación
-
-- Back: `/forgot-password`
-- Siguiente: `/reset-password`
-
-### i18n Keys
-
-- `auth.verifyOTP.title`
-- `auth.verifyOTP.subtitle` (con interpolación `{email}`)
-- `auth.verifyOTP.submitting`
-
-### Validación
-
-Dígitos solamente (`/^\d+$/`). maxlength=1.
-
-### Nota
-
-No usa React Query directamente — usa `verifyOtp()` del `ForgotPasswordContext`.
-
----
-
-## ResetPasswordPage (Paso 3/3)
-
-### Componente
-
-Formulario password + confirmPassword + panel de requisitos visuales + vista de éxito.
-
-### Guard
-
-`GuestOnly`
-
-### Hooks
-
-- `useResetPassword()` → POST `/auth/reset-password`
-
-### Contexto
-
-Lee `email`, `token`, `reset()` de `ForgotPasswordContext`.
-
-### Flujo
-
-1. Submit → validación manual (≥6 chars, passwords match)
-2. mutate → success view
-3. reset() context → setTimeout 3s → navigate `/login`
-
-### Navegación
-
-- Back: `/verify-otp`
-- Post-éxito: `/login` (auto after 3s)
-
-### i18n Keys
-
-- `auth.resetPassword.title`
-- `auth.resetPassword.subtitle` (con interpolación `{email}`)
-- `auth.resetPassword.password`
-- `auth.resetPassword.passwordPlaceholder`
-- `auth.resetPassword.confirmPassword`
-- `auth.resetPassword.confirmPasswordPlaceholder`
-- `auth.resetPassword.successTitle`
-- `auth.resetPassword.successMessage`
-- `auth.resetPassword.submitting`
-- `auth.resetPassword.submit`
-- `auth.resetPassword.backToLogin`
-
-### Uso
-
-```tsx
-const resetPassword = useResetPassword();
-const { email, token, reset } = useForgotPasswordContext();
-
-const handleSubmit = () => {
-  if (password.length < 6) {
-    setError("Mínimo 6 caracteres");
-    return;
-  }
-  if (password !== confirmPassword) {
-    setError("Las contraseñas no coinciden");
-    return;
-  }
-
-  resetPassword.mutate({ token, password }, {
-    onSuccess: () => {
-      reset();
-      setTimeout(() => navigate('/login'), 3000);
-    },
-  });
-};
-```
-
----
+Todas envueltas en `GuestOnly` (un usuario autenticado no ve recovery).
 
 ## VerifyEmailPage
 
-### Componente
+Pantalla de verificación de email. Puntos de diseño:
 
-Vista informativa: email del usuario + instrucciones + botón reenviar + botón cerrar sesión.
-
-### Hooks
-
-- `useResendVerification()` → POST `/auth/resend-verification`
-
-### Datos
-
-Email de `user.email` o de `location.state.email` (post-registration).
-
-### Flujo
-
-1. Click reenviar → mutate → success message
-2. Click cerrar sesión → `logout()` → navigate `/login`
-
-### Navegación
-
-- Cerrar sesión → `/login`
-
-### i18n Keys
-
-- `auth.verifyEmail.title`
-- `auth.verifyEmail.subtitle`
-- `auth.verifyEmail.successMessage`
-- `auth.verifyEmail.submitting`
-- `auth.verifyEmail.submit`
-
-### Nota
-
-Instrucciones hardcodeadas en español (no i18n): "Revisá tu bandeja de entrada", "Revisá la carpeta de spam".
-
----
+- **`canResend` desactivado si ya verificado**: `canResend = !(isAuthenticated && isVerified())`. La razón: un usuario autenticado y verificado no puede reenviar — el backend responde 200 opaco (anti-enumeración) sin hacer nada, y la UI mostraría un falso "Email reenviado exitosamente".
+- Acciones: reenviar email y cerrar sesión (`logout` → `/login`).
+- ⚠ Imprime en consola `[Mock] Email de verificación reenviado a:` y `[Mock] Token de verificación: verify-token-abc123` (ver deudas en [README](./README.md#deudas-conocidas)).
 
 ## VerifyEmailConfirmPage
 
-### Componente
+Valida el token recibido por query string (`?token=`). Al confirmar, muestra el estado "Redirigiendo al login..." pero **no navega a `/login`** — bug conocido y pendiente (no hay `navigate('/login')` en el estado de éxito). Se recomienda corregirlo en el código antes de producción.
 
-3 estados: error (no token), loading (verificando), éxito/error de mutation.
+## Detalles de layout
 
-### Datos
-
-Token desde `searchParams.get('token')` (query string).
-
-### Hooks
-
-- `useVerifyEmail()` → POST `/auth/verify-email`. Se ejecuta en `useEffect` al montar con el token.
-
-### Flujo
-
-1. URL con `?token=xxx`
-2. useEffect dispara mutation
-3. Loading → éxito (auto redirect) o error
-
-### Navegación
-
-- En error: botón a `/login`
-- En éxito: "Redirigiendo al login..."
-
-### ⚠️ Bug Confirmado
-
-En estado de éxito dice "Redirigiendo al login..." pero **no tiene `navigate('/login')`** — nunca redirige.
+- `AuthLayout` (split): hero animado a la izquierda (gradientes + íconos flotantes usando colores del tema) y formulario a la derecha; en mobile solo se muestra el formulario. Ver `src/layouts/AuthLayout.tsx`.
+- `AuthFormLayout` (`src/layouts/auth/`) provee `AuthFormHeader`, `AuthFormCheckbox`, `AuthFormActions`.
+- Las páginas de error usan `ErrorLayout` — ver [errors.md](./errors.md).

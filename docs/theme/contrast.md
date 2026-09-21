@@ -1,119 +1,73 @@
-# Contrast Checker
+# Motor de contraste WCAG 2.1
 
-Motor de verificación de contraste WCAG 2.1.
+`contrast.ts` es la única autoridad de contraste del módulo. Implementa la luminancia relativa y el ratio de contraste según WCAG 2.1, más los niveles de cumplimiento AA/AAA y el formateo de ratios.
 
-## Concepto
+Referencia: https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
 
-Verifica que los colores cumplan los estándares de accesibilidad para contraste.
+## API pública
 
-## WCAG Levels
+### `contrastRatio(hex1, hex2) => number`
 
-| Level | Ratio Mínimo | Uso |
-|-------|--------------|-----|
-| AAA | >= 7:1 | Texto normal (16px+) |
-| AA | >= 4.5:1 | Texto normal, texto grande (14px bold+) |
-| fail | < 4.5:1 | No cumple estándares |
+Calcula el ratio de contraste entre dos colores hex:
 
-## Funciones
-
-### `hexToRgb(hex: string): [number, number, number]`
-
-Convierte hexadecimal a RGB (0–255).
-
-```typescript
-hexToRgb('#ff0000')  // [255, 0, 0]
-hexToRgb('00ff00')   // [0, 255, 0]
-hexToRgb('#fff')     // [255, 255, 255]
+```
+(lighter + 0.05) / (darker + 0.05)
 ```
 
-### `relativeLuminance(hex: string): number`
+donde `lighter`/`darker` son las luminancias relativas ordenadas. El resultado es un número sin formato (p. ej. `21` para blanco/negro, `1` para colores idénticos).
 
-Calcula la luminancia relativa según WCAG 2.1.
-
-```typescript
-relativeLuminance('#ffffff')  // 1.0
-relativeLuminance('#000000')  // 0.0
-relativeLuminance('#777777')  // ~0.245
+```ts
+contrastRatio('#ffffff', '#000000'); // 21
+contrastRatio('#ffffff', '#ffffff'); // 1
 ```
 
-**Fórmula**:
+### `wcagLevel(ratio) => 'AAA' | 'AA' | 'fail'`
+
+Clasifica un ratio según los umbrales WCAG 2.1:
+
+| Ratio | Nivel |
+|---|---|
+| ≥ 7.0 | `AAA` |
+| ≥ 4.5 | `AA` |
+| < 4.5 | `fail` |
+
+```ts
+wcagLevel(7);   // 'AAA'
+wcagLevel(4.5); // 'AA'
+wcagLevel(4.49); // 'fail'
 ```
+
+### `formatRatio(ratio) => string`
+
+Formatea el ratio a dos decimales con sufijo `:1`:
+
+```ts
+formatRatio(4.5333); // '4.53:1'
+```
+
+## Implementación interna (no exportada)
+
+| Función | Rol |
+|---|---|
+| `hexToRgb(hex)` | Convierte hex → `[r, g, b]` (0-255) |
+| `relativeLuminance(hex)` | Luminancia relativa (0 = negro, 1 = blanco); umbral de la función de transferencia sRGB: `0.03928` |
+
+Fórmula de luminancia relativa (WCAG 2.1):
+
+```
+para cada canal c en [0,1]:
+  c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+
 L = 0.2126 * R + 0.7152 * G + 0.0722 * B
-
-Donde:
-- Si sRGB <= 0.03928 → linear = sRGB / 12.92
-- Si sRGB > 0.03928  → linear = ((sRGB + 0.055) / 1.055) ^ 2.4
 ```
 
-### `contrastRatio(hex1: string, hex2: string): number`
+## Consumidores
 
-Calcula el ratio de contraste entre dos colores.
+| Consumidor | Uso |
+|---|---|
+| `semantic.ts` | Verifica los contratos de contraste por rol del generador OKLCH |
+| tests | `contrast.test.ts` cubre los tres exports |
 
-```typescript
-contrastRatio('#ffffff', '#000000')  // 21.0
-contrastRatio('#ffffff', '#777777')  // ~4.64
-contrastRatio('#777777', '#777777')  // 1.0
-```
+## Referencias
 
-**Fórmula**:
-```
-ratio = (lighter + 0.05) / (darker + 0.05)
-```
-
-**Rango**: [1, 21]
-
-### `wcagLevel(ratio: number): WcagLevel`
-
-Determina el nivel WCAG basado en el ratio.
-
-```typescript
-wcagLevel(7.0)    // 'AAA'
-wcagLevel(4.5)    // 'AA'
-wcagLevel(3.0)    // 'fail'
-wcagLevel(21.0)   // 'AAA'
-```
-
-### `formatRatio(ratio: number): string`
-
-Formatea el ratio para display.
-
-```typescript
-formatRatio(4.5)    // '4.50:1'
-formatRatio(21.0)   // '21.00:1'
-formatRatio(1.0)    // '1.00:1'
-```
-
-## Uso
-
-```typescript
-import { contrastRatio, wcagLevel, formatRatio } from '@theme/contrast';
-
-const ratio = contrastRatio('#000000', '#ffffff');
-const level = wcagLevel(ratio);
-const display = formatRatio(ratio);
-
-console.log(`${display} → ${level}`);
-// "21.00:1 → AAA"
-```
-
-## Ejemplo: Verificar Colores del Tema
-
-```typescript
-import { contrastRatio, wcagLevel } from '@theme/contrast';
-
-function verifyThemeColors(text: string, background: string) {
-  const ratio = contrastRatio(text, background);
-  const level = wcagLevel(ratio);
-  
-  if (level === 'fail') {
-    console.warn(`Contraste insuficiente: ${ratio.toFixed(2)}:1`);
-    return false;
-  }
-  
-  console.log(`Contraste OK: ${ratio.toFixed(2)}:1 (${level})`);
-  return true;
-}
-
-verifyThemeColors('#5a5565', '#ffffff');  // OK (text on bg)
-verifyThemeColors('#ffffff', '#044311');  // OK (white on primary)
-```
+- Contratos de contraste que este motor valida: [semantic.md](./semantic.md)

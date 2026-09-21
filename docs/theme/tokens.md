@@ -1,114 +1,56 @@
-# Theme Tokens
+# Tokens de color
 
-## Definición
+`tokens.ts` define los 8 tokens por defecto del sistema y su mapeo a CSS variables. Es la única fuente de verdad de los colores base del tema.
 
-Los tokens son constantes de diseño que se mapean a CSS variables.
+## Los 8 tokens
 
-### Type
-
-```typescript
-type TokenKey = keyof typeof defaultTokens;
-// Resuelve a: 'primary' | 'secondary' | 'accent' | 'background' | 'surface' | 'text' | 'text-h' | 'border'
-```
-
-### Tokens Disponibles
-
-| Token | Valor Default | CSS Variable | Descripción |
-|-------|---------------|--------------|-------------|
-| `primary` | `#044311` | `--primary` | Color primario de la marca |
-| `secondary` | `#044311` | `--secondary` | Color secundario |
+| Token (`TokenKey`) | Default | CSS variable | Uso esperado |
+|---|---|---|---|
+| `primary` | `#044311` | `--primary` | Color primario de marca |
+| `secondary` | `#044311` | `--secondary` | Color secundario de marca |
 | `accent` | `#044311` | `--accent` | Color de acento |
 | `background` | `#ffffff` | `--bg` | Fondo de página |
-| `surface` | `#ffffff` | `--code-bg` | Fondo de superficies (cards, inputs) |
-| `text` | `#5a5565` | `--text` | Color de texto principal |
-| `text-h` | `#1a1525` | `--text-h` | Color de texto de headings |
-| `border` | `#e4e2dc` | `--border` | Color de bordes |
+| `surface` | `#ffffff` | `--code-bg` | Superficie elevada (⚠ ver nota) |
+| `text` | `#5a5565` | `--text` | Texto base |
+| `text-h` | `#1a1525` | `--text-h` | Texto de encabezados (ink) |
+| `border` | `#e4e2dc` | `--border` | Bordes |
 
-## CSS Variables Derivadas
+Tipos exportados:
 
-### Variantes Translúcidas
-
-A partir de `accent` y `secondary`, se derivan variantes translúcidas:
-
-```css
---accent-bg: rgba(r, g, b, 0.1)        /* Fondo sutil de acento */
---accent-border: rgba(r, g, b, 0.35)   /* Borde de acento */
---secondary-bg: rgba(r, g, b, 0.1)     /* Fondo sutil secundario */
+```ts
+export const defaultTokens = { ... } as const;
+export type TokenKey = keyof typeof defaultTokens;        // 'primary' | 'secondary' | ... | 'border'
+export const tokenToVar: Record<TokenKey, string>;        // token → nombre de CSS variable
 ```
 
-### Paletas Semánticas
+> Nota: los tres tokens de marca (`primary`, `secondary`, `accent`) son idénticos por defecto (`#044311`). Los tokens están duplicados en el default; la arquitectura permite diferenciarlos, pero hoy no lo hace.
 
-Para cada status (success, warning, danger, info), se generan 6 variantes:
+## Cómo `setColor` aplica un token
 
-| Sufijo | Uso | Contraste |
-|--------|-----|-----------|
-| `--{status}` | Iconos, dots | >= 3:1 vs superficies |
-| `--{status}-strong` | Texto semántico | >= 4.5:1 vs bg + surface |
-| `--{status}-bg` | Superficie suave | Tint sutil |
-| `--{status}-border` | Borde de estado | >= 3:1 vs surface |
-| `--{status}-row` | Lavado ultra-suave | Casi invisible |
-| `--{status}-solid-fg` | Texto sobre base sólida | >= 4.5:1 vs base |
+`setColor(variable: TokenKey, value: string)` (expuesto por `ThemeContext`) actualiza el estado `tokens` con un merge parcial:
 
-## Uso en CSS
-
-```css
-/* Directo desde tokens */
-.miboton {
-  background-color: var(--primary);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
-/* Variantes translúcidas */
-.alert {
-  background-color: var(--accent-bg);
-  border: 1px solid var(--accent-border);
-}
-
-/* Paletas semánticas */
-.exito {
-  color: var(--success-strong);
-  background-color: var(--success-bg);
-  border: 1px solid var(--success-border);
-}
-
-.error {
-  color: var(--danger-strong);
-  background-color: var(--danger-bg);
-  border: 1px solid var(--danger-border);
-}
+```ts
+setTokens((prev) => ({ ...prev, [variable]: value }));
 ```
 
-## Uso en JavaScript
+El cambio de estado dispara los dos `useEffect` de `ThemeProvider`:
 
-```typescript
-import { useTheme } from '@theme/useTheme';
+1. `applyTokensToDOM` escribe el nuevo valor en la CSS variable correspondiente (vía `tokenToVar`) sobre `document.documentElement.style`.
+2. `saveSaved` persiste el tema completo.
 
-function MiComponente() {
-  const { tokens } = useTheme();
-  
-  return (
-    <div style={{ 
-      backgroundColor: tokens.background,
-      color: tokens.text 
-    }}>
-      Texto con color del tema
-    </div>
-  );
-}
-```
+Como el merge es parcial, cambiar un solo token no afecta a los demás; las variables derivadas (`--accent-bg`, `--accent-border`, `--secondary-bg` y las 24 semánticas) se recalculan en cada aplicación porque dependen de `tokens.accent`, `tokens.secondary`, `tokens.surface` y `tokens.background`.
 
-## Mapeo Token → CSS Variable
+## Nota: mapeo `surface` → `--code-bg`
 
-```typescript
-export const tokenToVar: Record<TokenKey, string> = {
-  primary: '--primary',
-  secondary: '--secondary',
-  accent: '--accent',
-  background: '--bg',
-  surface: '--code-bg',
-  text: '--text',
-  'text-h': '--text-h',
-  border: '--border',
-};
-```
+El token `surface` mapea a la CSS variable `--code-bg` (naming debt: el nombre de la variable no refleja el concepto "superficie"). Consecuencia operativa:
+
+- `src/index.css` define `:root { --code-bg: #f6f5f1; }`.
+- Al montar, `ThemeProvider` sobreescribe `--code-bg` con `tokens.surface = '#ffffff'`.
+
+Resultado: la variable queda gobernada por el token `surface`, no por el CSS — el bloque de código de la app (y cualquier componente que consuma `--code-bg`) muestra `#ffffff` aunque el CSS declare `#f6f5f1`. Es una divergencia intencional pero frágil: si se elimina el token, el CSS vuelve a `#f6f5f1`.
+
+## Referencias
+
+- Flujo completo: [architecture.md](./architecture.md)
+- Derivación de paletas semánticas que consumen `surface` y `background`: [semantic.md](./semantic.md)
+- Persistencia de tokens modificados: [persistence.md](./persistence.md)

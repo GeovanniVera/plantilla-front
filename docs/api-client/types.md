@@ -1,256 +1,190 @@
-# API Client Types
+# API Client — Contrato de tipos
 
-## Contrato Base: ApiResponse
+## Propósito
 
-El frontend define la estructura; el backend debe cumplirla.
+`src/lib/api/types/api-response.ts` es **la fuente de verdad** de la estructura de respuesta que el backend DEBE cumplir. El frontend define las reglas: cualquier backend que quiera conectarse debe responder con esta estructura exacta.
 
-```typescript
+## Contrato `ApiResponse<T>`
+
+```ts
 type ApiResponse<T = unknown> = ApiSuccess<T> | ApiError;
 ```
 
-Es una **unión discriminada** por el campo `success`.
+### Éxito — `ApiSuccess<T>`
 
----
-
-## ApiSuccess
-
-```typescript
+```ts
 interface ApiSuccess<T = unknown> {
   success: true;
-  message: string;      // legible para humanos
-  data?: T;             // opcional en DELETE/operaciones vacías
+  message: string;        // mensaje legible para humanos
+  data?: T;               // opcional en operaciones como DELETE
 }
 ```
 
-### Ejemplo
+### Error — `ApiError`
 
-```json
-{
-  "success": true,
-  "message": "Usuario obtenido",
-  "data": {
-    "id": "123",
-    "email": "user@test.com",
-    "name": "Juan Pérez"
-  }
-}
-```
-
----
-
-## ApiError
-
-```typescript
+```ts
 interface ApiError {
   success: false;
-  message: string;            // legible para humanos
-  code: ApiErrorCode;         // estandarizado
-  fields?: Record<string, string[]>;  // solo VALIDATION_ERROR
-  timestamp?: string;         // ISO 8601
-  traceId?: string;           // correlación con backend
+  message: string;
+  code: ApiErrorCode;
+  fields?: Record<string, string[]>;  // solo cuando code === 'VALIDATION_ERROR'
+  timestamp?: string;                 // ISO 8601, útil para logs
+  traceId?: string;                   // correlación con logs del backend
 }
 ```
 
-### Ejemplo
+Ejemplo real de error:
 
 ```json
 {
   "success": false,
   "message": "El email ya está registrado",
   "code": "CONFLICT",
-  "timestamp": "2026-09-16T05:00:00Z",
-  "traceId": "abc-123"
+  "fields": { "email": ["Este email ya está en uso"] },
+  "timestamp": "2026-09-11T20:00:00Z",
+  "traceId": "abc-123-def-456"
 }
 ```
 
----
+## Códigos de error (`ApiErrorCode`)
 
-## ApiErrorCode
+| Código | Significado |
+|---|---|
+| `VALIDATION_ERROR` | 400 — errores de validación por campo (`fields`) |
+| `UNAUTHORIZED` | 401 — credenciales inválidas o sesión expirada |
+| `FORBIDDEN` | 403 — sin permisos |
+| `ACCOUNT_SUSPENDED` | 403 — cuenta suspendida (limpia sesión y redirige a `/login?error=...`) |
+| `NOT_FOUND` | 404 |
+| `CONFLICT` | 409 — p. ej., email ya registrado |
+| `RATE_LIMITED` | 429 |
+| `INTERNAL_ERROR` | 500 |
+| `NETWORK_ERROR` | 0 — error de red |
+| `TIMEOUT` | — abort por timeout del cliente |
+| `UNKNOWN` | cualquier otro caso |
 
-```typescript
-type ApiErrorCode =
-  | 'VALIDATION_ERROR'    // 400 - Datos inválidos
-  | 'UNAUTHORIZED'        // 401 - No autenticado
-  | 'FORBIDDEN'           // 403 - Sin permisos
-  | 'NOT_FOUND'           // 404 - No encontrado
-  | 'CONFLICT'            // 409 - Conflicto (ej: email duplicado)
-  | 'RATE_LIMITED'        // 429 - Demasiadas solicitudes
-  | 'INTERNAL_ERROR'      // 500 - Error del servidor
-  | 'NETWORK_ERROR'       // 0   - Error de conexión
-  | 'TIMEOUT'             // -   - Timeout de la petición
-  | 'UNKNOWN'             // Otro - Error desconocido
-```
+> El union se amplía a medida que el backend agregue casos.
 
----
+## Tipos de autenticación
 
-## Type Guards
+### `User`
 
-```typescript
-// Narrow a ApiSuccess<T>
-function isApiSuccess<T>(response: ApiResponse<T>): response is ApiSuccess<T>
-
-// Narrow a ApiError
-function isApiError<T>(response: ApiResponse<T>): response is ApiError
-```
-
-### Uso
-
-```typescript
-import { client, isApiSuccess, isApiError } from '@lib/api';
-
-const response = await client.get<User>('/users/1');
-
-if (isApiSuccess(response)) {
-  // TypeScript sabe que response.data es User
-  console.log(response.data.name);
-}
-
-if (isApiError(response)) {
-  // TypeScript sabe que response.code es ApiErrorCode
-  console.error(response.code);
-}
-```
-
----
-
-## Modelos de Dominio
-
-### User
-
-```typescript
+```ts
 interface User {
   id: string;
   email: string;
   name: string;
   roles: string[];
-  privileges: string[];
+  permissions: string[];   // permisos efectivos (unión de permisos de todos sus roles)
   isVerified: boolean;
-  avatar?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  photoUrl?: string;
 }
 ```
 
-### AuthResponse
+**Importante**: el backend retorna `permissions`, NO `privileges`. Los guards y la navegación (`Can`, `RequirePrivilege`) comparan permisos con notación de punto (`users.read`).
 
-```typescript
+### `AuthResponse`
+
+```ts
 interface AuthResponse {
   user: User;
-  token: string;
-  refreshToken?: string;
-  expiresIn?: number;  // segundos
+  accessToken: string;     // JWT de vida corta
+  expiresIn?: number;      // vida del access token en segundos
 }
 ```
 
-### RefreshResponse
+**El refresh token NO viene en el body**: se maneja vía HttpOnly cookie (ver [interceptors.md](interceptors.md)).
 
-```typescript
+### `RefreshResponse`
+
+```ts
 interface RefreshResponse {
   user: User;
-  token: string;
-  refreshToken?: string;
+  accessToken: string;
   expiresIn?: number;
 }
 ```
 
----
+## Tipos de paginación
 
-## Paginación
-
-### PaginationParams (Request)
-
-```typescript
+```ts
 interface PaginationParams {
-  page?: number;      // default: 1
-  limit?: number;     // default: 10
-  search?: string;
+  page?: number;            // comienza en 1
+  limit?: number;           // default: 20
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
-```
 
-### PaginationMeta (Response)
-
-```typescript
 interface PaginationMeta {
   page: number;
   limit: number;
   total: number;
   totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
 }
-```
 
-### PaginatedResponse
-
-```typescript
 interface PaginatedResponse<T> {
+  success: true;
+  message: string;
   data: T[];
   pagination: PaginationMeta;
 }
 ```
 
----
+## Tipos de tema
 
-## Tema
-
-### ThemeTokens
-
-```typescript
+```ts
 interface ThemeTokens {
   primary: string;
   secondary: string;
   accent: string;
-  // ... otros tokens
+  background: string;
+  surface: string;
+  text: string;
+  'text-h': string;
+  border: string;
 }
-```
 
-### ThemeResponse
-
-```typescript
 interface ThemeResponse {
+  id: string;
+  name: string;
   tokens: ThemeTokens;
-  mode: 'light' | 'dark';
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 ```
 
----
+## Guards y helpers
 
-## Utility Types
+```ts
+isApiSuccess<T>(response: ApiResponse<T>): response is ApiSuccess<T>   // response.success === true
+isApiError<T>(response: ApiResponse<T>): response is ApiError          // response.success === false
 
-```typescript
-// Extrae tipo D de ApiSuccess<D>
-type ApiResponseData<T> = T extends ApiSuccess<infer D> ? D : never;
+type ApiResponseData<T> = T extends ApiSuccess<infer D> ? D : undefined;
 ```
 
-### Ejemplo
+Ejemplo:
 
-```typescript
-type UserData = ApiResponseData<ApiSuccess<User>>;
-// UserData = User
-```
-
----
-
-## ApiError (Clase)
-
-Clase de error personalizada para casos donde se quiera throw.
-
-```typescript
-class ApiError extends Error {
-  public status: number;
-  public statusText: string;
-  public data?: unknown;
-
-  constructor(status: number, statusText: string, data?: unknown);
+```ts
+const response = await client.get<User>('/users/1');
+if (isApiSuccess(response)) {
+  console.log(response.data?.name);
 }
 ```
 
-**Nota**: El cliente HTTP **nunca lanza** esta clase. Retorna `ApiResponse<T>` con `success: false` siempre. `ApiError` existe para throw manual si el consumidor prefiere exceptions.
+## Uso con el cliente
 
-```typescript
-import { ApiError } from '@lib/api';
+```ts
+const response: ApiResponse<AuthResponse> = await client.post('/auth/login', { email, password });
 
-if (isApiError(response)) {
-  throw new ApiError(400, response.message, response);
+if (response.success) {
+  console.log(response.data.user);
+} else {
+  console.error(response.code, response.message);
 }
 ```
+
+## Deudas conocidas
+
+- Los mocks de MSW (`src/test/mocks/handlers/auth.ts`) **no respetan este contrato en su totalidad**: devuelven `refreshToken` en los bodies y `verify-otp` responde `{ verified, token }` cuando el servicio espera `{ resetToken }`. Ver [../support/test.md](../support/test.md#deudas-conocidas).

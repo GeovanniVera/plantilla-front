@@ -1,51 +1,58 @@
-# Hooks
+# Módulo de hooks (`src/hooks/`)
 
-Hooks personalizados del proyecto plantilla-front.
+Inventario del barrel de hooks de la aplicación, con foco en los hooks de autenticación basados en React Query.
 
-## Inventario
+## Inventario del barrel (`src/hooks/index.ts`)
 
-| Hook | Tipo | Archivo | Exportado en barrel |
-|------|------|---------|---------------------|
-| `useMe` | Query | `useAuth.ts` | ✅ |
-| `useLogin` | Mutation | `useAuth.ts` | ✅ |
-| `useLogout` | Mutation | `useAuth.ts` | ✅ |
-| `useRegister` | Mutation | `useAuth.ts` | ✅ |
-| `useForgotPassword` | Mutation | `useAuth.ts` | ✅ |
-| `useResetPassword` | Mutation | `useAuth.ts` | ✅ |
-| `useVerifyEmail` | Mutation | `useAuth.ts` | ✅ |
-| `useResendVerification` | Mutation | `useAuth.ts` | ✅ |
-| `useMediaQuery` | State | `useMediaQuery.ts` | ❌ |
-| `useIsMobile` | State | `useIsMobile.ts` | ❌ |
+Exporta **exactamente 8 hooks**, todos de `./useAuth`:
 
-## Arquitectura
+| Hook | Tipo | Descripción |
+|---|---|---|
+| `useMe` | Query | Usuario actual (`GET /auth/me`) |
+| `useLogin` | Mutation | Inicia sesión (delega en `AuthContext.login`) |
+| `useLogout` | Mutation | Cierra sesión (delega en `AuthContext.logout`) |
+| `useRegister` | Mutation | Registro de usuario |
+| `useForgotPassword` | Mutation | Solicita email de recuperación de contraseña |
+| `useResetPassword` | Mutation | Resetea la contraseña con token |
+| `useVerifyEmail` | Mutation | Verifica el email con token |
+| `useResendVerification` | Mutation | Reenvía el email de verificación |
+
+### Lo que el barrel NO exporta
+
+| Símbolo | Archivo de origen | Estado |
+|---|---|---|
+| `useIsMobile` | `src/hooks/useIsMobile.ts` | Existe, **fuera del barrel**. Importe directo desde su archivo |
+| `useMediaQuery` | `src/hooks/useMediaQuery.ts` | Existe, **fuera del barrel**. Importe directo desde su archivo |
+| `useTemplateList` / `useTemplateItem` | `src/hooks/_template.hook.ts` | Plantilla **muerta** (queryFn retorna `undefined`). No importar |
+
+## Arquitectura de los hooks de auth
+
+Los hooks combinan dos fuentes de estado:
+
+1. **React Query** (`@tanstack/react-query`) — cache del server state (usuario, mutaciones).
+2. **AuthContext** (`src/auth/`) — persistencia de tokens y estado de autenticación.
 
 ```
-AuthProvider (context.tsx + provider.tsx)
-   ├── Estado: user, token, isAuthenticated, isLoading
-   ├── Persistencia: authStorage (localStorage/sessionStorage)
-   └── Token management: tokenManager (en client.ts)
-
-useAuth.ts (React Query wrappers)
-   ├── useMe()      → Query: GET /auth/me
-   ├── useLogin()   → Mutation + invalidación cache
-   ├── useLogout()  → Mutation + queryClient.clear()
-   └── useRegister, useForgotPassword, useResetPassword, useVerifyEmail, useResendVerification
+┌─────────────────────────┐      ┌──────────────────────────────┐
+│  hooks/useAuth.ts       │      │  auth/AuthProvider           │
+│  useLogin / useLogout   │─────▶│  login() / logout()          │
+│  (React Query)          │      │  maneja tokens + estado      │
+└─────────────────────────┘      └──────────────────────────────┘
+        │
+        ▼
+  authService (src/lib/api/services/auth.service)
 ```
 
-**La clave**: `useAuth.ts` NO es el hook de contexto. Usa `useAuth()` de `src/auth/hooks.ts` (el contexto real) y lo envuelve en React Query para manejar cache de server state.
-
-- `AuthContext` maneja **tokens y estado local** (persistencia)
-- React Query maneja **cache del server state** (queries y mutations)
+- `useLogin` y `useLogout` son **delgados**: delegan la persistencia y el estado en `AuthContext`; React Query solo orquesta la mutación y el cache.
+- El resto de las mutaciones (`useRegister`, `useForgotPassword`, `useResetPassword`, `useVerifyEmail`, `useResendVerification`) llaman a `authService` directamente.
+- `useMe` es la única query: `queryKey ['auth', 'me']`, sin retry, `staleTime` de 5 minutos.
 
 ## Documentación
 
-- [useAuth](./useAuth.md) — 8 hooks de autenticación con React Query
-- [Responsive](./responsive.md) — useMediaQuery y useIsMobile
-- [Gaps](./gaps.md) — Hooks faltantes (useDebounce, useLocalStorage)
+- [Hooks de auth (useAuth)](useAuth.md) — los 8 hooks en detalle: firmas, queryKeys, invalidaciones y uso.
+- [Hooks responsive](responsive.md) — `useMediaQuery` y `useIsMobile`.
+- [Notas de uso y limitaciones](gaps.md) — colisión `useForgotPassword`, barrel incompleto, template muerto y otros gotchas.
 
-## Gaps Detectados
+## Dependencia
 
-1. **No existen `useDebounce` ni `useLocalStorage`**
-2. **`useMediaQuery` e `useIsMobile` no están en el barrel**
-3. **No hay `useDebouncedValue`** — búsqueda en tiempo real hará llamada API por cada keystroke
-4. **No hay `useLocalStorage` genérico** — solo `authStorage` para tokens
+Los hooks de auth requieren que la aplicación esté envuelta en `AuthProvider` (ver [README del módulo auth](../auth/README.md)).

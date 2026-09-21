@@ -1,20 +1,6 @@
-# Frontend — Plantilla Admin (React + TypeScript)
+# Plantilla Frontend Admin — React + TypeScript
 
-Plantilla de frontend para aplicaciones admin, conectada al **backend Spring Boot** (`backend-spring`).
-
-## Stack
-
-| Tecnología | Versión | Propósito |
-|---|---|---|
-| React | ^19.2.8 | Framework UI |
-| TypeScript | ~6.0.2 | Tipado estático |
-| Vite | ^8.2.0 | Build tool y dev server |
-| Tailwind CSS | ^4.3.3 | Utility-first CSS |
-| React Router | ^8.3.0 | Enrutamiento SPA |
-| i18next | ^26.4.2 | Internacionalización |
-| React Query | ^5.102.8 | Server state management |
-| Storybook | ^10.5.10 | Documentación de componentes |
-| Vitest + MSW | — | Testing |
+Plantilla de frontend para aplicaciones admin, conectada a un backend **Spring Boot** (`backend-spring`).
 
 ## Quick Start
 
@@ -24,49 +10,80 @@ npm install
 
 # 2. Configurar entorno
 cp .env.example .env
-#    VITE_API_BASE=http://localhost:8080/api   ← apunta al backend
 
-# 3. Dev server
+# 3. Levantar el dev server
 npm run dev
 ```
 
-> Requiere el backend corriendo en `http://localhost:8080`
-> (ver README de `backend-spring` para levantar infraestructura).
+> Requiere el backend corriendo en `http://localhost:8080`.
+
+## Stack
+
+| Tecnología | Versión | Propósito |
+|---|---|---|
+| React / react-dom | ^19.2.8 | UI |
+| react-router | ^8.3.0 | Enrutamiento declarativo (`Routes`/`Route`, sin `react-router-dom`) |
+| @tanstack/react-query | ^5.102.8 | Server state (+ devtools) |
+| i18next + react-i18next | ^26.4.2 / ^17.0.13 | Internacionalización |
+| date-fns | ^4.4.0 | Fechas |
+| react-day-picker | ^10.0.1 | Calendarios |
+| react-icons | ^5.7.0 | Iconos |
+| react-loading-skeleton | ^3.5.0 | Skeletons |
+| TypeScript | ~6.0.2 | Tipado estático |
+| Vite + @vitejs/plugin-react | ^8.2.0 / ^6.0.4 | Build tool y dev server |
+| Tailwind CSS + @tailwindcss/vite | ^4.3.3 | Utility-first CSS |
+| Vitest + jsdom | latest / ^30.0.1 | Testing unitario |
+| MSW | ^2.15.0 | Mocks de API |
+| Storybook | ^10.5.10 | Documentación de componentes (addons a11y/docs/mcp/vitest, react-vite, chromatic) |
+| @testing-library/react / jest-dom / user-event | ^16.3.3 / ^7.0.1 / ^14.6.7 | Testing de UI |
+| oxlint | ^1.75.0 | Linting |
+| Prettier + prettier-plugin-tailwindcss | ^3.4.2 / ^0.6.9 | Formateo |
+| husky + lint-staged | ^9.1.7 / ^17.5.1 | Git hooks |
+| Playwright + @vitest/browser-playwright | latest | Tests de Storybook |
 
 ## Scripts
 
 | Script | Descripción |
 |---|---|
 | `npm run dev` | Dev server (Vite) |
-| `npm run build` | Type-check + build producción |
-| `npm run test` | Ejecutar tests |
-| `npm run test:coverage` | Tests con cobertura |
-| `npm run lint` | Linting (oxlint) |
-| `npm run format` | Formatear código (prettier) |
+| `npm run build` | Type-check (`tsc -b`) + build de producción |
+| `npm run preview` | Previsualizar el build |
 | `npm run typecheck` | Type-check sin emitir |
-| `npm run storybook` | Storybook dev server |
+| `npm run lint` | Linting (oxlint) |
+| `npm run format` | Formatear todo el proyecto (Prettier) |
+| `npm run format:check` | Verificar formato |
+| `npm run test` | Ejecutar tests (Vitest) |
+| `npm run test:watch` | Tests en modo watch |
+| `npm run test:coverage` | Tests con cobertura |
+| `npm run storybook` | Storybook dev server (puerto 6006) |
+| `npm run build-storybook` | Build estático de Storybook |
 
-## Módulos implementados (v1)
+## Módulos implementados
 
-| Módulo | Ruta | Permisos |
+| Módulo | Ruta | Permiso |
 |---|---|---|
 | Dashboard | `/dashboard` | auth |
-| Usuarios | `/admin/usuarios` | `users.read` / `users.write` |
-| Roles | `/admin/roles` | `roles.read` / `roles.write` |
+| Admin | `/admin` | `users.read` |
+| Usuarios | `/admin/usuarios` | `users.read` |
+| Roles | `/admin/roles` | `roles.read` |
 | Permisos | `/admin/permisos` | `permissions.read` |
-| Auditoría (admin) | `/admin/auditoria` | `audit.read` / `audit.read-mine` |
+| Auditoría | `/admin/auditoria` | `audit.read` |
+| Ajustes | `/ajustes` | auth |
 | Mi perfil | `/ajustes/perfil` | auth |
-| Mi actividad | `/ajustes/actividad` | `audit.read` / `audit.read-mine` |
+| Mi actividad | `/ajustes/actividad` | `audit.read` \| `audit.read-mine` |
 | Colores de marca | `/ajustes/colores` | `settings.brand` |
+
+Rutas de autenticación: `/login`, `/register`, `/forgot-password`, `/verify-otp`, `/reset-password`, `/verify-email`, `/verify-email/confirm`.
+Rutas públicas: `/terms`, `/403`, `/500`. Cualquier otra ruta cae en el 404 (`*`).
 
 ## Autorización por permisos
 
-- **Rutas**: `RequirePrivilege` redirige a `/403` si no tiene el permiso
-- **Componentes**: `Can` oculta sin redirigir
-- Los permisos vienen del backend en `user.permissions`
+- **Rutas**: `RequirePrivilege` protege la ruta y redirige a `/403` si el usuario no tiene el permiso.
+- **Componentes**: `Can` oculta elementos de UI sin redirigir.
+- Los permisos provienen del backend en `user.permissions`, con notación de punto (`users.read`).
 
 ```tsx
-import { Can } from './auth'
+import { Can } from './auth';
 
 <Can privilege="users.write">
   <button>Suspender</button>
@@ -75,10 +92,5 @@ import { Can } from './auth'
 
 ## Documentación
 
-La documentación detallada del template está en [`docs/`](./docs/README.md).
-
-Pendientes de la v1: [PENDIENTES.md](./PENDIENTES.md)
-
-## Licencia
-
-Privado — Uso interno.
+- Índice de documentación por módulo: [`docs/README.md`](./docs/README.md)
+- Tracker de pendientes: [`PENDIENTES.md`](./PENDIENTES.md)

@@ -1,235 +1,108 @@
-# Auth Guards
+# Guards de rutas
 
-Sistema de protección de rutas basado en composición.
+Componentes de protección de rutas del módulo de auth. Todos usan `useAuth()` + `Navigate` de `react-router`, y muestran el spinner "Verificando sesión..." mientras `isLoading` sea `true`.
 
-## Guards Disponibles
+## Tabla de guards
 
-| Guard | Autenticación | Verificación | Privilegio/Rol | Redirección si falla |
-|-------|---------------|--------------|----------------|---------------------|
-| `ProtectedRoute` | Requerida | Opcional | — | `/login` o `/verify-email` |
-| `RequirePrivilege` | Requerida | — | `privilege` o `anyOf[]` | `/login` → `/403` |
-| `RequireRole` | Requerida | — | `role` | `/login` → `/403` |
-| `GuestOnly` | **NO** requerida | — | — | `/` (si autenticado) |
-| `RequireVerification` | Requerida | Sí | — | `/login` o `/verify-email` |
+| Guard | Props | Comportamiento |
+|---|---|---|
+| `ProtectedRoute` | `{ children, redirectTo? = '/login', requireVerification? = true }` | `isLoading` → spinner. No autenticado → `redirectTo` con `state.from`. Autenticado pero sin email verificado (y `requireVerification`) → `/verify-email` |
+| `RequirePrivilege` | `{ children, redirectTo? = '/403' } & ({ privilege; anyOf? } \| { anyOf })` | No autenticado → `/login` con `state.from`. Sin el privilegio → `redirectTo`. `anyOf` tiene prioridad sobre `privilege` |
+| `RequireRole` | `{ children, role, redirectTo? = '/403' }` | No autenticado → `/login` con `state.from`. Sin el rol → `redirectTo`. ⚠ Desaconsejado: prefiera `RequirePrivilege` |
+| `GuestOnly` | `{ children, redirectTo? = '/dashboard' }` | Autenticado → `redirectTo`. No autenticado → renderiza `children` (rutas públicas: login, registro) |
+| `RedirectIfVerified` | `{ children, redirectTo? = '/dashboard' }` | Redirige **solo** si `isAuthenticated && isVerified()`. Anónimo o autenticado sin verificar → renderiza `children` |
+| `RequireVerification` | `{ children }` | No autenticado → `/login`. Email no verificado → `/verify-email`. Verificado → `children` |
+| `AuthLoading` | — | Spinner "Verificando sesión...". Uso interno de los guards; no se exporta por el barrel |
 
----
-
-## ProtectedRoute
-
-Protege rutas que requieren autenticación.
+## Uso en rutas
 
 ```tsx
-import { ProtectedRoute } from '@auth/guards';
+import {
+  ProtectedRoute,
+  RequirePrivilege,
+  RequireRole,
+  GuestOnly,
+  RedirectIfVerified,
+  RequireVerification,
+} from '@/auth';
 
-// Básico - requiere estar logueado
-<Route element={<ProtectedRoute />}>
+// Rutas protegidas (layout + página)
+<Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
   <Route path="/dashboard" element={<Dashboard />} />
+  <Route path="/perfil" element={<Perfil />} />
 </Route>
 
-// Con verificación de email
-<Route element={<ProtectedRoute requireVerification />}>
-  <Route path="/profile" element={<Profile />} />
-</Route>
+// Requiere privilegio específico
+<Route
+  path="/admin/configuracion"
+  element={
+    <RequirePrivilege privilege="settings.brand">
+      <BrandColorSettings />
+    </RequirePrivilege>
+  }
+/>
+
+// Requiere cualquiera de varios privilegios (anyOf)
+<Route
+  path="/users"
+  element={
+    <RequirePrivilege anyOf={['users.read', 'admin.all']}>
+      <UsersList />
+    </RequirePrivilege>
+  }
+/>
+
+// Rutas públicas: solo para no autenticados
+<Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
+<Route path="/registro" element={<GuestOnly><RegisterPage /></GuestOnly>} />
+
+// Pantalla de verificación de email
+<Route
+  path="/verify-email"
+  element={
+    <RedirectIfVerified>
+      <VerifyEmailPage />
+    </RedirectIfVerified>
+  }
+/>
+
+// Sección que exige email verificado
+<Route element={<RequireVerification><CuentaPage /></RequireVerification>} />
 ```
 
-### Props
+## `state.from` (redirección post-login)
 
-```typescript
-interface ProtectedRouteProps {
-  requireVerification?: boolean;  // default: true
-  children: ReactNode;
-}
-```
-
-### Comportamiento
-
-1. Si `isLoading === true` → muestra `<AuthLoading />`
-2. Si no está autenticado → redirige a `/login`
-3. Si `requireVerification=true` y no está verificado → redirige a `/verify-email`
-4. Si está autenticado → renderiza children
-
----
-
-## RequirePrivilege
-
-Requiere un privilegio específico.
+`ProtectedRoute` y `RequirePrivilege` (y `RequireRole`) pasan la ubicación actual en `state.from` al redirigir a `/login`, para que la página de login pueda devolver al usuario a donde iba tras autenticarse:
 
 ```tsx
-import { RequirePrivilege } from '@auth/guards';
-
-// Un privilegio
-<Route element={<RequirePrivilege privilege="settings:manage" />}>
-  <Route path="/settings" element={<Settings />} />
-</Route>
-
-// Cualquiera de varios privilegios
-<Route element={<RequirePrivilege anyOf={["reports:export", "admin:all"]} />}>
-  <Route path="/reports/export" element={<ExportReports />} />
-</Route>
+const location = useLocation();
+const from = location.state?.from?.pathname ?? '/dashboard';
 ```
 
-### Props
+## `Can` vs `RequirePrivilege`
 
-```typescript
-interface RequirePrivilegeProps {
-  privilege?: string;
-  anyOf?: string[];
-  children: ReactNode;
-}
-```
-
-### Comportamiento
-
-1. Si no está autenticado → redirige a `/login`
-2. Si no tiene el privilegio → redirige a `/403`
-3. Si tiene el privilegio → renderiza children
-
----
-
-## RequireRole
-
-Requiere un rol específico.
+| | `Can` | `RequirePrivilege` |
+|---|---|---|
+| Naturaleza | Renderizado condicional | Guard de ruta |
+| Sin permiso | Oculta (renderiza `fallback` o nada) | Redirige a `redirectTo` (default `/403`) |
+| Sin autenticación | No distingue: evalúa contra `user` actual | Redirige a `/login` con `state.from` |
+| Uso típico | Botones, acciones, secciones de UI | Páginas o rutas completas |
 
 ```tsx
-import { RequireRole } from '@auth/guards';
+// Ocultar un botón sin redirección
+<Can privilege="users.write" fallback={<span>Sin permisos</span>}>
+  <button>Editar usuario</button>
+</Can>
 
-<Route element={<RequireRole role="admin" />}>
-  <Route path="/admin" element={<AdminPanel />} />
-</Route>
+// Redirigir toda una ruta
+<RequirePrivilege privilege="users.write">
+  <UsersEditPage />
+</RequirePrivilege>
 ```
 
-### Props
+## Gotchas y deudas conocidas
 
-```typescript
-interface RequireRoleProps {
-  role: string;
-  children: ReactNode;
-}
-```
-
-### Comportamiento
-
-1. Si no está autenticado → redirige a `/login`
-2. Si no tiene el rol → redirige a `/403`
-3. Si tiene el rol → renderiza children
-
----
-
-## GuestOnly
-
-Solo permite usuarios NO autenticados (login, register).
-
-```tsx
-import { GuestOnly } from '@auth/guards';
-
-<Route element={<GuestOnly />}>
-  <Route path="/login" element={<LoginPage />} />
-  <Route path="/register" element={<RegisterPage />} />
-</Route>
-```
-
-### Props
-
-```typescript
-interface GuestOnlyProps {
-  children: ReactNode;
-}
-```
-
-### Comportamiento
-
-1. Si `isLoading === true` → muestra `<AuthLoading />`
-2. Si está autenticado → redirige a `/`
-3. Si no está autenticado → renderiza children
-
----
-
-## RequireVerification
-
-Requiere email verificado.
-
-```tsx
-import { RequireVerification } from '@auth/guards';
-
-<Route element={<RequireVerification />}>
-  <Route path="/dashboard" element={<Dashboard />} />
-</Route>
-```
-
-### Props
-
-```typescript
-interface RequireVerificationProps {
-  children: ReactNode;
-}
-```
-
-### Comportamiento
-
-1. Si no está autenticado → redirige a `/login`
-2. Si no está verificado → redirige a `/verify-email`
-3. Si está verificado → renderiza children
-
----
-
-## Composición de Guards
-
-Los guards se componen anidándolos:
-
-```tsx
-// Admin-only con verificación de email
-<Route element={
-  <ProtectedRoute requireVerification>
-    <RequireRole role="admin">
-      <AdminPanel />
-    </RequireRole>
-  </ProtectedRoute>
-}>
-```
-
-O usando el guard `RequireVerification` explícitamente:
-
-```tsx
-<Route element={<ProtectedRoute requireVerification={false} />}>
-  <Route element={<RequireVerification />}>
-    <Route path="/dashboard" element={<Dashboard />} />
-  </Route>
-</Route>
-```
-
----
-
-## Ejemplo Completo: App.tsx
-
-```tsx
-// Rutas públicas (no requieren auth)
-<Route element={<GuestOnly />}>
-  <Route path="/login" element={<LoginPage />} />
-  <Route path="/register" element={<RegisterPage />} />
-</Route>
-
-// Rutas de forgot password (flujo completo)
-<Route element={<ForgotPasswordProvider />}>
-  <Route element={<GuestOnly />}>
-    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-    <Route path="/verify-otp" element={<VerifyOTPPage />} />
-    <Route path="/reset-password" element={<ResetPasswordPage />} />
-  </Route>
-</Route>
-
-// Rutas protegidas (requieren auth + verificación)
-<Route element={<ProtectedRoute />}>
-  <Route path="/dashboard" element={<Dashboard />} />
-  <Route path="/profile" element={<Profile />} />
-</Route>
-
-// Rutas con privilegios específicos
-<Route element={<RequirePrivilege privilege="settings:manage" />}>
-  <Route path="/settings" element={<Settings />} />
-</Route>
-
-// Rutas con roles específicos
-<Route element={<RequireRole role="admin" />}>
-  <Route path="/admin" element={<AdminPanel />} />
-</Route>
-```
+- **`ProtectedRoute.requireVerification = true` por defecto**: cualquier ruta protegida exige email verificado salvo opt-out explícito (`requireVerification={false}`), duplicando el rol de `RequireVerification`. Si una ruta debe permitir usuarios sin verificar, debe optar fuera.
+- **`GuestOnly`**: el JSDoc documenta `redirectTo = '/'`, pero el código usa `'/dashboard'`. El comportamiento real es redirigir a `/dashboard`.
+- **`RequireRole` está desaconsejado** en su propio JSDoc: los privilegios son más granulares que los roles. Prefiera `RequirePrivilege`.
+- **Debug logging**: los guards registran `console.log('[GUARD] ...')` (p. ej. `ProtectedRoute` imprime el estado completo) y quedan activos en producción.

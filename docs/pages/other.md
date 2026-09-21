@@ -1,130 +1,30 @@
-# Other Pages
+# Otras páginas
 
-Páginas misceláneas: TermsPage, AjustesIndex.
+Dos páginas que no pertenecen a los flujos de auth, admin ni ajustes: la landing post-login y los términos legales.
 
----
+## DashboardPage
+
+**Ruta**: `/dashboard` · **Acceso**: autenticado (bajo `ProtectedRoute`) · **Lazy**: sí
+
+Landing post-login dentro de `MainLayout`. Contenido:
+
+| Sección | Detalle |
+|---|---|
+| Bienvenida | `Card` elevada con "Bienvenido, {user.name}" y un `Badge` por rol del usuario. |
+| Estadísticas | `StatCardGroup` con 3 `StatCard`s (Notificaciones, Archivos, Pagos). ⚠ **Valores placeholder hardcodeados en `0`** — no consumen ninguna API. |
+| Acciones rápidas | 3 cards navegables (Usuarios, Roles, Permisos), cada una gateada con `Can privilege="…"` (`users.read`, `roles.read`, `permissions.read`). |
+
+**Deuda conocida**: los `StatCard`s son placeholder con valores `0`; no hay datos reales de notificaciones/archivos/pagos en esta plantilla.
 
 ## TermsPage
 
-### Ruta
+**Ruta**: `/terms` · **Acceso**: público · **Lazy**: sí
 
-`/terms`
+Términos y Condiciones estáticos. Puntos clave:
 
-### Componente
+- El **cuerpo legal está hardcodeado en español** en el archivo (constante `SECTIONS` con secciones numeradas: Aceptación, Uso de la Aplicación, Cuenta de Usuario, Propiedad Intelectual, Limitación de Responsabilidad, etc.) — **no pasa por i18n**.
+- El encabezado de la página sí usa `useTranslation`.
+- Incluye navegación de retorno (ícono de flecha + enlace).
+- Es un documento genérico de plantilla: el desarrollador debe personalizarlo según el caso de uso.
 
-Página standalone con header sticky + 10 secciones hardcoded + footer.
-
-### Datos
-
-Array `SECTIONS` hardcodeado con 10 secciones legales (título + contenido).
-
-### Navegación
-
-- Header: Link a `/register`
-- Footer: Link a `/terms` (self-referencing)
-
-### i18n Keys
-
-- `auth.resetPassword.backToLogin` (reutilizado para "Volver")
-- `pages.terms.title`
-- `pages.terms.lastUpdated`
-
-### Design System
-
-Ninguno — Tailwind directo.
-
-### Nota
-
-Contenido en español hardcodeado, no i18n. Sección 8 tiene typo: `"终止"` (caracter chino en medio de texto español).
-
-### Uso
-
-```tsx
-const SECTIONS = [
-  { title: "1. Aceptación de los Términos", content: "..." },
-  { title: "2. Uso del Servicio", content: "..." },
-  // ... 10 secciones
-];
-
-function TermsPage() {
-  return (
-    <div className="min-h-screen">
-      <header className="sticky top-0">
-        <Link to="/register">Volver</Link>
-      </header>
-      <main>
-        <h1>{t('pages.terms.title')}</h1>
-        {SECTIONS.map((section) => (
-          <section key={section.title}>
-            <h2>{section.title}</h2>
-            <p>{section.content}</p>
-          </section>
-        ))}
-      </main>
-    </div>
-  );
-}
-```
-
----
-
-## AjustesIndex
-
-### Ruta
-
-`/ajustes`
-
-### Componente
-
-Grid de cards-link a sub-secciones de ajustes. Solo 1 item: "Colores de marca".
-
-### Layout
-
-`MainLayout` (dentro de `ProtectedRoute` + `RequirePrivilege("settings:manage")`)
-
-### Estado Local
-
-`loading` con `useEffect` → `setTimeout(800)` para simular carga.
-
-### Skeleton
-
-Usa `CardSkeleton` del design system durante la carga simulada.
-
-### Rutas Objetivo
-
-`/ajustes/colores`
-
-### i18n
-
-NO usa i18n. Labels hardcodeados en español: "Colores de marca", "Personaliza los colores...".
-
-### Design System
-
-- `CardSkeleton`
-
-### Nota
-
-Mezcla CSS Modules + CSS-in-JS (`style={}`) + CSS variables inline (`var(--border)`, `var(--accent)`).
-
-### Uso
-
-```tsx
-function AjustesIndex() {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 800);
-  }, []);
-
-  if (loading) return <CardSkeleton />;
-
-  return (
-    <div className={styles.container}>
-      <Link to="/ajustes/colores" className={styles.card}>
-        <h3>Colores de marca</h3>
-        <p>Personaliza los colores de tu tema</p>
-      </Link>
-    </div>
-  );
-}
-```
+**Deuda conocida**: contenido legal no traducido (solo en español) y no parametrizado; requiere personalización por proyecto.

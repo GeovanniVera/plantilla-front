@@ -1,150 +1,63 @@
-# Gaps
+# Notas de uso y limitaciones del barrel de hooks
 
-Hooks faltantes en el proyecto plantilla-front.
+Este documento registra los huecos y trampas reales del módulo `src/hooks/`, para que quien importe hooks no tropiece con comportamientos inesperados. Nada de lo listado aquí corresponde a hooks inexistentes: son limitaciones del barrel y de los archivos que lo componen.
 
-## Hooks No Existentes
+## 1. Colisión de nombres: `useForgotPassword`
 
-### 1. useDebounce / useDebouncedValue
+Existen **dos** hooks con el mismo nombre en el proyecto:
 
-**Problema**: Sin este hook, cualquier búsqueda en tiempo real hará una llamada API por cada keystroke.
+| | Hook de React Query | Hook de contexto |
+|---|---|---|
+| Ubicación | `src/hooks/useAuth.ts` | `src/auth/ForgotPasswordContext.tsx` |
+| Re-exportado por | `src/hooks/index.ts` ✔ | `src/auth/index.ts` ✘ (import directo) |
+| Propósito | Disparar `authService.forgotPassword(email)` | Máquina de estado del flujo forgot → OTP → reset (`setEmail`, `verifyOtp`, `resetPassword`, `reset`) |
+| Requiere provider | No | `ForgotPasswordProvider` |
+| Retorno | `useMutation` | `ForgotPasswordContextValue` |
 
-**Solución recomendada**:
+**Riesgo**: un import descuidado de `@/hooks` trae la mutación de React Query cuando en realidad se necesitaba el contexto del flujo de 3 pasos (y viceversa). El barrel `src/hooks/index.ts` re-exporta el de React Query; el del contexto **no** sale por ningún barrel.
 
-```tsx
-function useDebouncedValue<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+**Regla práctica**:
+- ¿Solo disparar el email de recuperación? → `useForgotPassword` de `@/hooks`.
+- ¿Navegar `/forgot-password` → `/verify-otp` → `/reset-password` con estado (email, `resetToken`, `otpVerified`)? → `useForgotPassword` de `@/auth/ForgotPasswordContext` (envuelto en `ForgotPasswordProvider`).
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
+## 2. Barrel incompleto: `useIsMobile` y `useMediaQuery` fuera de `src/hooks/index.ts`
 
-  return debouncedValue;
-}
+El barrel exporta solo los 8 hooks de auth. Los hooks responsive existen pero **no** se re-exportan:
+
+```ts
+// ✔ Funciona
+import { useMe, useLogin } from '@/hooks';
+
+// ✘ No existe en el barrel (falla el import)
+import { useIsMobile, useMediaQuery } from '@/hooks';
+
+// ✔ Import directo desde el archivo
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 ```
 
-**Uso**:
+El mismo patrón afecta al módulo auth: `AuthContext`, `ForgotPasswordProvider`, `useForgotPassword` (contexto) y `AuthLoading` tampoco salen por `src/auth/index.ts` (ver [Referencia de API del módulo auth](../auth/api-reference.md)).
 
-```tsx
-const [search, setSearch] = useState('');
-const debouncedSearch = useDebouncedValue(search, 300);
+## 3. Template muerto: `_template.hook.ts`
 
-const { data } = useQuery(['users', debouncedSearch], () =>
-  searchUsers(debouncedSearch)
-);
-```
+`src/hooks/_template.hook.ts` es una **plantilla** para crear hooks de React Query, no un hook utilizable:
 
-### 2. useLocalStorage / useSessionStorage
+- `useTemplateList()` y `useTemplateItem(id)` tienen el `queryFn` con el código real **comentado**; la función async retorna `undefined`.
+- Importarlos **rompe queries**: `useQuery` queda en estado `success` con `data: undefined`, y el consumo de `data` falla en runtime (p. ej. `data.map(...)`).
+- `useTemplateItem` además tiene `enabled: !!id`, por lo que con `id` vacío ni siquiera dispara la query.
 
-**Problema**: No hay hook genérico para persistir cualquier estado en storage. Solo existe `authStorage` para tokens.
+**Regla**: nunca importe `_template.hook.ts`. Úselo solo como referencia para crear hooks nuevos (copiar, descomentar y adaptar al servicio real).
 
-**Solución recomendada**:
+## 4. Notas de uso adicionales
 
-```tsx
-function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch {
-      return initialValue;
-    }
-  });
+### Solo `useMe`, `useLogin` y `useLogout` dependen de `AuthProvider`
 
-  const setValue = (value: T | ((val: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      console.error(error);
-    }
-  };
+Las demás mutaciones (`useRegister`, `useForgotPassword`, `useResetPassword`, `useVerifyEmail`, `useResendVerification`) llaman a `authService` directamente y funcionan sin el provider. Si un componente usa `useLogin`/`useLogout` fuera de `AuthProvider`, el `AuthContext` lanzará `Error`.
 
-  return [storedValue, setValue] as const;
-}
-```
+### `useLogin` retorna el usuario desde el cache
 
-**Uso**:
+El `data` de `useLogin` es `{ success: true, data: { user } }`, donde `user` proviene de `queryClient.getQueryData(['auth', 'me'])` y puede ser `undefined` si la query aún no cargó. No asuma que `data.user` siempre existe tras el mutate; prefiera leer `useMe()` después de invalidar.
 
-```tsx
-const [theme, setTheme] = useLocalStorage('theme', 'light');
-const [filters, setFilters] = useLocalStorage('user-filters', defaultFilters);
-```
+### `useLogout` limpia todo el cache de React Query
 
-### 3. useDebounce (callback)
-
-**Problema**: No hay forma de debounced callbacks (ej: resize, scroll).
-
-**Solución recomendada**:
-
-```tsx
-function useDebounce<T extends (...args: any[]) => any>(
-  callback: T,
-  delay: number
-): T {
-  const callbackRef = useRef(callback);
-  const timeoutRef = useRef<NodeJS.Timeout>();
-
-  useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
-
-  return useCallback((...args) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      callbackRef.current(...args);
-    }, delay);
-  }, [delay]) as T;
-}
-```
-
-**Uso**:
-
-```tsx
-const handleResize = useDebounce((width: number) => {
-  console.log('Width:', width);
-}, 250);
-
-window.addEventListener('resize', (e) => handleResize(e.target.innerWidth));
-```
-
----
-
-## Inconsistencias
-
-### Barrel Export
-
-`useMediaQuery` e `useIsMobile` **NO están exportados** desde `src/hooks/index.ts`.
-
-**Opciones**:
-
-1. **Agregarlos al barrel** (recomendado):
-```tsx
-// src/hooks/index.ts
-export { useMe, useLogin, useLogout } from './useAuth';
-export { useMediaQuery } from './useMediaQuery';
-export { useIsMobile } from './useIsMobile';
-```
-
-2. **Eliminarlos y usar `useMediaQuery` directamente**: `useIsMobile` es trivial y puede no justificar un archivo separado.
-
----
-
-## Prioridad
-
-| Hook | Prioridad | Razón |
-|------|-----------|-------|
-| `useDebouncedValue` | 🔴 Alta | Búsquedas en tiempo real |
-| `useLocalStorage` | 🟠 Media | Persistencia genérica |
-| `useDebounce` (callback) | 🟡 Baja | Resize/scroll handlers |
-
----
-
-## Recomendación
-
-1. Crear `useDebouncedValue` inmediatamente — es prácticamente obligatorio para cualquier app con búsqueda
-2. Evaluar `useLocalStorage` según necesidades reales — el proyecto ya tiene `authStorage`
-3. `useDebounce` (callback) es opcional — resolverlo con `useEffect` + `setTimeout` cuando sea necesario
+`onSettled` ejecuta `queryClient.clear()`, que descarta **todas** las queries de la aplicación (no solo las de auth). Es intencional (sesión cerrada = cache fresco), pero tenga en cuenta que cualquier estado de query en memoria se pierde al hacer logout.

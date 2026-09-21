@@ -1,247 +1,166 @@
-# Patterns
+# Patrones de diseño (`src/components/`)
 
-Patrones de diseño reutilizados en el design system.
+Los 10 patrones reales que estructuran el design system, con ejemplos verificados del código. Sirven de guía para entender por qué los componentes están organizados como están y para no romper las convenciones al extenderlos.
 
-## 1. Compound Pattern
+## 1. Compound components con `Object.assign`
 
-Patrón más usado. Componer componentes relacionados usando `Object.assign`.
+El patrón dominante: un componente root que lleva subcomponentes estáticos asignados con `Object.assign`, sin crear archivos separados.
 
-### Mecánica
+| Root | Partes |
+|---|---|
+| `Input` | `.Root` `.Control` `.StartAddon` `.EndAdornment` `.EndAction` |
+| `Select` | `.Root` `.Control` `.StartAddon` |
+| `Textarea` | `.Base` |
+| `Checkbox` | `.Base` |
+| `Radio` | `.Group` |
+| `Badge` | `.Icon` |
+| `Card` | `.Image` `.Header` `.Title` `.Description` `.Body` `.Footer` |
+| `Modal` | `.Header` `.Body` `.Footer` |
+| `Drawer` | `.Header` `.Body` `.Footer` |
+| `Tabs` | `.List` `.Trigger` `.Panel` |
+| `Sidebar` | `.Header` `.Toggle` `.Nav` `.Footer` |
 
-```typescript
-const InputShorthand = (props) => <input {...props} />;
+Ejemplo real (`primitives/Input.tsx`):
 
-export const Input = Object.assign(InputShorthand, {
+```tsx
+const Input = Object.assign(InputShorthand, {
   Root: InputRoot,
   Control: InputControl,
   StartAddon: InputStartAddon,
   EndAdornment: InputEndAdornment,
   EndAction: InputEndAction,
 });
+export default Input;
 ```
 
-### Uso
+Regla: cada parte comparte el módulo del root; el contrato de props puede declararse en un `types.ts` central (caso de `ModalHeaderProps`/`BodyProps`/`FooterProps`, compartidos por Modal y Drawer).
+
+## 2. Dual API (shorthand + compound)
+
+Los controles de formulario ofrecen dos superficies:
+
+- **Shorthand**: `value: string; onChange: (v: string) => void` con props de estructura opcionales — el 90% de los casos.
+- **Compound**: piezas explícitas (`Input.Root`/`Input.Control`/...) con contexto propio — para composiciones custom (toolbars, adornos interactivos).
+
+| Control | Shorthand | Compound | Contexto |
+|---|---|---|---|
+| `Input` | `Input` | `InputBase` + `InputRoot` + `InputControl` (+ addons) | `InputContext` con `size`/`validationState`/`disabled`/`readOnly`; **lanza error** fuera del `Root` |
+| `Select` | `Select` | `SelectBase` + `SelectRoot` + `SelectControl` (+ addon) | `SelectContext` (estado estructural; value/options no viajan por contexto) |
+| `Checkbox` | `Checkbox` | `CheckboxBase` | — |
+
+Regla interna (`Input`): el shorthand **con estructura** (adornos, `showPasswordToggle`) delega al compound; **sin estructura** renderiza un `<input>` plano. En `Select`, el shorthand con `startAdornment` delega a `SelectRoot`+`SelectControl`; sin él usa `SelectBase`.
 
 ```tsx
-// Shorthand (simple)
-<Input value={v} onChange={setV} />
+// Shorthand
+<Input value={q} onChange={setQ} startAdornment={<LuSearch />} startAdornmentVariant="accent" />
 
-// Compound (composable)
-<Input.Root>
-  <Input.StartAddon>$</Input.StartAddon>
-  <Input.Control />
-  <Input.EndAdornment>USD</Input.EndAdornment>
+// Compound
+<Input.Root appearance="filled">
+  <Input.StartAddon variant="subtle"><LuSearch /></Input.StartAddon>
+  <Input.Control value={q} onChange={(e) => setQ(e.target.value)} />
+  <Input.EndAction><button onClick={clear}>Limpiar</button></Input.EndAction>
 </Input.Root>
 ```
 
-### Componentes que lo usan
-
-- Input, Select, Checkbox, Radio
-- Badge, Card
-- Modal, Drawer
-- Tabs, Sidebar
-
----
-
-## 2. Dual API
-
-Shorthand para casos simples, compound para composición compleja.
-
-### Mecánica
-
-```tsx
-// Shorthand decide internamente
-<Input value={v} onChange={setV} />
-// → renderiza <input> standalone
-
-<Input startAdornment="$" endAdornment="USD" value={v} onChange={setV} />
-// → renderiza InputRoot + InputControl + adornos
-```
-
-### Componentes que lo usan
-
-- Input, Select, Checkbox, Textarea
-
----
-
 ## 3. Context-driven
 
-Proveer estado y comportamiento a través de React Context.
+Los contextos orquestan estado entre root y partes, siempre con error explícito si se usan fuera del proveedor ("debe usarse dentro de...").
 
-### Mecánica
+| Contexto | Proveedor | Consumidores | Error fuera del provider |
+|---|---|---|---|
+| `FormContext` (`forms/FormContext.ts`) | `Form` | `FormField` (error/touched por `name`) | `useFormContext` lanza |
+| `ModalContext` (`overlays/context.ts`) | `Modal`, `Drawer`, `DrawerStack` | `Modal/Drawer.Header/.Body/.Footer` | `useModalClose` lanza |
+| `TabsContext` (`navigation/Tabs.tsx`) | `Tabs` | `Tabs.Trigger` / `Tabs.Panel` | `useTabsContext` lanza |
+| `SidebarContext` (`navigation/sidebar/context.ts`) | `Sidebar` | `Sidebar.Toggle`, `NavItem`, `NavGroup`, `SidebarLogo`, `UserAvatar`, `UserClock` | default silencioso (no lanza) |
+| `InputContext` / `SelectContext` | `Input.Root` / `Select.Root` | piezas compound | lanzan |
 
-```tsx
-const SidebarContext = createContext(null);
+Nota: `ModalContext` es **compartido** — el mismo contexto sirve a Modal y Drawer, por eso los headers/bodies/footers son intercambiables entre ambos.
 
-export function SidebarRoot({ children }) {
-  const [expanded, setExpanded] = useState(true);
-  
-  return (
-    <SidebarContext.Provider value={{ expanded, toggleExpanded: () => setExpanded(!expanded) }}>
-      <aside>{children}</aside>
-    </SidebarContext.Provider>
-  );
-}
+## 4. Portal
 
-export function useSidebar() {
-  const ctx = useContext(SidebarContext);
-  if (!ctx) throw new Error('useSidebar must be used within Sidebar.Root');
-  return ctx;
-}
+Todo lo que debe "salir" de su contenedor renderiza por `createPortal(..., document.body)`:
+
+- `Modal`, `Drawer`, `DrawerStack` (overlays completos, `z-[1000]`).
+- `ToastProvider` (contenedor de toasts, `z-[2000]`).
+- `FilterDropdown` (popover de filtro de tabla, posicionado con `usePopoverPosition`).
+- `DatePicker` / `DateRangePicker` (popover del calendario con `position: fixed` — fix 7B: ya no es recortado por `Card` con `overflow-hidden`).
+
+Motivación verificable: el fix 7B en `Calendar.tsx` documenta que el popover portal con `position: fixed` resolvió el clipping por `overflow-hidden` de las cards.
+
+## 5. Singleton global imperativo
+
+`useToast` (feedback) no usa context: el `ToastProvider` registra una API en un **module-level `toastFn`** y el hook llama directamente.
+
+```ts
+// useToast.ts
+let toastFn: ToastAPI | null = null;
+export function registerToast(fn: ToastAPI) { toastFn = fn; }
+// ...
+if (!toastFn) { console.warn('[Toast] No ToastProvider found in the tree.'); return; }
 ```
 
-### Contextos del sistema
+Tradeoff: cualquier componente puede llamar `toast.success(...)` sin envolturas; a cambio, **sin provider el fallo es silencioso** (solo `console.warn`). Solo un provider puede estar registrado a la vez.
 
-| Contexto | Usado por |
-|----------|-----------|
-| `SidebarContext` | Sidebar.Root, Sidebar.Toggle, Sidebar.Nav |
-| `TabsContext` | Tabs.Root, Tabs.List, Tabs.Trigger, Tabs.Panel |
-| `FormContext` | Form, FormField, useFormContext |
-| `InputContext` | Input.Root, Input.Control, Input.StartAddon |
-| `SelectContext` | Select.Root, Select.Control |
-| `ModalContext` | Modal, Drawer, DrawerStack |
+## 6. CSS-module bridge con data-attributes
 
----
+`FormField` + `Form.module.css` es el único caso donde un CSS Module **gana a `@layer utilities`**:
 
-## 4. Slot Composition
+- Los controles emiten `data-variant` (`'default' | 'filled' | 'outlined'`) y `data-validation`.
+- `.fieldError [data-variant]` pinta bordes rojos sobre controles arbitrarios envueltos por `FormField` con error.
+- No es expresable como utility: los overrides descendientes (`[data-variant]`) no se resuelven seguramente en Tailwind.
 
-Callbacks que permiten componer contenido personalizado.
+Este patrón se complementa con los data-attributes de estado de `InputControl`/`SelectControl` (`data-input-disabled`, `data-input-readonly`, `data-select-disabled`) que el Root consume con `has-data-[...]`.
 
-### Mecánica
+## 7. Composition slots sobre core
 
-```tsx
-<BaseTable
-  columns={columns}
-  data={data}
-  composeHeader={(ctx) => ({
-    children: <CustomHeader column={ctx.column} />,
-  })}
-  composeCell={(ctx) => ({
-    children: ctx.column.key === 'status' 
-      ? <StatusBadge value={ctx.value} />
-      : ctx.value,
-  })}
-/>
+`BaseTable` es el core de render **sin lógica**; las variantes inyectan su propio CSS module y comportamiento vía slots:
+
+| Slot | Propósito |
+|---|---|
+| `styles?: BaseTableStyles` | Contrato estructural de clases; `DataTable`/`ExcelTable` inyectan su módulo (`ExcelTable.module.css`) |
+| `composeHeader` | Overrides de header por columna (clases/estilos) |
+| `composeCell` | Overrides de celda: clases, estilos, `content` (reemplaza el render) y `props` (eventos, ARIA) |
+| `leadingColumn` | Columna fija inicial (ej. números de fila) |
+| `rowClassName` | Formato condicional: token (`rowDanger`...) mapeado al CSS module, o clase cruda |
+
+`ExcelTable` es el caso extremo: inyecta `styles`, `leadingColumn`, `composeCell` con selección/edición y `wrapperProps` con `role="grid"` y navegación de teclado — todo sobre el mismo core `BaseTable`.
+
+## 8. Slots de render prop
+
+Render props como extensión declarativa:
+
+- `Column.render(value, row, index)` — celda custom (usado por DataTable/ExcelTable/ResponsiveTable).
+- `Column.renderHeader(props?: FilterHeaderProps)` — cabecera custom; `useFilterableColumns` lo inyecta con `FilterHeader`.
+- `LeadingColumn.cell(rowIndex)` — contenido de la columna inicial.
+- `BaseTable.emptyState` — reemplazo del empty state por defecto.
+- `Badge.Icon`/`Card.*` son la variante estructural de este patrón: slots de layout para composición.
+
+## 9. Hook de estado puro derivado
+
+`useTablePagination` nunca muta estado durante el render: la página efectiva es **derivada** (`min(max(1, stored), totalPages)`), no un `setState` en render.
+
+```ts
+const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+const effectivePage = Math.min(Math.max(1, storedPage), totalPages); // puro
 ```
 
-### Uso
+Por qué importa (hotfix 7D): cuando los filtros encogen el dataset, la página almacenada puede quedar fuera de rango; derivarla mantiene la UI consistente sin re-renders extra. Bonus: datasets vacíos → `totalPages = 1`, un estado válido.
 
-Útil cuando necesitas renderizado personalizado sin crear un componente completo.
+## 10. Controlled/uncontrolled dual
 
----
-
-## 5. Portal
-
-Renderizar contenido fuera del árbol DOM del padre.
-
-### Mecánica
+`Tabs` soporta ambos modos con el mismo componente:
 
 ```tsx
-function Modal({ children }) {
-  return createPortal(
-    <div className="overlay">{children}</div>,
-    document.body
-  );
-}
+// Uncontrolled
+<Tabs defaultValue="info">...</Tabs>
+// Controlled
+<Tabs value={tab} onChange={setTab}>...</Tabs>
 ```
 
-### Componentes que lo usan
+El mecanismo: `isControlled = value !== undefined`; sin `value` usa estado interno (`internalValue`) inicializado con `defaultValue`; `setActiveTab` actualiza interno solo si no es controlado y siempre llama `onChange`.
 
-- Modal, Drawer, DrawerStack
-- Toast
-- DatePicker, DateRangePicker
+## Cómo usar estos patrones
 
----
-
-## 6. Singleton API
-
-API registrada en un closure a nivel de módulo.
-
-### Mecánica
-
-```tsx
-// toast.ts
-let toastAPI = null;
-
-export function registerToast(api) { toastAPI = api; }
-export function unregisterToast() { toastAPI = null; }
-
-export function useToast() {
-  if (!toastAPI) throw new Error('useToast must be used within ToastProvider');
-  return toastAPI;
-}
-```
-
-### Ventaja
-
-No usa React Context. Funciona desde cualquier componente dentro del provider, incluyendo callbacks y eventos.
-
----
-
-## 7. CSS Module Bridge
-
-Usar CSS modules para estilos que Tailwind no puede expresar.
-
-### Casos de uso
-
-- Transiciones complejas (Sidebar expand/collapse)
-- Cascada de errores (FormField error borders)
-- Scrollbars personalizados (Modal.Body)
-- Animaciones grid (NavGroup accordion)
-
-### Mecánica
-
-```tsx
-// FormField.module.css
-.errorBorder { border-color: var(--danger); }
-.errorBorderFloating { border-color: var(--danger); }
-
-// FormField.tsx
-import styles from './FormField.module.css';
-
-<div className={clsx(styles.errorBorder, error && styles.errorBorderFloating)}>
-```
-
----
-
-## 8. Ref Callback Merge
-
-Combinar ref del consumidor con lógica interna.
-
-### Mecánica
-
-```tsx
-const Checkbox = forwardRef(({ indeterminate, ...props }, ref) => {
-  const internalRef = useRef(null);
-  
-  const mergedRef = useCallback((node) => {
-    internalRef.current = node;
-    if (typeof ref === 'function') ref(node);
-    else if (ref) ref.current = node;
-    
-    // Lógica interna
-    if (node) node.indeterminate = indeterminate;
-  }, [ref, indeterminate]);
-  
-  return <input ref={mergedRef} {...props} />;
-});
-```
-
-### Uso
-
-Permite que el consumidor pase su propio ref mientras internamente se maneja el estado indeterminate.
-
----
-
-## Resumen
-
-| Patrón | Complejidad | Cuándo usar |
-|--------|-------------|-------------|
-| Compound | Alta | Componentes relacionados que se componen |
-| Dual API | Media | Cuando necesitas simple + composable |
-| Context-driven | Media | Estado compartido entre hijos |
-| Slot Composition | Baja | Renderizado personalizado sin componente nuevo |
-| Portal | Baja | Contenido fuera del árbol DOM |
-| Singleton API | Baja | API global sin Context |
-| CSS Module Bridge | Baja | Estilos que Tailwind no puede expresar |
-| Ref Callback Merge | Media | Combinar ref del consumidor con lógica interna |
+- **Para consumir**: usa los barrels de familia; deep import solo para lo que no está exportado (ver [README](README.md)).
+- **Para extender**: respeta la regla de cascada (un conjunto efectivo de clases por estado), los errores de contexto ("debe usarse dentro de...") y no muevas contratos de props entre familias (single source of truth en `forms/types.ts` y `table/types.ts`).
+- **Para decidir**: si un componente nuevo necesita chrome lateral → dual API con compound; si necesita "salir" del layout → portal; si expone slots de composición → patrón 7/8.

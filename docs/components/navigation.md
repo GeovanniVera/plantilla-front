@@ -1,185 +1,157 @@
-# Navigation
+# Navigation (`src/components/navigation/`)
 
-Componentes de navegación: Breadcrumb, Tabs, Sidebar.
+Navegación: breadcrumbs, tabs y el sidebar completo. El barrel solo exporta `Tabs` y `Breadcrumb`; los componentes de `sidebar/` se consumen por deep import.
+
+## Barrel (`navigation/index.ts`)
+
+Exporta: `Tabs`, `Breadcrumb` + tipos (`TabsProps`, `TabsListProps`, `TabsTriggerProps`, `TabsPanelProps`, `TabsVariant`, `BreadcrumbItem`, `BreadcrumbProps`).
+
+**No exporta** los componentes de `sidebar/` (deep import: `@components/navigation/sidebar/...`).
 
 ## Breadcrumb
 
-### Props
+| Prop | Tipo | Descripción |
+|---|---|---|
+| `items` | `{ label: string; href?: string; icon?: ReactNode }[]` | Items; sin `href` se renderizan como texto |
+| `separator` | `'/' \| '>' \| '›' \| ReactNode` | Separador; default `LuChevronRight` |
+| `className` | `string` | Clase adicional |
 
-| Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `items` | `BreadcrumbItem[]` | required | `[{ label, href?, icon? }]` |
-| `separator` | `'/' \| '>' \| '›' \| ReactNode` | `LuChevronRight` | Separador |
-| `className` | `string` | — | Clase CSS |
+Comportamiento:
 
-### Colapso
-
-Si `items.length > 3`, los items del medio se colapsan en un botón con `LuEllipsis` + tooltip nativo.
-
-### Accesibilidad
-
-- `<nav aria-label="Breadcrumb">`
-- `<ol>` semántico
-- Último item con `aria-current="page"`
-
-### Uso
+- Con **más de 3 items**, colapsa los del medio en un botón `…` (`LuEllipsis`) sin `onClick` funcional (el título muestra los labels colapsados).
+- El **último item siempre es texto** (nunca link) y lleva `aria-current="page"`.
+- `aria-label="Breadcrumb"` en el `<nav>`.
 
 ```tsx
 <Breadcrumb
   items={[
-    { label: 'Inicio', href: '/', icon: LuHome },
+    { label: 'Inicio', href: '/' },
     { label: 'Usuarios', href: '/users' },
-    { label: 'Juan Pérez' },
+    { label: 'Detalle' },
   ]}
 />
 ```
 
----
+## Tabs
 
-## Tabs (Compound Pattern)
+Pestañas controlled/uncontrolled con tres variantes.
 
-### Props (Root)
+| Prop | Tipo | Descripción |
+|---|---|---|
+| `value` | `string` | Modo controlado |
+| `defaultValue` | `string` | Modo no controlado |
+| `onChange` | `(value: string) => void` | Callback de cambio |
+| `variant` | `'underline' \| 'pills' \| 'enclosed'` | Estilo |
+| `children` / `className` | — | Contenido |
 
-| Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `value` | `string` | — | Controlled value |
-| `defaultValue` | `string` | — | Uncontrolled default |
-| `onChange` | `(value: string) => void` | — | Callback de cambio |
-| `variant` | `'underline' \| 'pills' \| 'enclosed'` | `'underline'` | Variante visual |
+Piezas compound: `Tabs.List`, `Tabs.Trigger`, `Tabs.Panel`.
 
-### Sub-componentes
+| `Tabs.Trigger` | Tipo | Descripción |
+|---|---|---|
+| `value` | `string` | Identificador |
+| `children` / `icon?` / `disabled?` | — | Contenido |
+| | | |
 
-| Componente | Props | Descripción |
-|------------|-------|-------------|
-| `Tabs.List` | `children` | `<div role="tablist">` |
-| `Tabs.Trigger` | `value`, `icon?`, `disabled?`, `children` | `<button role="tab">` |
-| `Tabs.Panel` | `value`, `children` | `<div role="tabpanel">` |
+| `Tabs.Panel` | Tipo | Descripción |
+|---|---|---|
+| `value` | `string` | Debe coincidir con un trigger |
+| `children` / `className` | — | Contenido (solo el activo se monta) |
 
-### Accesibilidad
+Comportamiento:
 
-- `role="tablist"`, `role="tab"`, `role="tabpanel"`
-- `aria-selected`, `aria-controls`, `aria-labelledby`
-- `tabIndex` roving (navegación por teclado)
-
-### Uso
+- **Controlled/uncontrolled dual**: con `value` definido es controlado; sin él, estado interno con `defaultValue`.
+- **Teclado básico**: Enter/Space activan la pestaña enfocada.
+- ⚠️ **Flechas no implementadas**: no hay navegación con ArrowLeft/ArrowRight entre triggers.
+- ARIA: `role="tablist"`/`role="tab"`/`role="tabpanel"`, `aria-selected`, `aria-controls`/`aria-labelledby`, `tabIndex={active ? 0 : -1}`.
 
 ```tsx
-<Tabs defaultValue="general">
+<Tabs defaultValue="info" variant="pills">
   <Tabs.List>
-    <Tabs.Trigger value="general">General</Tabs.Trigger>
-    <Tabs.Trigger value="advanced" icon={LuSettings}>Avanzado</Tabs.Trigger>
-    <Tabs.Trigger value="danger" disabled>Peligro</Tabs.Trigger>
+    <Tabs.Trigger value="info">Información</Tabs.Trigger>
+    <Tabs.Trigger value="history">Historial</Tabs.Trigger>
   </Tabs.List>
-  <Tabs.Panel value="general">
-    <GeneralSettings />
-  </Tabs.Panel>
-  <Tabs.Panel value="advanced">
-    <AdvancedSettings />
-  </Tabs.Panel>
+  <Tabs.Panel value="info">...</Tabs.Panel>
+  <Tabs.Panel value="history">...</Tabs.Panel>
 </Tabs>
 ```
 
-### Variantes
+## Sidebar (`sidebar/` — deep import)
 
-| Variante | Estilo |
-|----------|--------|
-| `underline` | Borde inferior en tab activa |
-| `pills` | Fondo coloreado en tab activa |
-| `enclosed` | Tabs con bordes y fondo |
-
----
-
-## Sidebar (Compound Pattern — el más complejo)
-
-### Sub-componentes
-
-| Componente | Descripción |
-|------------|-------------|
-| `Sidebar.Root` | Provee `SidebarContext`, maneja mobile/responsive |
-| `Sidebar.Header` | Zona del logo |
-| `Sidebar.Toggle` | Botón expand/collapse |
-| `Sidebar.Nav` | `<nav aria-label="Navegación principal">` |
-| `Sidebar.Footer` | Zona inferior |
-
-### Contexto
-
-```typescript
-{
-  expanded: boolean,
-  toggleExpanded: () => void
-}
-```
-
-### NavItem Props
-
-| Prop | Tipo | Descripción |
-|------|------|-------------|
-| `as` | `ElementType` | Componente renderizador (default: `Link`) |
-| `to` | `string` | Ruta de navegación |
-| `icon` | `ElementType` | Icono react-icons |
-| `label` | `string` | Texto |
-| `active` | `boolean` | Estado activo |
-| `danger` | `boolean` | Estilo peligroso (rojo) |
-
-### NavGroup Props
-
-Accordion con animación `grid-template-rows: 0fr → 1fr` (sin max-height guessing).
-
-| Prop | Tipo | Descripción |
-|------|------|-------------|
-| `icon` | `ElementType` | Icono del grupo |
-| `label` | `string` | Texto del grupo |
-| `open` | `boolean` | Estado abierto |
-| `active` | `boolean` | Tiene item activo |
-| `onToggle` | `() => void` | Toggle del accordion |
-| `children` | `ReactNode` | Items del grupo |
-
-### Componentes Auxiliares
-
-| Componente | Props | Descripción |
-|------------|-------|-------------|
-| `SidebarLogo` | `src`, `name` | Logo con Link a `/` |
-| `UserAvatar` | `name`, `role` | Avatar con inicial |
-| `UserClock` | — | Reloj en tiempo real (HH:MM:SS) |
-
-### Uso
+Sidebar acoplado a la aplicación: usa `useLocation`/`useNavigate` de react-router, `useAuth` de `../../../auth` (logout navega a `/login`) y `useMediaQuery`. Su estilo vive en `Sidebar.module.css`.
 
 ```tsx
-<Sidebar.Root>
-  <Sidebar.Header>
-    <SidebarLogo src="/logo.svg" name="Mi App" />
-  </Sidebar.Header>
-
-  <Sidebar.Toggle />
-
-  <Sidebar.Nav>
-    <NavItem to="/dashboard" icon={LuLayoutDashboard} label="Dashboard" active />
-    <NavItem to="/users" icon={LuUsers} label="Usuarios" />
-    <NavItem to="/settings" icon={LuSettings} label="Configuración" />
-
-    <NavGroup icon={LuFolder} label="Proyectos" open onToggle={toggle}>
-      <NavItem to="/projects/1" label="Proyecto 1" />
-      <NavItem to="/projects/2" label="Proyecto 2" />
-    </NavGroup>
-
-    <NavItem to="/logout" icon={LuLogOut} label="Salir" danger />
-  </Sidebar.Nav>
-
-  <Sidebar.Footer>
-    <UserAvatar name="Juan Pérez" role="Admin" />
-    <UserClock />
-  </Sidebar.Footer>
-</Sidebar.Root>
+import Sidebar from '@components/navigation/sidebar/Sidebar';
 ```
 
-### Responsive
+### Sidebar (default export) + compound
 
-- **Desktop**: Sidebar expanded/collapsed con toggle
-- **Mobile**: Drawer overlay con body scroll lock
-- **Breakpoint**: `useMediaQuery` hook
+| Pieza | Rol |
+|---|---|
+| `Sidebar` (root) | Provee `SidebarContext` (`expanded`/`toggleExpanded`); en mobile renderiza bottom bar + backdrop + scroll lock del body |
+| `Sidebar.Header` | Encabezado |
+| `Sidebar.Toggle` | Botón colapsar/expandir (labels "Colapsar"/"Expandir") |
+| `Sidebar.Nav` | `<nav aria-label="Navegación principal">` |
+| `Sidebar.Footer` | Pie |
 
-### Dependencias
+- **Mobile** (`max-width: 768px`): bottom bar fija con menú + items (`/ajustes`, "Cerrar sesión" danger), backdrop y bloqueo de scroll del body cuando está abierto; se auto-cierra al navegar.
+- **Rutas hardcodeadas**: el logo va a `/dashboard`; la bottom bar contiene `/ajustes` y logout → `/login`.
+- **Textos en español hardcodeados**: "Colapsar", "Expandir", "Ajustes", "Cerrar sesión", "Abrir menú".
 
-- `react-router`
-- `@hooks/useMediaQuery`
-- `Sidebar.module.css` (transiciones expand/collapse)
+### NavItem
+
+| Prop | Tipo | Default | Descripción |
+|---|---|---|---|
+| `as` | `ElementType` | `Link` (react-router) | Componente renderizador |
+| `to` | `string` | — | Se pasa al componente cuando existe |
+| `icon` | `ElementType` | — | Ícono (react-icons); **hereda `currentColor`** |
+| `label` | `string` | — | Texto |
+| `active` | `boolean` | `false` | Estado activo |
+| `danger` | `boolean` | `false` | Estilo de peligro; **gana sobre active/hover** |
+| `className` / `onClick` | — | — | Extras; `onClick` se usa cuando `as="button"` |
+
+### NavGroup
+
+| Prop | Tipo | Default | Descripción |
+|---|---|---|---|
+| `icon` | `ElementType` | — | Ícono del grupo |
+| `label` | `string` | — | Label |
+| `open` | `boolean` | `false` | Acordeón abierto |
+| `active` | `boolean` | `false` | Algún hijo activo |
+| `onToggle` | `() => void` | — | Click en el toggle |
+| `children` | `ReactNode` | — | `NavItem` u otros |
+
+Acordeón con la técnica **`grid-template-rows: 0fr → 1fr`** (sin adivinar max-height). El chevron solo es visible con sidebar expandido.
+
+### SidebarLogo
+
+| Prop | Tipo | Descripción |
+|---|---|---|
+| `src` | `string` | URL del logo |
+| `name` | `string` | Nombre (alt + texto) |
+
+Hardcodea `to="/dashboard"`.
+
+### UserAvatar
+
+| Prop | Tipo | Descripción |
+|---|---|---|
+| `name` | `string` | Nombre (obtiene la inicial) |
+| `role` | `string` | Rol opcional |
+| `photoUrl` | `string` | Foto opcional |
+
+Fallback a la inicial sobre fondo accent si no hay `photoUrl` o la imagen falla (`onError`).
+
+### UserClock
+
+Reloj en vivo: `setInterval` de 1s, formato con locale `es-ES` (hora + fecha abreviada). Sin props.
+
+### sidebar/types.ts
+
+Modelo de datos (no usado por `NavItem.tsx`): `NavItem { to, icon: IconType, label, danger? }` y `GroupItem { id, icon: IconType, label, basePath, children: NavItem[] }`. El contrato de datos usa `IconType` de `react-icons`.
+
+## Gotchas y deudas
+
+- El barrel de navigation **no exporta** el sidebar: deep import obligatorio.
+- `Sidebar` está **acoplado a la app**: react-router, `useAuth`, rutas hardcodeadas (`/dashboard`, `/ajustes`, `/login`) y textos en español.
+- `Tabs` no tiene navegación por flechas (solo Enter/Space).
+- El botón `…` del `Breadcrumb` colapsado no tiene `onClick` funcional.

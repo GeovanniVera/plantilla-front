@@ -1,137 +1,81 @@
-# Documentación del Proyecto
+# Documentación — Plantilla Frontend Admin
 
-## Módulos Documentados
+Documentación de la plantilla de frontend admin, sincronizada con el código real del repositorio. Cada guía describe el estado actual de su módulo en `src/`; si un archivo de código cambia, la guía correspondiente debe actualizarse en el mismo cambio.
 
-### 🔴 Auth
-Módulo de autenticación y autorización.
+## Módulos documentados
 
-- [README](./auth/README.md) - Visión general y quick start
-- [Arquitectura](./auth/architecture.md) - Contratos, persistencia, eventos
-- [Flujos](./auth/flows.md) - Secuencias paso a paso
-- [API Reference](./auth/api-reference.md) - Endpoints y contratos
-- [Guards](./auth/guards.md) - Protección de rutas
+| Área | Guía | Alcance |
+|---|---|---|
+| API client | [api-client/README.md](./api-client/README.md) | Cliente HTTP, interceptors, servicios y tipos de respuesta (`src/lib/api`) |
+| Autenticación | [auth/README.md](./auth/README.md) | Autenticación y autorización: `AuthProvider`, guards, `Can`, flujos de login/registro/recuperación (`src/auth`) |
+| Componentes | [components/README.md](./components/README.md) | Design system: primitives, forms, overlays, feedback, navigation, layout, data-display (`src/components`) |
+| Features | [features/README.md](./features/README.md) | Features de dominio: audit, profile, roles, settings, users (`src/features`) |
+| Hooks | [hooks/README.md](./hooks/README.md) | Hooks React Query de auth, `useMediaQuery`, `useIsMobile` (`src/hooks`) |
+| Pages | [pages/README.md](./pages/README.md) | Páginas de auth, admin, ajustes y raíz (`src/pages`) |
+| Support | [support/README.md](./support/README.md) | Configuración de soporte: app, config, i18n, lib, test |
+| Theme | [theme/README.md](./theme/README.md) | `ThemeProvider`, tokens, colores semánticos OKLCH, contraste WCAG y persistencia (`src/theme`) |
 
-### 🔴 API Client
-Cliente HTTP centralizado para comunicación con el backend.
+## Stack tecnológico
 
-- [README](./api-client/README.md) - Visión general y quick start
-- [Arquitectura](./api-client/architecture.md) - Pipeline de requests, config, timeout
-- [Types](./api-client/types.md) - Contratos ApiResponse, User, AuthResponse, etc.
-- [Interceptors](./api-client/interceptors.md) - Refresh token, deduplicación, anti-bucle
+| Tecnología | Versión | Propósito |
+|---|---|---|
+| React / react-dom | ^19.2.8 | UI |
+| react-router | ^8.3.0 | Enrutamiento declarativo (`Routes`/`Route`, sin `react-router-dom`) |
+| @tanstack/react-query | ^5.102.8 | Server state (+ devtools) |
+| i18next + react-i18next | ^26.4.2 / ^17.0.13 | Internacionalización |
+| date-fns | ^4.4.0 | Fechas |
+| react-day-picker | ^10.0.1 | Calendarios |
+| react-icons | ^5.7.0 | Iconos |
+| react-loading-skeleton | ^3.5.0 | Skeletons |
+| TypeScript | ~6.0.2 | Tipado estático |
+| Vite + @vitejs/plugin-react | ^8.2.0 / ^6.0.4 | Build tool y dev server |
+| Tailwind CSS + @tailwindcss/vite | ^4.3.3 | Utility-first CSS |
+| Vitest + jsdom | latest / ^30.0.1 | Testing unitario |
+| MSW | ^2.15.0 | Mocks de API |
+| Storybook | ^10.5.10 | Documentación de componentes (addons a11y/docs/mcp/vitest, react-vite, chromatic) |
+| @testing-library/react / jest-dom / user-event | ^16.3.3 / ^7.0.1 / ^14.6.7 | Testing de UI |
+| oxlint | ^1.75.0 | Linting |
+| Prettier + prettier-plugin-tailwindcss | ^3.4.2 / ^0.6.9 | Formateo |
+| husky + lint-staged | ^9.1.7 / ^17.5.1 | Git hooks |
+| Playwright + @vitest/browser-playwright | latest | Tests de Storybook |
 
-### 🔴 Theme
-Sistema de diseño y theming con paletas semánticas accesibles.
-
-- [README](./theme/README.md) - Visión general y quick start
-- [Arquitectura](./theme/architecture.md) - Flujo de datos, effects, orquestación
-- [Tokens](./theme/tokens.md) - Tokens disponibles y CSS variables
-- [Semantic](./theme/semantic.md) - Generador de paletas OKLCH
-- [Contrast](./theme/contrast.md) - Motor WCAG 2.1
-- [Persistence](./theme/persistence.md) - Strategy Pattern para persistencia
-
-### 🔴 Components
-Design system completo con 30+ componentes UI.
-
-- [README](./components/README.md) - Visión general y patrones
-- [Primitives](./components/primitives.md) - Button, Input, Select, Textarea, Checkbox, Radio, Badge, StatusDot
-- [Forms](./components/forms.md) - useForm, Form, FormField, FormContext
-- [Overlays](./components/overlays.md) - Modal, Drawer, DrawerStack, ConfirmDialog
-- [Feedback](./components/feedback.md) - Toast, Spinner, Skeleton
-- [Navigation](./components/navigation.md) - Breadcrumb, Tabs, Sidebar
-- [Layout](./components/layout.md) - Card, StatCard, FormLayout
-- [Data Display](./components/data-display.md) - BaseTable, DataTable, ExcelTable, Calendar
-- [Patterns](./components/patterns.md) - Compound, Dual API, Context-driven, Portal, etc.
-
-### 🔴 Hooks
-Hooks personalizados para autenticación y responsive design.
-
-- [README](./hooks/README.md) - Inventario y arquitectura
-- [useAuth](./hooks/useAuth.md) - 8 hooks de autenticación con React Query
-- [Responsive](./hooks/responsive.md) - useMediaQuery y useIsMobile
-- [Gaps](./hooks/gaps.md) - Hooks faltantes (useDebounce, useLocalStorage)
-
-### 🔴 Features
-Funcionalidades de negocio (solo settings implementada).
-
-- [README](./features/README.md) - Inventario y arquitectura
-- [Settings](./features/settings.md) - Configuración de brand colors y theming
-
-### 🔴 Pages
-12 páginas del proyecto (7 auth, 3 error, 2 otras).
-
-- [README](./pages/README.md) - Inventario, flujos, lazy loading
-- [Auth](./pages/auth.md) - Login, Register, ForgotPassword, VerifyOTP, ResetPassword, VerifyEmail, VerifyEmailConfirm
-- [Errors](./pages/errors.md) - Forbidden (403), NotFound (404), ServerError (500)
-- [Other](./pages/other.md) - TermsPage, AjustesIndex
-- [Patterns](./pages/patterns.md) - Patrones, issues, bugs, recomendaciones
-
-### 🔴 Support
-Módulos de soporte: config, i18n, API client, testing, app.
-
-- [README](./support/README.md) - Inventario y mapa de dependencias
-- [Config](./support/config.md) — Variables de entorno tipadas
-- [i18n](./support/i18n.md) — Internacionalización con i18next
-- [Lib](./support/lib.md) — API Client, Token Store, servicios
-- [Test](./support/test.md) — Infraestructura de testing con MSW
-- [App](./support/app.md) — App.tsx, routes, layouts, styles, main.tsx
-
----
-
-## Stack Tecnológico
-
-| Categoría | Tecnología |
-|-----------|------------|
-| Framework | React 19 + TypeScript 6 |
-| Bundler | Vite 8 |
-| Routing | React Router 8 |
-| Estilos | Tailwind CSS 4 + CSS Modules |
-| State Server | TanStack React Query 5 |
-| i18n | i18next + react-i18next |
-| Testing | Vitest + Testing Library + MSW |
-| Docs | Storybook 10 |
-
----
-
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 src/
-├── auth/           # Autenticación y autorización
-├── components/     # Design system (UI library)
-├── config/         # Variables de entorno
-├── features/       # Funcionalidades de negocio
-├── hooks/          # Hooks personalizados
-├── layouts/        # Estructura de página
-├── lib/            # Utilidades, servicios, helpers
-├── pages/          # Páginas/rutas
-├── routes/         # Definición de rutas
-├── styles/         # Estilos globales
-├── test/           # Infraestructura de testing
-├── theme/          # Sistema de diseño y theming
-└── App.tsx         # Orquestación principal
+├── auth/          # Autenticación y autorización (AuthProvider, guards, Can)
+├── components/    # Design system: primitives, forms, overlays, feedback,
+│                  # navigation, layout, data-display (cada familia con barrel propio)
+├── config/        # Configuración de entorno tipada (env)
+├── features/      # Features de dominio: audit, profile, roles, settings, users
+├── hooks/         # Hooks React Query de auth, useMediaQuery, useIsMobile
+├── layouts/       # AuthLayout, MainLayout, ErrorLayout
+├── lib/           # API client, token store e i18n
+├── pages/         # Páginas de auth, admin, ajustes y raíz
+├── routes/        # Código muerto: el router real vive en src/App.tsx
+├── styles/        # Estilos globales
+├── test/          # Setup de tests y mocks de MSW
+├── theme/         # ThemeProvider, tokens, colores semánticos y persistencia
+├── App.tsx        # Router real (todas las rutas)
+└── main.tsx       # Orquestación: StrictMode → QueryClientProvider →
+                   # BrowserRouter → ThemeProvider → ToastProvider → App
 ```
 
----
+Alias de importación: `@components`, `@hooks`, `@theme`, `@config`, `@lib` → `src/*`.
 
-## Comandos Utiles
+## Comandos útiles
 
-```bash
-# Desarrollo
-npm run dev
+| Comando | Descripción |
+|---|---|
+| `npm run dev` | Dev server (Vite) |
+| `npm run build` | Type-check (`tsc -b`) + build de producción |
+| `npm run typecheck` | Type-check sin emitir |
+| `npm run lint` | Linting (oxlint) |
+| `npm run format` / `format:check` | Formatear / verificar formato (Prettier) |
+| `npm run test` / `test:watch` / `test:coverage` | Tests (Vitest) |
+| `npm run storybook` / `build-storybook` | Storybook dev / build estático |
+| `npm run preview` | Previsualizar el build |
 
-# Build
-npm run build
+## Nota sobre el router
 
-# Tests
-npm run test
-npm run test:watch
-npm run test:coverage
-
-# Lint y format
-npm run lint
-npm run format
-npm run typecheck
-
-# Storybook
-npm run storybook
-```
+El router real de la aplicación vive en `src/App.tsx`, con todas las rutas declaradas de forma lazy. El directorio `src/routes/` es código muerto y no debe usarse como referencia.

@@ -1,205 +1,108 @@
-# Feedback
+# Feedback (`src/components/feedback/`)
 
-Componentes de retroalimentación: Toast, Spinner, Skeleton.
+Retroalimentación visual: toasts, spinners y skeletons.
 
-## ToastProvider + useToast
+## Barrel (`feedback/index.ts`)
 
-### ToastProvider Props
+Exporta: `ToastProvider`, `useToast` (+ tipos `ToastItem`, `ToastVariant`, `ToastPosition`, `ToastAPI`, `ToastProviderProps`), `Skeleton` + 4 presets (`CardSkeleton`, `TableRowSkeleton`, `StatSkeleton`, `FormSkeleton`) y `Spinner`.
+
+**No exporta** `Toast` (item interno, deep import no recomendado).
+
+## ToastProvider
+
+Proveedor global de toasts. Estado local + registro global (`registerToast`).
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `children` | `ReactNode` | required | Árbol de la app |
-| `position` | `'top-right' \| 'top-center' \| 'bottom-right' \| 'bottom-center'` | `'top-right'` | Posición |
+|---|---|---|---|
+| `children` | `ReactNode` | — | Árbol de la app |
+| `position` | `'top-right' \| 'top-center' \| 'bottom-right' \| 'bottom-center'` | `'top-right'` | Posición del contenedor |
 | `maxVisible` | `number` | `3` | Máximo de toasts visibles |
-| `defaultDuration` | `number` | `5000` | Duración auto-close (ms) |
+| `defaultDuration` | `number` | `5000` | Duración de auto-cierre en ms |
 
-### useToast API
+- Renderiza el contenedor por **portal a `document.body`** con `z-[2000]`.
+- Muestra `toasts.slice(-maxVisible)`: con más toasts que `maxVisible`, los más nuevos ganan.
+- Al montar registra la API global (`registerToast`) y al desmontar la desregistra.
 
-```typescript
-{
-  success: (message, options?) => void,
-  error: (message, options?) => void,
-  warning: (message, options?) => void,
-  info: (message, options?) => void,
-  dismiss: (id: string) => void,
-}
-```
+Se monta una sola vez en la raíz de la app (ver `src/main.tsx`).
 
-### Toast Options
+## useToast
 
-| Prop | Tipo | Descripción |
-|------|------|-------------|
-| `duration` | `number` | Override auto-close (ms) |
-| `action` | `{ label, onClick }` | Botón de acción |
-
-### Patrón de Diseño
-
-**Módulo singleton** — `ToastProvider` registra la API en un closure (`registerToast`/`unregisterToast`), `useToast` lee de esa referencia. No usa React Context.
-
-### Accesibilidad
-
-- `role="alert"`
-- `aria-live="polite"`
-
-### Uso
+Hook de acceso a la API de toasts — **patrón singleton global, NO context**.
 
 ```tsx
-// En App.tsx
-<ToastProvider position="top-right" maxVisible={3}>
-  <App />
-</ToastProvider>
-
-// En cualquier componente
-function MyComponent() {
-  const toast = useToast();
-
-  const handleSave = async () => {
-    try {
-      await save();
-      toast.success('Guardado correctamente');
-    } catch (error) {
-      toast.error('Error al guardar', {
-        action: { label: 'Reintentar', onClick: handleSave },
-      });
-    }
-  };
-
-  return <Button onClick={handleSave}>Guardar</Button>;
-}
+const toast = useToast();
+toast.success('Guardado correctamente');
+toast.error('Error al guardar', { action: { label: 'Reintentar', onClick: retry } });
+toast.warning('Cuidado', { duration: 8000 });
+toast.info('Novedad');
+toast.dismiss(id);
 ```
 
----
+API (`ToastAPI`):
+
+| Método | Firma |
+|---|---|
+| `success` / `error` / `warning` / `info` | `(message: string, options?: { duration?: number; action?: { label: string; onClick: () => void } }) => void` |
+| `dismiss` | `(id: string) => void` |
+
+Comportamiento:
+
+- El registro es un **module-level `toastFn`** al que `ToastProvider` se suscribe al montar; el hook llama `toastFn[method](...)` directamente, sin context.
+- ⚠️ **Silencioso sin provider**: si no hay `ToastProvider` montado, solo emite `console.warn('[Toast] No ToastProvider found in the tree.')` y retorna — no lanza.
+
+## Toast (item interno)
+
+El item renderizado por `ToastProvider` (no exportado por barrel):
+
+- **Auto-close** con `duration` por item o el `defaultDuration` del provider.
+- **Pause on hover**: al entrar el mouse pausa el timer; al salir lo reinicia.
+- `action` opcional: botón con `label`/`onClick`.
+- Animación de entrada (`animate-toast-in`) y **salida de 200ms** (`animate-toast-out`) antes de desmontar.
+- `role="alert"`, `aria-live="polite"`, botón de cierre con `title="Cerrar"`.
 
 ## Spinner
 
-### Props
+Indicador de carga circular, CSS puro, sin dependencias.
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `size` | `'sm' \| 'md' \| 'lg' \| number` | `'md'` | Tamaño (24/40/64px o custom) |
-| `color` | `'accent' \| 'white' \| 'current'` | `'accent'` | Color del spinner |
-| `className` / `style` | — | — | Override estilos |
+|---|---|---|---|
+| `size` | `'sm' \| 'md' \| 'lg' \| number` | `'md'` | `sm`=24, `md`=40, `lg`=64; o píxeles exactos |
+| `color` | `'accent' \| 'white' \| 'current'` | `'accent'` | `accent` → `var(--accent)`; `white` → `#fff`; `current` → `currentColor` |
+| `className` / `style` | — | — | Extras |
 
-### Tamaños
-
-| Size | Pixels |
-|------|--------|
-| `sm` | 24px |
-| `md` | 40px |
-| `lg` | 64px |
-
-### Accesibilidad
-
-- `role="status"`
-- `aria-label="Cargando"`
-- `<span class="sr-only">` para screen readers
-
-### Uso
-
-```tsx
-<Spinner size="sm" />
-<Spinner size="lg" color="white" />
-<Spinner size={48} color="current" />
-```
-
-### Nota Técnica
-
-Genera `<style>` tags dinámicos por tamaño (CSS puro inline, no Tailwind).
-
----
+- `role="status"`, `aria-label="Cargando"` + texto `sr-only` "Cargando...".
+- ⚠️ **Único CSS-in-JS crudo del sistema**: inyecta un `<style>` por render con keyframes nombrados por tamaño (`spinner-${px}`). No es un defecto funcional, pero es una anomalía deliberada respecto al resto del styling.
 
 ## Skeleton
 
-### Props
+Wrapper de `react-loading-skeleton` con CSS variables del theme.
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `variant` | `'text' \| 'circular' \| 'rectangular'` | `'text'` | Forma |
+|---|---|---|---|
+| `variant` | `'text' \| 'circular' \| 'rectangular'` | `'text'` | Forma (circular → `circle`) |
 | `width` / `height` | `number \| string` | — | Dimensiones |
-| `count` | `number` | `1` | Número de líneas |
-| `className` / `style` | — | — | Override |
+| `count` | `number` | `1` | Cantidad de líneas |
+| `className` / `style` | — | — | Extras |
 
-### Sub-componentes Pre-armados
+Mapea `--base-color: var(--surface)` y `--highlight-color: var(--border-base)` para heredar el theme.
 
-| Componente | Descripción |
-|------------|-------------|
-| `CardSkeleton` | Skeleton para tarjetas |
-| `TableRowSkeleton({ columns })` | Skeleton para filas de tabla |
-| `StatSkeleton` | Skeleton para estadísticas |
-| `FormSkeleton({ fields })` | Skeleton para formularios |
+### Presets
 
-### Uso
+| Preset | Props | Descripción |
+|---|---|---|
+| `CardSkeleton()` | — | Esqueleto de tarjeta de contenido |
+| `TableRowSkeleton({ columns = 5 })` | `columns?: number` | Fila de tabla |
+| `StatSkeleton()` | — | Tarjeta de estadística |
+| `FormSkeleton({ fields = 4 })` | `fields?: number` | Formulario (labels + inputs + botón) |
 
 ```tsx
-// Básico
-<Skeleton variant="text" width="80%" />
 <Skeleton variant="circular" width={40} height={40} />
-<Skeleton variant="rectangular" width="100%" height={200} />
-
-// Múltiples líneas
-<Skeleton count={3} variant="text" />
-
-// Compuestos
-<CardSkeleton />
-<TableRowSkeleton columns={5} />
-<FormSkeleton fields={4} />
+<TableRowSkeleton columns={6} />
 ```
 
-### Dependencias
+## Gotchas
 
-`react-loading-skeleton` (wrapper con CSS variables del design system).
-
----
-
-## Ejemplo: Loading State
-
-```tsx
-function Dashboard() {
-  const { data, isLoading } = useQuery(['dashboard'], fetchDashboard);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <StatSkeleton />
-        <div className="grid grid-cols-3 gap-4">
-          <CardSkeleton />
-          <CardSkeleton />
-          <CardSkeleton />
-        </div>
-        <TableRowSkeleton columns={5} />
-      </div>
-    );
-  }
-
-  return <DashboardContent data={data} />;
-}
-```
-
----
-
-## Ejemplo: Error State con Toast
-
-```tsx
-function UserProfile() {
-  const toast = useToast();
-  const queryClient = useQueryClient();
-
-  const updateProfile = useMutation(updateProfileApi, {
-    onSuccess: () => {
-      queryClient.invalidateQueries(['profile']);
-      toast.success('Perfil actualizado');
-    },
-    onError: (error) => {
-      toast.error('Error al actualizar perfil', {
-        action: { label: 'Reintentar', onClick: () => updateProfile.mutate() },
-      });
-    },
-  });
-
-  return (
-    <Form onSubmit={(v) => updateProfile.mutate(v)}>
-      {/* ... */}
-    </Form>
-  );
-}
-```
+- `useToast` no lanza sin provider: solo `console.warn` (los consumidores pueden no darse cuenta del fallo silencioso).
+- `ToastProvider` y `useToast` usan el mismo registro global: montar más de un provider a la vez hace que el último desregistre al anterior.
+- `Toast` no está en el barrel; no importarlo directamente.
+- `Spinner` inyecta `<style>` por render (keyframes por tamaño).

@@ -1,261 +1,105 @@
-# Auth Flows
+# Flujos de autenticación
 
-## Diagrama de Flujo General
+Secuencia de cada flujo soportado por el módulo: login, registro, recuperación de contraseña, verificación de email, logout y restauración de sesión.
 
-```
-                         ┌──────────────┐
-                         │   Inicio App  │
-                         └──────┬───────┘
-                                │
-                    ┌───────────▼───────────┐
-                    │  ¿Hay token en storage?│
-                    └───────┬───────┬───────┘
-                     Sí     │       │   No
-               ┌────────────▼─┐   ┌─▼──────────────┐
-               │  GET /me     │   │ isLoading=false  │
-               │  ¿success?   │   │ No autenticado   │
-               └──┬───────┬──┘   └─────────────────┘
-            Sí    │   No  │
-       ┌──────────▼┐  ┌───▼──────────┐
-       │Autenticado │  │ Limpiar todo │
-       └────────────┘  └──────────────┘
-```
-
----
-
-## Login
-
-### Flujo
+## Login (con "Recuérdeme")
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Usuario completa formulario (email, password, remember)      │
-│ 2. handleSubmit() → e.preventDefault()                          │
-│ 3. setLoading(true), setError('')                               │
-│ 4. await login(email, password, remember)                       │
-│    └─ provider.tsx: login()                                     │
-│       ├─ await authService.login(email, password)               │
-│       │   └─ client.post('/auth/login', {email, password})      │
-│       ├─ Si !response.success → throw Error(message)            │
-│       ├─ Desestructura { user, token, refreshToken, expiresIn } │
-│       ├─ authStorage.setToken(token, expiresIn, remember)       │
-│       ├─ authStorage.setRefreshToken(refreshToken, remember)    │
-│       ├─ tokenManager.set(token)                                │
-│       └─ setState({ user, token, isAuthenticated: true })       │
-│ 5. navigate(from, { replace: true })                            │
-└─────────────────────────────────────────────────────────────────┘
+useLogin() [hooks] / login() [AuthContext]
+  ├─ authService.login(email, password)
+  │     ├─ éxito   → { user, accessToken, expiresIn }
+  │     └─ falla   → throw Error(response.message || 'Credenciales inválidas')
+  ├─ authStorage.clearAll()                     ← limpia ambos storages
+  ├─ authStorage.setActiveSession(remember, expiresIn)
+  │     └─ escribe SOLO el indicador auth_expires_at
+  │        remember=true  → localStorage
+  │        remember=false → sessionStorage
+  ├─ tokenManager.set(accessToken, expiresIn)   ← access token SOLO en memoria
+  └─ setState({ user, token, isAuthenticated: true, isLoading: false })
 ```
 
-### API
+- `remember` por defecto es `true` (indicador en `localStorage`). Con `false`, la sesión vive solo en `sessionStorage` (scoped a la pestaña).
+- El access token nunca se persiste: `authStorage` escribe solo el indicador de sesión; el token vive en `tokenManager` (memoria).
+- El refresh token nunca toca el frontend: viaja en cookie HttpOnly del backend.
+- El hook `useLogin()` (React Query) delega en `login()` del `AuthContext` e invalida la query `['auth', 'me']` al completar.
+
+## Registro
 
 ```
-POST /auth/login
-Body: { email: string, password: string }
+useRegister().mutate({ name, email, password, acceptedTerms })
+  └─ authService.register(data)  → POST /auth/register
+```
 
-Response (éxito):
-{
-  "success": true,
-  "data": {
-    "user": { "id", "email", "name", "roles", "privileges", "isVerified" },
-    "token": "eyJ...",
-    "refreshToken": "refresh-1",
-    "expiresIn": 3600
-  }
-}
+`register` retorna solo un mensaje opaco (`ApiResponse<void>`): **no** devuelve user ni token. Tras registrarse, el usuario debe verificar su email (flujo siguiente) antes de acceder a rutas protegidas.
 
-Response (error):
-{
-  "success": false,
-  "message": "Credenciales inválidas",
-  "code": "UNAUTHORIZED"
+## Recuperación de contraseña (forgot → OTP → reset)
+
+Máquina de estado gestionada por `ForgotPasswordContext` (`src/auth/ForgotPasswordContext.tsx`), con tres rutas:
+
+| Ruta | Estado | Acción |
+|---|---|---|
+| `/forgot-password` | `email` | `setEmail(email)`; dispara `authService.forgotPassword` |
+| `/verify-otp` | `token: null`, `otpVerified: false` | `verifyOtp(otp)` → guarda `response.data.resetToken` en `state.token` y marca `otpVerified: true` |
+| `/reset-password` | `token` disponible | `resetPassword(password)` → `authService.resetPassword(state.token, password)` |
+
+```ts
+interface ForgotPasswordState {
+  email: string;
+  token: string | null;
+  otpVerified: boolean;
 }
 ```
 
----
+Comportamiento clave:
 
-## Register
+- `verifyOtp(otp)` depende de `state.email`; si la respuesta falla devuelve `{ success: false, error }` (p. ej. "Código inválido o expirado").
+- `resetPassword(password)` **requiere** `state.token`; sin token devuelve `{ success: false, error: 'Token no disponible' }`.
+- `reset()` reinicia todo el estado (útil al salir del flujo o tras completarlo).
+- `useForgotPassword()` lanza `Error` fuera de `ForgotPasswordProvider`.
+- `ForgotPasswordProvider` y `useForgotPassword` (contexto) **no** se exportan por el barrel de auth: importe desde `src/auth/ForgotPasswordContext.tsx`.
 
-### Flujo
+> ⚠ Colisión de nombres: `useForgotPassword` también existe en `src/hooks/useAuth.ts` como mutación React Query (`authService.forgotPassword(email)`). Para el flujo de 3 pasos use el hook del contexto; para disparar el email de recuperación sin máquina de estado, use el de React Query. Ver [Notas de uso del barrel de hooks](../hooks/gaps.md).
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Usuario llena: name, email, password, confirmPassword,      │
-│    acceptTerms                                                  │
-│ 2. Validaciones client-side:                                    │
-│    ├─ !acceptTerms → "Debés aceptar los términos"              │
-│    └─ password !== confirmPassword → "Las contraseñas no        │
-│       coinciden"                                                │
-│ 3. await registerMutation.mutate({ name, email, password })     │
-│    └─ authService.register({ name, email, password })           │
-│ 4. Si !response.success → setError(response.message)            │
-│ 5. Si success:                                                  │
-│    └─ Login automático:                                         │
-│       loginMutation.mutate({ email, password, remember: true }) │
-│       └─ navigate('/verify-email', { state: { email } })        │
-└─────────────────────────────────────────────────────────────────┘
-```
+## Verificación de email
 
-### API
-
-```
-POST /auth/register
-Body: { name: string, email: string, password: string }
-
-Response (éxito):
-{
-  "success": true,
-  "data": {
-    "user": { "id", "email", "name", "roles": ["viewer"], "isVerified": false },
-    "token": "eyJ..."
-  }
-}
-```
-
----
-
-## Forgot Password (3 pasos)
-
-### Paso 1: Solicitar Email
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Usuario ingresa email                                        │
-│ 2. await forgotPasswordMutation.mutate(email)                   │
-│    └─ authService.forgotPassword(email)                         │
-│ 3. Si success:                                                  │
-│    ├─ setEmail(email) ← guarda en ForgotPasswordContext         │
-│    └─ setTimeout → navigate('/verify-otp') después de 2s        │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**API:**
-```
-POST /auth/forgot-password
-Body: { email: string }
-
-Response: { "success": true, "message": "Email de recuperación enviado" }
-```
-
-### Paso 2: Verificar OTP
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Página renderiza 6 inputs de dígito                         │
-│ 2. Auto-submit al completar 6 dígitos                           │
-│ 3. await verifyOtp(otpString)                                   │
-│    └─ ForgotPasswordContext.verifyOtp                           │
-│       └─ authService.verifyOtp(email, otp)                      │
-│ 4. Si success:                                                  │
-│    ├─ setState({ token: data.token, otpVerified: true })        │
-│    └─ navigate('/reset-password')                               │
-│ 5. Si error:                                                    │
-│    ├─ setError(result.error)                                    │
-│    └─ Resetea inputs a ['', '', '', '', '', '']                │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**API:**
-```
-POST /auth/verify-otp
-Body: { email: string, otp: string }
-
-Response (éxito): { "success": true, "data": { "verified": true, "token": "reset-token-..." } }
-Response (OTP inválido): { "success": false, "code": "INVALID_OTP" }
-Response (OTP expirado): { "success": false, "code": "EXPIRED" }
-```
-
-### Paso 3: Reset Password
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Guard: si !token → navigate('/forgot-password')              │
-│ 2. Usuario llena: password, confirmPassword                     │
-│ 3. await resetPasswordMutation.mutate({ token, password })      │
-│    └─ authService.resetPassword(token, password)                │
-│ 4. Si success:                                                  │
-│    ├─ reset() ← limpia ForgotPasswordContext                     │
-│    └─ setTimeout → navigate('/login') después de 3s            │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**API:**
-```
-POST /auth/reset-password
-Body: { token: string, password: string }
-
-Response: { "success": true, "message": "Contraseña actualizada" }
-```
-
----
-
-## Verify Email
-
-### Desde enlace del email
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. useEffect al montar:                                        │
-│    ├─ const token = searchParams.get('token')                   │
-│    └─ await verifyEmailMutation.mutate(token)                   │
-│ 2. Si success:                                                  │
-│    └─ setTimeout → navigate('/login') después de 3s            │
-│ 3. Si error → mostrar mensaje de error                          │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**API:**
-```
-POST /auth/verify-email
-Body: { token: string }
-
-Response (éxito): { "success": true, "data": { "email": "usuario@ejemplo.com" } }
-Response (token inválido): { "success": false, "code": "VALIDATION_ERROR" }
-```
-
----
+- `useVerifyEmail().mutate(token)` → `authService.verifyEmail(token)` → `POST /auth/verify-email` (devuelve `{ email }`).
+- `useResendVerification().mutate(email)` → `authService.resendVerification(email)` → `POST /auth/resend-verification`.
+- Las rutas de verificación usan `RedirectIfVerified`: si el usuario ya está autenticado **y** verificado, redirige a `/dashboard`; un usuario anónimo o autenticado sin verificar sigue viendo la pantalla.
 
 ## Logout
 
-### Flujo normal
-
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. await logout()                                               │
-│    └─ authService.logout()                                      │
-│ 2. finally (SIEMPRE):                                           │
-│    ├─ authStorage.clearAll()                                    │
-│    ├─ tokenManager.clear()                                      │
-│    └─ setState({ user: null, isAuthenticated: false })          │
-└─────────────────────────────────────────────────────────────────┘
+useLogout() [hooks] / logout() [AuthContext]
+  ├─ try   { await authService.logout() }   ← POST /auth/logout
+  └─ finally {
+        authStorage.clearAll();             ← limpia AMBOS storages (indicador + claves legacy);
+        tokenManager.clear();
+        setState(no autenticado);
+      }
 ```
 
-### Logout forzado (refresh token fallido)
+La limpieza local ocurre **siempre**, incluso si la llamada a la API falla. El hook `useLogout()` (React Query) ejecuta `queryClient.clear()` al terminar (settled), descartando todo el cache de queries.
+
+## Restauración de sesión (al montar la app)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. client.ts detecta 401 tras refresh                           │
-│ 2. Despacha CustomEvent('auth:logout')                          │
-│ 3. AuthProvider listener:                                       │
-│    ├─ authStorage.clearAll()                                    │
-│    ├─ tokenManager.clear()                                      │
-│    └─ window.location.href = '/login' ← hard redirect          │
-└─────────────────────────────────────────────────────────────────┘
+Montaje del AuthProvider
+  └─ restoreSession()
+        ├─ authStorage.getActiveSession()     ← sessionStorage primero, luego localStorage
+        │     └─ sin indicador → isLoading=false
+        ├─ con indicador → tryRefreshToken()  ← POST /auth/refresh (cookie HttpOnly)
+        │     ├─ refresh falla → authStorage.clear(remember) + tokenManager.clear() + no autenticado
+        │     └─ refresh OK → token nuevo en memoria (tokenManager.set)
+        │           └─ authService.me()
+        │                 ├─ éxito   → { user, token, isAuthenticated: true }
+        │                 └─ falla   → authStorage.clear(remember) + tokenManager.clear() + no autenticado
+        └─ isLoading=false
 ```
 
----
+- El access token no se lee del storage: el diseño memory-only elimina el vector XSS de token persistido. Tras un reload, la sesión se reconstruye vía refresh (cookie HttpOnly) y `GET /auth/me`.
+- `getActiveSession()` evita que un indicador de `localStorage` secuestre una sesión tab-scoped creada en `sessionStorage`.
+- Si el refresh falla durante el uso (token expirado), el interceptor de refresh emite `auth:logout`, y el provider limpia todo y hace hard redirect a `/login`.
 
-## Restaurar Sesión (al montar la app)
+## Deudas conocidas
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. AuthProvider monta → useEffect([], ...)                      │
-│ 2. restoreSession():                                           │
-│    ├─ token = authStorage.getToken(true)  ← localStorage       │
-│    ├─ Si !token → token = authStorage.getToken(false) ← session │
-│    ├─ Si !token → isLoading=false, return (no sesión)           │
-│    ├─ tokenManager.set(token)                                   │
-│    ├─ await authService.me()                                    │
-│    ├─ Si !success: limpiar todo                                 │
-│    └─ Si success: setState({ user, token, isAuthenticated })    │
-└─────────────────────────────────────────────────────────────────┘
-```
+- En restore, login y logout quedan `console.log`/`console.error` de depuración (`[AUTH] ...`) activos en producción.

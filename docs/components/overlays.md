@@ -1,211 +1,134 @@
-# Overlays
+# Overlays (`src/components/overlays/`)
 
-Componentes de superposición: Modal, Drawer, DrawerStack, ConfirmDialog.
+Diálogos y superficies superpuestas: modal, drawer, drawer multi-nivel y diálogo de confirmación. Todos renderizan por **portal a `document.body`** y comparten el `ModalContext` para el cierre.
 
-## Modal (Compound Pattern)
+## Barrel (`overlays/index.ts`)
 
-### Props
+Exporta: `Modal`, `Drawer`, `ConfirmDialog`, `DrawerStack` + tipos (`ModalProps`, `DrawerProps`, `ModalHeaderProps`, `ModalBodyProps`, `ModalFooterProps`, `ConfirmDialogProps`, `ConfirmVariant`, `DrawerStackProps`, `DrawerBreadcrumb`).
+
+## Modal
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `isOpen` | `boolean` | required | Controla visibilidad |
-| `onClose` | `() => void` | required | Callback de cierre |
+|---|---|---|---|
+| `isOpen` | `boolean` | — | Controla la visibilidad |
+| `onClose` | `() => void` | — | Callback de cierre |
+| `children` | `ReactNode` | — | Contenido |
 | `width` | `number \| string` | `520` | Ancho de la ventana |
 | `maxHeight` | `string` | `'85vh'` | Altura máxima |
-| `children` | `ReactNode` | required | Contenido |
+| `className` | `string` | — | Clase adicional |
 
-### Sub-componentes
+Comportamiento:
 
-| Componente | Props | Descripción |
-|------------|-------|-------------|
-| `Modal.Header` | `title`, `rightSlot`, `showClose` (default true), `children` | Cabecera con título |
-| `Modal.Body` | `children` | Cuerpo scrollable |
-| `Modal.Footer` | `children` | Pie con borde superior |
-
-### Accesibilidad
-
-- `role="dialog"`, `aria-modal="true"`
-- Cierre con Escape
-- Click en overlay cierra
-- Focus trap dentro del modal
-
-### Portal
-
-`createPortal(..., document.body)`
-
-### Uso
+- Portal a `document.body`, `role="dialog"`, `aria-modal="true"`.
+- Cierre con **Escape** y **click en el overlay** (solo si el target es el overlay mismo).
+- **Sin focus trap** (deuda conocida).
 
 ```tsx
-<Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-  <Modal.Header title="Confirmar acción" />
-  <Modal.Body>
-    <p>¿Estás seguro de que deseas continuar?</p>
-  </Modal.Body>
+<Modal isOpen={open} onClose={close} width={560}>
+  <Modal.Header title="Editar usuario" />
+  <Modal.Body>...</Modal.Body>
   <Modal.Footer>
-    <Button variant="secondary" onClick={() => setShowModal(false)}>
-      Cancelar
-    </Button>
-    <Button onClick={handleConfirm}>Confirmar</Button>
+    <Button variant="ghost" onClick={close}>Cancelar</Button>
+    <Button onClick={save}>Guardar</Button>
   </Modal.Footer>
 </Modal>
 ```
 
----
-
-## Drawer (Compound Pattern)
-
-### Props
+### Modal.Header
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `isOpen` | `boolean` | required | Controla visibilidad |
-| `onClose` | `() => void` | required | Callback de cierre |
-| `width` | `number \| string` | `480` | Ancho del drawer |
-| `children` | `ReactNode` | required | Contenido |
+|---|---|---|---|
+| `title` | `string` | — | Título (centrado) |
+| `rightSlot` | `ReactNode` | — | Contenido derecho; **reemplaza el botón de cierre** |
+| `showClose` | `boolean` | `true` | Muestra el botón de cierre |
+| `children` | `ReactNode` | — | Alternativa a `title` (contenido custom en el centro) |
 
-### Sub-componentes
+El botón de cierre usa `title="Cerrar"`. `Modal.Body` es el área scrollable; `Modal.Footer` el pie con acciones. Header/Body/Footer lanzan error si se usan fuera de `Modal`/`Drawer` (vía `useModalClose`).
 
-Misma API que Modal pero con título alineado a la izquierda:
-- `Drawer.Header`
-- `Drawer.Body`
-- `Drawer.Footer`
+## Drawer
 
-### Responsive
+| Prop | Tipo | Default | Descripción |
+|---|---|---|---|
+| `isOpen` / `onClose` / `children` | — | — | Igual que Modal |
+| `width` | `number \| string` | `480` | Ancho |
+| `className` | `string` | — | Clase adicional |
 
-En `max-[480px]` colapsa a bottom sheet:
-- `rounded-t-[16px]`
-- `max-h-[85vh]`
-
-### Uso
+- Comparte `ModalContext` y los contratos `ModalHeaderProps`/`ModalBodyProps`/`ModalFooterProps` con `Modal` (mismo contrato, header alineado a la izquierda).
+- Breakpoint `max-[480px]`: colapsa a **bottom-sheet** (`w-full!` con `!important` para ganarle al width inline).
+- Mismo cierre por Escape + click en overlay; sin focus trap.
 
 ```tsx
-<Drawer isOpen={showDrawer} onClose={() => setShowDrawer(false)}>
-  <Drawer.Header title="Detalles" />
-  <Drawer.Body>
-    <p>Contenido del drawer</p>
-  </Drawer.Body>
-  <Drawer.Footer>
-    <Button onClick={() => setShowDrawer(false)}>Cerrar</Button>
-  </Drawer.Footer>
+<Drawer isOpen={open} onClose={close} width={420}>
+  <Drawer.Header title="Detalle" />
+  <Drawer.Body>...</Drawer.Body>
+  <Drawer.Footer>...</Drawer.Footer>
 </Drawer>
 ```
 
----
-
 ## DrawerStack
 
-Drawer multi-nivel con breadcrumbs y animaciones.
-
-### Props
+Drawer multi-nivel con breadcrumbs y animación push/pop.
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `isOpen` | `boolean` | required | Controla visibilidad |
-| `onClose` | `() => void` | required | Callback de cierre |
+|---|---|---|---|
+| `isOpen` / `onClose` | — | — | Igual que Drawer |
 | `level` | `number` | `0` | Nivel actual (0 = primero) |
-| `onBack` | `() => void` | — | Callback de retroceso |
-| `onNavigate` | `(level: number) => void` | — | Click en breadcrumb |
-| `breadcrumbs` | `DrawerBreadcrumb[]` | — | Items de navegación `[{ label, level }]` |
+| `onBack` | `() => void` | — | Botón volver / breadcrumb |
+| `onNavigate` | `(level: number) => void` | — | Click en breadcrumb no actual |
+| `breadcrumbs` | `{ label: string; level: number }[]` | — | Ruta de navegación (reemplaza el título) |
 | `title` | `string` | `''` | Título (cuando no hay breadcrumbs) |
 | `width` | `number \| string` | `480` | Ancho |
-| `children` | `ReactNode` | required | Contenido |
+| `children` | `ReactNode` | — | Contenido del nivel actual |
 
-### Comportamiento
+Comportamiento:
 
-- **Escape**: retrocede si `level > 0`, cierra si `level === 0`
-- **Animaciones**: push/pop según dirección de navegación
-- **Breadcrumbs**: navegación rápida entre niveles
-- **Indicador de nivel**: dots que muestran profundidad
-
-### Uso
-
-```tsx
-const [level, setLevel] = useState(0);
-
-<DrawerStack
-  isOpen={isOpen}
-  onClose={() => setIsOpen(false)}
-  level={level}
-  onBack={() => setLevel(level - 1)}
-  onNavigate={(l) => setLevel(l)}
-  breadcrumbs={[
-    { label: 'Usuarios', level: 0 },
-    { label: 'Detalle', level: 1 },
-    { label: 'Editar', level: 2 },
-  ]}
->
-  {level === 0 && <UserList />}
-  {level === 1 && <UserDetail />}
-  {level === 2 && <UserEdit />}
-</DrawerStack>
-```
-
----
+- **Escape**: si `level > 0` llama `onBack()`; si no, `onClose()`.
+- Con breadcrumbs muestra el botón volver, los crumbs clicables (el último es el actual, no clicable) y el botón cerrar; sin breadcrumbs y `level > 0` muestra **dots indicadores** de nivel.
+- Animación push/pop: `animate-stack-slide-forward` / `animate-stack-slide-back`, elegidas por dirección de navegación (nunca concatenadas), con `key={level}` en el contenedor de contenido.
+- También colapsa a bottom-sheet en `max-[480px]`.
 
 ## ConfirmDialog
 
-### Props
+Diálogo de confirmación construido **sobre `Modal`** (width `420`).
 
 | Prop | Tipo | Default | Descripción |
-|------|------|---------|-------------|
-| `isOpen` | `boolean` | required | Controla visibilidad |
-| `onClose` | `() => void` | required | Callback de cierre |
-| `onConfirm` | `() => void` | required | Callback de confirmación |
-| `title` | `string` | required | Título del diálogo |
-| `message` | `string` | required | Mensaje descriptivo |
-| `confirmLabel` | `string` | `'Confirmar'` | Label del botón confirmar |
-| `cancelLabel` | `string` | `'Cancelar'` | Label del botón cancelar |
-| `variant` | `'default' \| 'destructive' \| 'warning' \| 'info'` | `'default'` | Variante de color/icono |
-| `icon` | `ReactNode` | — | Override del icono auto-generado |
+|---|---|---|---|
+| `isOpen` / `onClose` | — | — | Igual que Modal |
+| `onConfirm` | `() => void` | — | Acción de confirmación |
+| `title` | `string` | — | Título |
+| `message` | `string` | — | Mensaje |
+| `confirmLabel` | `string` | `'Confirmar'` | Texto del botón confirmar |
+| `cancelLabel` | `string` | `'Cancelar'` | Texto del botón cancelar |
+| `variant` | `'default' \| 'destructive' \| 'warning' \| 'info'` | `'default'` | Token semántico de color |
+| `icon` | `ReactNode` | — | Override del ícono auto-generado |
 
-### Variantes
+Notas:
 
-| Variante | Icono | Color Botón Confirmar |
-|----------|-------|----------------------|
-| `default` | — | primary |
-| `destructive` | `LuTrash2` | danger |
-| `warning` | `LuAlertTriangle` | warning |
-| `info` | `LuInfo` | info |
-
-### Uso
+- **No usa el primitivo `Button`**: los botones son custom, con estilos propios por variante.
+- ⚠️ **`handleConfirm` llama `onConfirm(); onClose();` en ese orden fijo**: el consumidor no controla el orden del cierre.
 
 ```tsx
 <ConfirmDialog
-  isOpen={showConfirm}
-  onClose={() => setShowConfirm(false)}
-  onConfirm={handleDelete}
+  isOpen={open}
+  onClose={close}
+  onConfirm={deleteUser}
   title="Eliminar usuario"
-  message="Esta acción no se puede deshacer. El usuario será eliminado permanentemente."
-  confirmLabel="Eliminar"
+  message="Esta acción no se puede deshacer."
   variant="destructive"
+  confirmLabel="Eliminar"
 />
 ```
 
-### Patrón Interno
+## context.ts
 
-Compone `Modal` internamente:
-```tsx
-<Modal isOpen={isOpen} onClose={onClose} width={420}>
-  <Modal.Header title={title} />
-  <Modal.Body>
-    <div className="flex gap-3">
-      {icon}
-      <p>{message}</p>
-    </div>
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="secondary" onClick={onClose}>{cancelLabel}</Button>
-    <Button variant={buttonVariant} onClick={onConfirm}>{confirmLabel}</Button>
-  </Modal.Footer>
-</Modal>
-```
+- `ModalContext`: `createContext<(() => void) | null>(null)` — el callback `onClose` del overlay activo.
+- `useModalClose()`: devuelve el callback; **lanza error** fuera de `Modal`/`Drawer` (`'Modal.Header/Body/Footer must be used inside <Modal> or <Drawer>'`).
 
----
+`Drawer` y `DrawerStack` proveen el mismo contexto, por eso los headers/bodies/footers compartidos funcionan en ambos.
 
-## Compartido: ModalContext
+## Gotchas y deudas
 
-Modal y Drawer comparten el mismo contexto para manejar:
-- Estado de apertura
-- Focus management
-- Scroll lock del body
-- Cierre con Escape
+- **Sin focus trap** en `Modal`/`Drawer`: el foco no se confina dentro del diálogo.
+- `ConfirmDialog` no usa `Button` (botones custom) y `handleConfirm` fija el orden `onConfirm()` → `onClose()`.
+- `Modal.Header` con `rightSlot` **oculta** el botón de cierre (`showClose && !rightSlot`).
+- La animación de entrada depende de tokens `animate-*` definidos en `src/styles/tailwind.css` (overlay-fade-in, window-slide-in, drawer-slide-in, stack-slide-forward/back).

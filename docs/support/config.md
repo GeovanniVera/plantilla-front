@@ -1,83 +1,39 @@
-# Config
+# Configuración de entorno (`src/config/env.ts`)
 
-Variables de entorno tipadas del proyecto plantilla-front.
+## Propósito
 
-## Archivo
+`env.ts` valida y exporta las variables de entorno tipadas de la aplicación. **Todas las variables tienen default** y ninguna es estrictamente requerida en producción; solo en desarrollo se valida `VITE_API_BASE` (si falta, lanza un error).
 
-`src/config/env.ts`
-
-## Interface
-
-```typescript
-interface Env {
-  VITE_API_BASE: string;
-  VITE_AUTH_API_PATH: string;
-  VITE_AUTH_LOGIN_PATH: string;
-  VITE_AUTH_LOGOUT_PATH: string;
-  VITE_AUTH_ME_PATH: string;
-  VITE_AUTH_REFRESH_PATH: string;
-  VITE_REQUEST_TIMEOUT: number;
-  VITE_APP_NAME: string;
-}
+```ts
+export const env = validateEnv();
 ```
 
-## Funciones
+## Variables
 
-### `getEnvVar(key, required?)`
+| Variable | Tipo | Default | `.env.example` |
+|---|---|---|---|
+| `VITE_API_BASE` | string | `/api` | `http://localhost:8080/api` |
+| `VITE_AUTH_LOGIN_PATH` | string | `/auth/login` | `/auth/login` |
+| `VITE_AUTH_REFRESH_PATH` | string | `/auth/refresh` | `/auth/refresh` |
+| `VITE_AUTH_LOGOUT_PATH` | string | `/auth/logout` | `/auth/logout` |
+| `VITE_AUTH_ME_PATH` | string | `/auth/me` | `/auth/me` |
+| `VITE_REQUEST_TIMEOUT` | number | `15000` | `15000` |
+| `VITE_APP_NAME` | string | `SemillaTecnologica` | `SemillaTecnologica` |
 
-Lee de `import.meta.env`. Si `required=true` y falta, lanza `Error`.
+## Comportamiento de validación
 
-### `getEnvNumber(key, defaultValue)`
-
-Parsea a número con fallback seguro.
-
-### `validateEnv()`
-
-En DEV valida que `VITE_API_BASE` exista. Aplica defaults razonables para todo.
-
-## Export
-
-```typescript
-export const env: Env;
-```
-
-## Defaults
-
-| Variable | Default |
-|----------|---------|
-| `VITE_API_BASE` | `'/api'` |
-| `VITE_REQUEST_TIMEOUT` | `15000` |
-| `VITE_APP_NAME` | `'Plantilla Front'` |
-
-## Patrones
-
-### Fail-fast en DEV
-
-Explota temprano si falta una variable requerida:
-
-```typescript
-if (required && !value) {
-  console.error(`[ENV ERROR] Missing required env var: ${key}`);
-  throw new Error(`Missing required env var: ${key}`);
-}
-```
-
-### Graceful degradation en producción
-
-Defaults razonables para todo.
-
-### Single source of truth
-
-Nunca se accede a `import.meta.env` directamente desde otros módulos.
+- `getEnvVar(key, required)` — si la variable falta y es requerida, lanza `Error` (en DEV además loguea `[ENV ERROR]` por consola).
+- `getEnvNumber(key, defaultValue)` — parsea a número; si el valor no es numérico, loguea `[ENV WARNING]` y usa el default.
+- `validateEnv()` — en `import.meta.env.DEV` exige `VITE_API_BASE`; en producción todas caen a su default si faltan.
 
 ## Uso
 
-```typescript
+```ts
 import { env } from '@config/env';
 
-// ✅ Correcto
-const apiUrl = env.VITE_API_BASE;
-
-// ❌ Incorrecto
-const apiUrl = import.meta.env.VITE_API_BASE;
+const response = await fetch(`${env.VITE_API_BASE}/users`);
 ```
+
+## Deudas conocidas
+
+- **`client.ts` NO usa `env` para base ni timeout**: `src/lib/api/client.ts` define `API_BASE = import.meta.env.VITE_API_BASE ?? '/api'` y `REQUEST_TIMEOUT = Number(import.meta.env.VITE_REQUEST_TIMEOUT) || 15000` leyendo `import.meta.env` directamente. El **único** consumidor real de `env` es `src/lib/api/interceptors/refresh.ts` (usa `env.VITE_API_BASE` y `env.VITE_AUTH_REFRESH_PATH`). Existen dos fuentes de verdad para la misma configuración: un cambio en `.env` requiere actualizar ambos consumidores por separado, y los defaults pueden divergir silenciosamente.

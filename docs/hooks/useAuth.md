@@ -1,279 +1,122 @@
-# useAuth
+# Hooks de autenticación (`useAuth.ts`)
 
-8 hooks de autenticación que combinan React Query con AuthContext.
+Detalle de los 8 hooks de React Query exportados por `src/hooks/index.ts`, todos definidos en `src/hooks/useAuth.ts`. Requieren `AuthProvider` (excepto las mutaciones que no usan el contexto, marcadas abajo).
 
-## Arquitectura
+## `useMe`
 
-```
-useAuth.ts (React Query wrappers)
-   ├── useMe()      → Query: GET /auth/me
-   ├── useLogin()   → Mutation + invalidación cache
-   ├── useLogout()  → Mutation + queryClient.clear()
-   └── useRegister, useForgotPassword, useResetPassword, useVerifyEmail, useResendVerification
+| | |
+|---|---|
+| Firma | `() => UseQueryResult<User>` |
+| queryKey | `['auth', 'me']` |
+| Opciones | `retry: false`, `staleTime: 5 * 60 * 1000` (5 minutos) |
+| Servicio | `authService.me()` |
 
-AuthContext (src/auth/hooks.ts)
-   ├── Estado: user, token, isAuthenticated, isLoading
-   ├── Persistencia: authStorage (localStorage/sessionStorage)
-   └── Token management: tokenManager (en client.ts)
-```
-
-**Separación de responsabilidades**:
-- `AuthContext` → tokens y estado local (persistencia)
-- React Query → cache del server state (queries y mutations)
-
----
-
-## useMe
-
-### Params
-
-Ninguno.
-
-### Retorno
-
-`UseQueryResult<User>` — data, isLoading, error, refetch, etc.
-
-### Config
-
-- Query Key: `['auth', 'me']`
-- `retry: false`
-- `staleTime: 5 min`
-
-### Dependencias
-
-`authService.me()` → `GET /auth/me`
-
-### Uso
+Query del usuario actual. Sin token válido, `queryFn` lanza `Error(response.message || 'No autenticado')` y la query queda en estado de error (sin reintentos).
 
 ```tsx
-const { data: user, isLoading } = useMe();
-
-if (isLoading) return <Spinner />;
-return <p>{user.name}</p>;
+const { data: user, isLoading, error } = useMe();
 ```
 
----
+## `useLogin`
 
-## useLogin
+| | |
+|---|---|
+| Firma | `() => useMutation({ email: string; password: string; remember?: boolean })` |
+| Dependencia | `AuthContext.login` (requiere `AuthProvider`) |
+| onSuccess | Invalida `['auth', 'me']` |
 
-### Params
-
-```typescript
-{
-  email: string;
-  password: string;
-  remember?: boolean;  // default: true
-}
-```
-
-### Retorno
-
-`UseMutationResult` con `mutate()` y `mutateAsync()`
-
-### Flujo
-
-1. Llama `login()` del AuthContext
-2. Obtiene user del cache
-3. Invalida `['auth', 'me']`
-
-### Uso
+Delega en `login()` del `AuthContext`, que maneja persistencia de tokens y estado. `remember` por defecto es `true`. Devuelve el usuario del cache en `data.user`.
 
 ```tsx
 const login = useLogin();
 
-const handleSubmit = () => {
-  login.mutate({ email, password, remember: true }, {
-    onSuccess: () => navigate('/dashboard'),
-    onError: (err) => setError(err.message),
-  });
-};
+login.mutate(
+  { email, password, remember: true },
+  { onSuccess: () => navigate('/dashboard') },
+);
 ```
 
----
+## `useLogout`
 
-## useLogout
+| | |
+|---|---|
+| Firma | `() => useMutation(() => void)` |
+| Dependencia | `AuthContext.logout` (requiere `AuthProvider`) |
+| onSettled | `queryClient.clear()` — descarta **todo** el cache de queries |
 
-### Params
-
-Ninguno.
-
-### Retorno
-
-`UseMutationResult`
-
-### Flujo
-
-1. Llama `logout()` del AuthContext
-2. `queryClient.clear()` en `onSettled` (limpia TODO el cache)
-
-### Uso
+Delega en `logout()` del `AuthContext` (que siempre limpia localmente aunque la API falle). Al terminar, limpia el cache completo de React Query.
 
 ```tsx
 const logout = useLogout();
-
-<button onClick={() => logout.mutate()}>Cerrar sesión</button>
+logout.mutate();
 ```
 
----
+## `useRegister`
 
-## useRegister
+| | |
+|---|---|
+| Firma | `useMutation({ name: string; email: string; password: string; acceptedTerms: boolean })` |
+| Servicio | `authService.register` |
+| Dependencia de contexto | Ninguna |
 
-### Params
+`register` retorna solo mensaje opaco (`ApiResponse<void>`): no hay user ni token tras registrarse. El email debe verificarse después (ver `useVerifyEmail`).
 
-```typescript
-{
-  name: string;
-  email: string;
-  password: string;
-  acceptedTerms: boolean;
-}
-```
+## `useForgotPassword`
 
-### Retorno
+| | |
+|---|---|
+| Firma | `useMutation(email: string)` |
+| Servicio | `authService.forgotPassword` |
+| Dependencia de contexto | Ninguna |
 
-`UseMutationResult<ApiResponse<AuthResponse>>`
+Dispara el email de recuperación de contraseña.
 
-### Nota
+> ⚠ Colisión de nombres: `useForgotPassword` **también** existe en `src/auth/ForgotPasswordContext.tsx` como hook de contexto del flujo de 3 pasos (forgot → OTP → reset). El barrel `src/hooks/index.ts` re-exporta el de React Query. Importe con cuidado: si necesita la máquina de estado (guardar `resetToken`, validar OTP), use el del contexto; si solo necesita disparar el email, use este. Detalles en [Notas de uso y limitaciones](gaps.md).
 
-**NO toca AuthContext** — solo llama a la API.
+## `useResetPassword`
 
-### Uso
+| | |
+|---|---|
+| Firma | `useMutation({ token: string; password: string })` |
+| Servicio | `authService.resetPassword` |
+| Dependencia de contexto | Ninguna |
 
-```tsx
-const register = useRegister();
+Restablece la contraseña con el token obtenido del flujo OTP.
 
-register.mutate({ name, email, password, acceptedTerms: true }, {
-  onSuccess: () => navigate('/verify-email'),
-});
-```
+## `useVerifyEmail`
 
----
+| | |
+|---|---|
+| Firma | `useMutation(token: string)` |
+| Servicio | `authService.verifyEmail` (devuelve `{ email }`) |
+| Dependencia de contexto | Ninguna |
 
-## useForgotPassword
+Verifica el email con el token enviado por correo.
 
-### Params
+## `useResendVerification`
 
-`email: string`
+| | |
+|---|---|
+| Firma | `useMutation(email: string)` |
+| Servicio | `authService.resendVerification` |
+| Dependencia de contexto | Ninguna |
 
-### Retorno
+Reenvía el email de verificación.
 
-`UseMutationResult`
+## Tabla resumen
 
-### Uso
+| Hook | Tipo | Firma | Servicio / Contexto | Invalidación |
+|---|---|---|---|---|
+| `useMe` | Query | `()` | `authService.me()` | — |
+| `useLogin` | Mutation | `{ email, password, remember? }` | `AuthContext.login` | invalida `['auth','me']` |
+| `useLogout` | Mutation | `() => void` | `AuthContext.logout` | `queryClient.clear()` (settled) |
+| `useRegister` | Mutation | `{ name, email, password, acceptedTerms }` | `authService.register` | — |
+| `useForgotPassword` | Mutation | `email: string` | `authService.forgotPassword` | — |
+| `useResetPassword` | Mutation | `{ token, password }` | `authService.resetPassword` | — |
+| `useVerifyEmail` | Mutation | `token: string` | `authService.verifyEmail` | — |
+| `useResendVerification` | Mutation | `email: string` | `authService.resendVerification` | — |
 
-```tsx
-const forgotPassword = useForgotPassword();
+## Notas
 
-forgotPassword.mutate('user@example.com');
-```
-
----
-
-## useResetPassword
-
-### Params
-
-```typescript
-{
-  token: string;
-  password: string;
-}
-```
-
-### Retorno
-
-`UseMutationResult`
-
-### Uso
-
-```tsx
-const resetPassword = useResetPassword();
-
-resetPassword.mutate({ token: 'abc', password: 'newpass' });
-```
-
----
-
-## useVerifyEmail
-
-### Params
-
-`token: string`
-
-### Retorno
-
-`UseMutationResult`
-
-### Uso
-
-```tsx
-const verifyEmail = useVerifyEmail();
-
-verifyEmail.mutate('verification-token');
-```
-
----
-
-## useResendVerification
-
-### Params
-
-`email: string`
-
-### Retorno
-
-`UseMutationResult`
-
-### Uso
-
-```tsx
-const resendVerification = useResendVerification();
-
-resendVerification.mutate('user@example.com');
-```
-
----
-
-## Patrón de Diseño
-
-### Integración React Query + Context
-
-```tsx
-// useLogin integra ambos mundos
-export function useLogin() {
-  const { login } = useAuth();  // Context
-  const queryClient = useQueryClient();  // React Query
-
-  return useMutation({
-    mutationFn: async (credentials) => {
-      await login(credentials);  // Llama al contexto
-      return queryClient.getQueryData(['auth', 'me']);  // Obtiene del cache
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });  // Refresca
-    },
-  });
-}
-```
-
-### Por qué no usar solo React Query
-
-El AuthContext maneja:
-- Persistencia de tokens (localStorage/sessionStorage)
-- Estado de isLoading inicial
-- Escuchadores de eventos (auth:logout del ThemeProvider)
-
-React Query no puede manejar esto porque:
-- No persiste estado entre sesiones
-- No tiene eventos de lifecycle
-- No maneja tokens de refresh
-
-### Por qué no usar solo Context
-
-El Context no puede manejar:
-- Cache de datos del usuario
-- Deduplicación de requests
-- Retry automático
-- Stale-while-revalidate
-
-React Query resuelve todo esto con `useMe()`.
+- Solo `useMe`, `useLogin` y `useLogout` tocan el `AuthContext`; las demás mutaciones llaman a `authService` directamente y funcionan sin `AuthProvider`.
+- `useLogin` retorna `data.user` desde el cache `['auth', 'me']` (puede ser `undefined` si la query aún no cargó).

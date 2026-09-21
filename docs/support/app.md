@@ -1,225 +1,94 @@
-# App
+# Aplicación (`src/main.tsx` + `src/App.tsx`)
 
-Orquestación principal del proyecto plantilla-front: App.tsx, routes, layouts, styles, main.tsx.
+## Propósito
 
-## App.tsx
+Documenta la composición de la aplicación: el orden de providers en `main.tsx`, el árbol de rutas reales en `App.tsx`, los guards de autenticación, los layouts y el sistema de estilos. **Las rutas reales viven en `App.tsx`; todo `src/routes/` es código muerto.**
 
-### Árbol de Componentes
+## Composición de providers (`src/main.tsx`)
 
-```
-AuthProvider (contexto global)
-  └── ErrorBoundary
-        └── Suspense (fallback: "Cargando...")
-              └── Routes
-                    ├── AuthLayout (login, register)
-                    ├── AuthLayout + ForgotPasswordProvider + GuestOnly
-                    │     ├── /forgot-password
-                    │     ├── /verify-otp
-                    │     └── /reset-password
-                    ├── AuthLayout (verify-email)
-                    ├── Standalone (terms, 403, 500)
-                    ├── ProtectedRoute + MainLayout
-                    │     └── routes[] (con RequirePrivilege para /ajustes)
-                    └── * → NotFoundPage
-```
-
-### Lazy Loading
-
-11 páginas lazy-loaded:
-
-```tsx
-const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
-const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
-const ForgotPasswordPage = React.lazy(() => import('./pages/auth/ForgotPasswordPage'));
-const VerifyOTPPage = React.lazy(() => import('./pages/auth/VerifyOTPPage'));
-const ResetPasswordPage = React.lazy(() => import('./pages/auth/ResetPasswordPage'));
-const VerifyEmailPage = React.lazy(() => import('./pages/auth/VerifyEmailPage'));
-const VerifyEmailConfirmPage = React.lazy(() => import('./pages/auth/VerifyEmailConfirmPage'));
-const ForbiddenPage = React.lazy(() => import('./pages/auth/ForbiddenPage'));
-const NotFoundPage = React.lazy(() => import('./pages/auth/NotFoundPage'));
-const ServerErrorPage = React.lazy(() => import('./pages/auth/ServerErrorPage'));
-const TermsPage = React.lazy(() => import('./pages/auth/TermsPage'));
-```
-
-### Guards
-
-| Guard | Uso |
-|-------|-----|
-| `GuestOnly` | Login, Register, ForgotPassword, VerifyOTP, ResetPassword |
-| `ProtectedRoute` | Todas las rutas dentro de `MainLayout` |
-| `RequirePrivilege("settings:manage")` | Rutas `/ajustes/*` |
-
----
-
-## Routes
-
-### Archivos
-
-| Archivo | Función |
-|---------|---------|
-| `src/routes/index.ts` | Barrel: fusiona todos los arrays |
-| `src/routes/ajustes.tsx` | 2 rutas lazy: `/ajustes` y `/ajustes/colores` |
-| `src/routes/showcase.tsx` | Array vacío (limpiado) |
-| `src/routes/examples.tsx` | Array vacío (limpiado) |
-
-### Uso
-
-```typescript
-// src/routes/index.ts
-import { ajustesRoutes } from './ajustes';
-import { showcaseRoutes } from './showcase';
-import { examplesRoutes } from './examples';
-
-export const routes: RouteObject[] = [
-  ...ajustesRoutes,
-  ...showcaseRoutes,
-  ...examplesRoutes,
-];
-```
-
-### Extensibility
-
-Para agregar un módulo:
-
-1. Crear archivo `src/routes/nombre-modulo.tsx`
-2. Exportar array de rutas
-3. Importar y spread en `index.ts`
-
----
-
-## Layouts
-
-### MainLayout (335 líneas)
+Orden exacto, de afuera hacia adentro:
 
 ```
-<div flex h-screen>
-  <Sidebar>
-    ├── Header: SidebarLogo + UserAvatar + UserClock
-    ├── Toggle
-    ├── Nav: AppNavItems (Inicio, Componentes group, Ejemplos group)
-    └── Footer: AppFooter (Ajustes group + Cerrar sesión)
-  </Sidebar>
-  <main>
-    ├── Breadcrumbs (auto from pathname)
-    ├── PageHeader (auto from ROUTE_CONFIG)
-    └── <Outlet />
-  </main>
-</div>
+StrictMode
+└── QueryClientProvider (staleTime 5min, retry 1, refetchOnWindowFocus false)
+    └── ReactQueryDevtools (initialIsOpen: false)
+        └── BrowserRouter
+            └── ThemeProvider
+                └── ToastProvider (position: 'top-right', maxVisible: 3)
+                    └── App
 ```
 
-- **`ROUTE_CONFIG`**: Diccionario de `{title, subtitle}` por segmento de URL
-- **`Breadcrumbs`**: Genera migas de pan desde `pathname`
-- **`AppNavItems`**: Navegación con `NavGroup` colapsable y `NavItem` activo
-- **`AppFooter`**: Ajustes + Logout
+- `main.tsx` importa `./lib/i18n/config` como **side-effect** (inicializa i18next antes del render).
+- También importa `./index.css` y `./styles/tailwind.css`.
 
-### AuthLayout (81 líneas)
+## Árbol de rutas (`src/App.tsx`)
 
-```
-<div splitLayout h-screen>
-  <div leftPanel (55%)>
-    <div heroBg> — gradientes + 5 iconos flotantes animados
-    <div heroContent> — Logo + Brand name + tagline
-  </div>
-  <div rightPanel (45%)>
-    <div brandMobile> — solo visible en mobile
-    <Outlet />
-  </div>
-</div>
-```
+`App` envuelve todo con `AuthProvider` → `ErrorBoundary` → `Suspense` (fallback "Cargando..."), y **todas** las páginas se cargan con `lazy()`.
 
-- **Responsive**: Mobile solo muestra el form. Desktop split 55/44
-- **Hero animado**: 5 gradient layers + 5 floating icons
-- **`prefers-reduced-motion`**: Desactiva animaciones
+| Path | Guard | Layout |
+|---|---|---|
+| `/login`, `/register` | — | `AuthLayout` |
+| `/forgot-password`, `/verify-otp`, `/reset-password` | `GuestOnly` | `AuthLayout` + `ForgotPasswordProvider` |
+| `/verify-email` | `RedirectIfVerified` | `AuthLayout` |
+| `/verify-email/confirm` | — | `AuthLayout` |
+| `/terms`, `/403`, `/500` | — | standalone (sin layout) |
+| `/dashboard` | `ProtectedRoute` (verifica email) | `MainLayout` |
+| `/admin` | `ProtectedRoute` + `RequirePrivilege users.read` | `MainLayout` |
+| `/admin/usuarios` | `RequirePrivilege users.read` | `MainLayout` |
+| `/admin/roles` | `RequirePrivilege roles.read` | `MainLayout` |
+| `/admin/permisos` | `RequirePrivilege permissions.read` | `MainLayout` |
+| `/admin/auditoria` | `RequirePrivilege audit.read` | `MainLayout` |
+| `/ajustes` | `ProtectedRoute` | `MainLayout` |
+| `/ajustes/perfil` | `ProtectedRoute` | `MainLayout` |
+| `/ajustes/actividad` | `RequirePrivilege anyOf [audit.read, audit.read-mine]` | `MainLayout` |
+| `/ajustes/colores` | `RequirePrivilege settings.brand` | `MainLayout` |
+| `*` | — | `NotFoundPage` |
 
-### ErrorLayout (62 líneas)
+> Nota: `/ajustes` y `/ajustes/perfil` usan `ProtectedRoute` sin guard adicional de privilegio; las rutas de administración y ajustes específicos sí exigen privilegios con notación de punto.
 
-Componente reutilizable: `image`, `imageAlt`, `title`, `description`, `actions`, `children`.
+## Guards (`src/auth/guards.tsx`)
 
-### AuthFormLayout (84 líneas)
+| Guard | Comportamiento |
+|---|---|
+| `ProtectedRoute` | Requiere autenticación; `redirectTo` default `/login`; `requireVerification` default `true` (email sin verificar → `/verify-email`) |
+| `RequirePrivilege` | Exige `privilege` XOR `anyOf` (si ambos, `anyOf` tiene prioridad); sin permisos → `/403`; sin sesión → `/login` |
+| `RequireRole` | Requiere un rol específico; default `/403`. Nota en código: preferir `RequirePrivilege` (más granular) |
+| `GuestOnly` | Solo para invitados; autenticado → `/dashboard` |
+| `RedirectIfVerified` | Redirige SOLO si autenticado Y verificado (condición contraria a `GuestOnly`); anónimo o sin verificar sigue viendo la pantalla |
+| `RequireVerification` | Requiere email verificado; sin sesión → `/login`; sin verificar → `/verify-email` |
 
-- **`AuthFormHeader`**: Título + subtítulo
-- **`AuthFormCheckbox`**: Wrapper de `Checkbox`
-- **`AuthFormActions`**: Botón CTA con Spinner + enlace secundario
+`AuthLoading` ("Verificando sesión...") se muestra mientras el provider restaura la sesión.
 
----
+## Layouts (`src/layouts/`)
 
-## Styles
+| Layout | Descripción |
+|---|---|
+| `AuthLayout.tsx` | Split 50/50: hero animado con gradientes + branding "SemillaTecnologica" a la izquierda, `Outlet` a la derecha. En mobile solo se muestra el formulario |
+| `auth/AuthFormLayout.tsx` | Composición de formularios de auth: `AuthFormHeader({ title, subtitle })`, `AuthFormCheckbox({ label, checked, onChange })`, `AuthFormActions({ submitLabel, loading, secondaryLabel, secondaryHref })` — el enlace secundario se extrae del texto con regex `¿...?` |
+| `MainLayout.tsx` | `Sidebar` compuesta (`Sidebar.Header`, `Sidebar.Logo`, `Sidebar.UserAvatar`, `Sidebar.UserClock`, `Sidebar.Toggle`, `Sidebar.Nav`, `Sidebar.Footer`); breadcrumbs derivados de `pathname` + `ROUTE_CONFIG`; navegación condicionada con `Can` usando permisos con punto (`users.read`, `settings.brand`, etc.) |
+| `ErrorLayout.tsx` | Genérico `{ image, imageAlt, title, description, actions?, children? }`, usado por `/403`, `/404` y `/500` |
 
-### tailwind.css (340 líneas)
+## Estilos (`src/styles/` + `src/index.css`)
 
-Tailwind v4 entry con:
+### `src/styles/tailwind.css` — entrada Tailwind v4 (CSS-first)
 
-1. **`@import 'tailwindcss'`**: Entry point de Tailwind v4
-2. **Status palette**: 24 variables de status (4 semáforos × 6 roles)
-3. **Dark mode overrides**: `@media (prefers-color-scheme: dark)`
-4. **Theme mapping**: Conecta variables Tailwind con CSS runtime vars
-5. **Radius scale**: `--radius-sm: 6px`, `--radius-md: 8px`, `--radius-lg: 12px`
-6. **Font stacks**: `--font-sans`, `--font-heading`, `--font-mono`
-7. **Animations** (12 keyframes): `btn-pulse`, `toast-in/out`, `drawer-slide-in`, etc.
-8. **Focus contract**: `:focus-visible` con outline accent
+- `@import 'tailwindcss'` + `@theme` con **escala px fija** (`--spacing: 4px`, `--text-xs/sm/lg/xl`). Hotfix 8E.3: el root usa 18px (index.css), por lo que los `rem` inflaban las utilidades ~12%; fijar la escala en px mantiene paridad con los CSS Modules legacy.
+- **Tokens semánticos de status** (`success`, `warning`, `danger`, `info`) con variantes `strong` / `bg` / `border` / `row` / `solid-fg`, con dark mode por `prefers-color-scheme` (re-declarados en un bloque `@media`).
+- **Mapeo `--color-*` → vars runtime**: `--color-primary: var(--primary)`, `--color-background: var(--bg)`, `--color-surface: var(--code-bg)`, `--color-foreground: var(--text)`, `--color-heading: var(--text-h)`, etc. Las marcas de color NUNCA se copian como literales: `ThemeProvider` sigue funcionando sin cambios.
+- **Radios**: `--radius-sm/md/lg` = 6/8/12px.
+- **Animaciones**: `btn-pulse`, `btn-bounce`, `btn-shake`, y keyframes para toast, modal/overlay, drawer, popover y transiciones de pestañas.
+- **`:focus-visible`**: outline de acento como anillo de foco por teclado.
 
-### index.css (108 líneas)
+> **Deuda interna (comentario en el código)**: NO usar el variante `dark:` de Tailwind hasta que la propiedad del tema migre a un atributo `data-theme`. El dark mode actual funciona vía `prefers-color-scheme` sobre las mismas variables.
 
-Design tokens base:
+### `src/index.css` — variables base y reset
 
-- `:root` con todos los tokens de color, tipografía, sombras
-- **Font stack**: `--sans: Inter`, `--heading: Fraunces`, `--mono: ui-monospace`
-- **Reset**: `box-sizing: border-box` global
-- **Typography**: h1 (56px/36px responsive), h2 (24px/20px)
-- **Root font**: 18px con responsive a 16px en ≤1024px
+- `--primary: #044311`, `--secondary`, `--accent`, `--text`, `--text-h`, `--bg`, `--border`, `--code-bg`, `--accent-bg`, `--accent-border`, `--shadow`.
+- Fuentes: `--sans: 'Inter', ...`, `--heading: 'Fraunces', serif`, `--mono`.
+- Tipografía global: `font: 18px/145% var(--sans)`; en pantallas ≤ 1024px baja a 16px.
+- Reset de cajas (`box-sizing: border-box`), estilos de `h1`/`h2`/`p` y optimizaciones de renderizado de fuentes.
 
-### Patrones
+## Deudas conocidas
 
-- **Design Tokens**: Variables CSS como contrato de diseño
-- **Runtime theming**: Brand colors son `var(--primary)`, nunca literales
-- **Dark mode via CSS**: `prefers-color-scheme` sobre las mismas variables
-- **Animation tokens**: Cada animación es un token reusable
-
----
-
-## main.tsx
-
-### Punto de Entrada
-
-```typescript
-// 1. Side effects
-import './lib/i18n/config';  // Inicializa i18next
-import './index.css';         // Design tokens base
-import './styles/tailwind.css'; // Tailwind v4 + status palette
-
-// 2. Providers (nested)
-<StrictMode>
-  <QueryClientProvider client={queryClient}>
-    <ReactQueryDevtools />
-    <BrowserRouter>
-      <ThemeProvider>
-        <ToastProvider position="top-right" maxVisible={3}>
-          <App />
-        </ToastProvider>
-      </ThemeProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-</StrictMode>
-```
-
-### QueryClient Config
-
-```typescript
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,  // 5 min
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-```
-
-### Orden de Carga
-
-1. `i18n/config` — inicializa i18next
-2. `index.css` — design tokens base
-3. `tailwind.css` — Tailwind v4 + status palette + animations
-4. Providers anidados
-5. `App.tsx` — orquestación principal
+- `src/routes/` es código muerto: las rutas reales están en `App.tsx`. No editar `src/routes/` esperando que afecte la navegación.
+- Estilos: migrar el dark mode de `prefers-color-scheme` a `data-theme` antes de adoptar `dark:` de Tailwind (ver comentario interno en `tailwind.css`).

@@ -1,332 +1,106 @@
-# Auth API Reference
+# Referencia de API del módulo de autenticación
 
-## Endpoints
+Todas las exportaciones públicas del barrel `src/auth/index.ts`, con firmas y tipos.
 
-### POST /auth/login
+## Exportaciones del barrel (`src/auth/index.ts`)
 
-Inicia sesión con credenciales.
+### Proveedor
 
-**Request:**
-```json
-{
-  "email": "usuario@ejemplo.com",
-  "password": "miPassword123"
-}
-```
+| Export | Fuente | Firma |
+|---|---|---|
+| `AuthProvider` | `./provider` | `({ children }: { children: ReactNode }) => JSX` |
 
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Login exitoso",
-  "data": {
-    "user": {
-      "id": "123",
-      "email": "usuario@ejemplo.com",
-      "name": "Juan Pérez",
-      "roles": ["admin"],
-      "privileges": ["users:read", "users:write"],
-      "isVerified": true
-    },
-    "token": "eyJhbGciOiJIUzI1NiIs...",
-    "refreshToken": "refresh-token-abc",
-    "expiresIn": 3600
-  }
-}
-```
+Envuelve la aplicación y provee el estado de autenticación. Al montarse intenta restaurar la sesión (ver [Arquitectura](architecture.md)).
 
-**Response (401):**
-```json
-{
-  "success": false,
-  "message": "Credenciales inválidas",
-  "code": "UNAUTHORIZED"
-}
-```
+### Hooks
 
----
+| Export | Fuente | Firma | Lanza |
+|---|---|---|---|
+| `useAuth` | `./hooks` | `() => AuthContextValue` | `Error` fuera de `AuthProvider` |
+| `useHasPrivilege` | `./hooks` | `(privilege: string) => boolean` | — |
+| `useHasAnyPrivilege` | `./hooks` | `(privileges: string[]) => boolean` | — |
+| `useHasRole` | `./hooks` | `(role: string) => boolean` | — |
 
-### POST /auth/register
+### Guards (componentes de protección de rutas)
 
-Registra un nuevo usuario.
+| Export | Fuente | Props |
+|---|---|---|
+| `ProtectedRoute` | `./guards` | `{ children, redirectTo?: string = '/login', requireVerification?: boolean = true }` |
+| `RequirePrivilege` | `./guards` | `{ children, redirectTo?: string = '/403' } & ({ privilege: string; anyOf?: string[] } \| { privilege?: never; anyOf: string[] })` |
+| `RequireRole` | `./guards` | `{ children, role: string, redirectTo?: string = '/403' }` |
+| `GuestOnly` | `./guards` | `{ children, redirectTo?: string = '/dashboard' }` |
+| `RedirectIfVerified` | `./guards` | `{ children, redirectTo?: string = '/dashboard' }` |
+| `RequireVerification` | `./guards` | `{ children }` |
 
-**Request:**
-```json
-{
-  "name": "Juan Pérez",
-  "email": "juan@ejemplo.com",
-  "password": "miPassword123",
-  "acceptedTerms": true
-}
-```
+Detalles de comportamiento y ejemplos en [Guards de rutas](guards.md).
 
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Registro exitoso",
-  "data": {
-    "user": {
-      "id": "124",
-      "email": "juan@ejemplo.com",
-      "name": "Juan Pérez",
-      "roles": ["viewer"],
-      "privileges": ["users:read"],
-      "isVerified": false
-    },
-    "token": "eyJhbGciOiJIUzI1NiIs..."
-  }
-}
-```
+### Control de acceso por renderizado
 
----
+| Export | Fuente | Props |
+|---|---|---|
+| `Can` | `./Can` | `{ privilege?: string, anyOf?: string[], children: ReactNode, fallback?: ReactNode = null }` |
 
-### GET /auth/me
+Oculta su contenido si no hay permiso; **no** redirige (a diferencia de `RequirePrivilege`).
 
-Obtiene el usuario actual (requiere Bearer token).
+### Tipos
 
-**Headers:**
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-```
+| Export | Fuente | Definición |
+|---|---|---|
+| `User` | `./types` (re-export de `src/lib/api/types/api-response.ts`) | `{ id: string; email: string; name: string; roles: string[]; permissions: string[]; isVerified: boolean; photoUrl?: string }` |
+| `AuthState` | `./types` | `{ user: User \| null; token: string \| null; isAuthenticated: boolean; isLoading: boolean }` |
+| `AuthContextValue` | `./types` | `AuthState` + `login`, `logout`, `hasPrivilege`, `hasAnyPrivilege`, `hasRole`, `isVerified` |
 
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Usuario obtenido",
-  "data": {
-    "id": "123",
-    "email": "usuario@ejemplo.com",
-    "name": "Juan Pérez",
-    "roles": ["admin"],
-    "privileges": ["users:read", "users:write"],
-    "isVerified": true
-  }
-}
-```
+## No exportados por el barrel
 
----
+Estos símbolos existen en el módulo pero **no** forman parte de la API pública; impórtelos desde su archivo de origen solo si es necesario:
 
-### POST /auth/refresh
+| Símbolo | Archivo de origen | Nota |
+|---|---|---|
+| `AuthContext` | `src/auth/context.tsx` | Uso interno; prefiera `useAuth()` |
+| `ForgotPasswordProvider` | `src/auth/ForgotPasswordContext.tsx` | Proveedor del flujo de 3 pasos de recuperación de contraseña |
+| `useForgotPassword` | `src/auth/ForgotPasswordContext.tsx` | Contexto del flujo forgot → OTP → reset. ⚠ Colisiona con `useForgotPassword` de React Query (ver [gaps del barrel de hooks](../hooks/gaps.md)) |
+| `AuthLoading` | `src/auth/guards.tsx` | Spinner "Verificando sesión..." usado internamente por los guards |
 
-Refresca el token de acceso.
+## Ejemplo de uso completo
 
-**Request:**
-```json
-{
-  "refreshToken": "refresh-token-abc"
-}
-```
+```tsx
+import {
+  AuthProvider,
+  useAuth,
+  useHasPrivilege,
+  ProtectedRoute,
+  RequirePrivilege,
+  Can,
+} from '@/auth';
 
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Token refrescado",
-  "data": {
-    "user": { ... },
-    "token": "nuevo-jwt...",
-    "refreshToken": "nuevo-refresh...",
-    "expiresIn": 3600
-  }
-}
-```
-
----
-
-### POST /auth/logout
-
-Cierra la sesión.
-
-**Request:**
-```json
-// Sin body
-```
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Logout exitoso"
-}
-```
-
----
-
-### POST /auth/forgot-password
-
-Envía email de recuperación.
-
-**Request:**
-```json
-{
-  "email": "usuario@ejemplo.com"
-}
-```
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Email de recuperación enviado"
-}
-```
-
----
-
-### POST /auth/verify-otp
-
-Verifica el código OTP.
-
-**Request:**
-```json
-{
-  "email": "usuario@ejemplo.com",
-  "otp": "123456"
-}
-```
-
-**Response (éxito):**
-```json
-{
-  "success": true,
-  "message": "OTP verificado",
-  "data": {
-    "verified": true,
-    "token": "reset-token-xyz"
-  }
-}
-```
-
-**Response (OTP inválido):**
-```json
-{
-  "success": false,
-  "message": "OTP inválido",
-  "code": "INVALID_OTP"
-}
-```
-
-**Response (OTP expirado):**
-```json
-{
-  "success": false,
-  "message": "OTP expirado",
-  "code": "EXPIRED"
-}
-```
-
----
-
-### POST /auth/reset-password
-
-Restablece la contraseña.
-
-**Request:**
-```json
-{
-  "token": "reset-token-xyz",
-  "password": "nuevaPassword123"
-}
-```
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Contraseña actualizada"
-}
-```
-
----
-
-### POST /auth/verify-email
-
-Verifica el email desde el enlace.
-
-**Request:**
-```json
-{
-  "token": "verify-token-abc123"
-}
-```
-
-**Response (éxito):**
-```json
-{
-  "success": true,
-  "message": "Email verificado",
-  "data": {
-    "email": "usuario@ejemplo.com"
-  }
-}
-```
-
-**Response (token inválido):**
-```json
-{
-  "success": false,
-  "message": "Token inválido",
-  "code": "VALIDATION_ERROR"
-}
-```
-
----
-
-### POST /auth/resend-verification
-
-Reenvía el email de verificación.
-
-**Request:**
-```json
-{
-  "email": "usuario@ejemplo.com"
-}
-```
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Email reenviado"
-}
-```
-
----
-
-## Códigos de Error
-
-| Código | Descripción |
-|--------|-------------|
-| `VALIDATION_ERROR` | Datos de entrada inválidos |
-| `UNAUTHORIZED` | Credenciales inválidas o token expirado |
-| `FORBIDDEN` | Sin permisos |
-| `NOT_FOUND` | Recurso no encontrado |
-| `CONFLICT` | Conflicto (ej: email ya registrado) |
-| `RATE_LIMITED` | Demasiadas solicitudes |
-| `INTERNAL_ERROR` | Error del servidor |
-| `NETWORK_ERROR` | Error de conexión |
-| `TIMEOUT` | Timeout de la petición |
-| `UNKNOWN` | Error desconocido |
-
-## Contrato ApiResponse
-
-```typescript
-type ApiResponse<T> = ApiSuccess<T> | ApiError;
-
-interface ApiSuccess<T> {
-  success: true;
-  message: string;
-  data?: T;
+function App() {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/admin"
+            element={
+              <RequirePrivilege privilege="settings.brand">
+                <AdminPanel />
+              </RequirePrivilege>
+            }
+          />
+        </Route>
+      </Routes>
+    </AuthProvider>
+  );
 }
 
-interface ApiError {
-  success: false;
-  message: string;
-  code: ApiErrorCode;
-  fields?: Record<string, string[]>;
-  timestamp?: string;
-  traceId?: string;
+function BotonEliminar() {
+  const puedeEliminar = useHasPrivilege('users.write');
+  if (!puedeEliminar) return null;
+  return <button>Eliminar</button>;
 }
+
+// Alternativa de renderizado condicional:
+<Can privilege="users.write" fallback={<span>Sin permisos</span>}>
+  <button>Editar</button>
+</Can>;
 ```

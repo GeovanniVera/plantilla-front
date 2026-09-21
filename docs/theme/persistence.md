@@ -1,14 +1,10 @@
-# Theme Persistence
+# Persistencia del tema
 
-Sistema de persistencia con Strategy Pattern.
+`persistence.ts` implementa la persistencia del tema con **strategy pattern**: una interfaz `ThemeStorage` define el contrato y las funciones de alto nivel (`loadTheme`, `saveTheme`, `resetTheme`) quedan desacopladas de la implementación concreta, que se intercambia vía `setStorageAdapter`.
 
-## Concepto
+## Interfaz `ThemeStorage`
 
-El tema se persiste automáticamente en cada cambio. El adaptador de persistencia es intercambiable.
-
-## Interface
-
-```typescript
+```ts
 export type ThemeMap = Partial<Record<TokenKey, string>>;
 
 export interface ThemeStorage {
@@ -18,132 +14,62 @@ export interface ThemeStorage {
 }
 ```
 
-## Adaptador por Defecto: localStorage
+- `load()` retorna el mapa de tokens guardado (puede ser parcial: el merge con los defaults ocurre en `ThemeProvider`).
+- `save(theme)` persiste el mapa completo.
+- `reset()` elimina el tema guardado.
 
-```typescript
-export const localStorageAdapter: ThemeStorage = {
-  load() {
-    try {
-      const data = localStorage.getItem('brand-theme-v1');
-      return data ? JSON.parse(data) : {};
-    } catch {
-      return {};
-    }
-  },
-  
-  save(theme) {
-    try {
-      localStorage.setItem('brand-theme-v1', JSON.stringify(theme));
-    } catch {
-      // localStorage lleno o inaccesible — falla silenciosamente
-    }
-  },
-  
-  reset() {
-    try {
-      localStorage.removeItem('brand-theme-v1');
-    } catch {
-      // Ignorar errores
-    }
-  },
-};
+## Adaptador por defecto: `localStorageAdapter`
+
+```ts
+export const localStorageAdapter: ThemeStorage;
 ```
 
-## Funciones Exportadas
+| Aspecto | Valor |
+|---|---|
+| Clave de storage | `brand-theme-v1` |
+| Formato | JSON (`JSON.stringify` / `JSON.parse`) |
+| Manejo de errores | `try/catch` silencioso en los tres métodos |
 
-```typescript
-export function setStorageAdapter(adapter: ThemeStorage): void
-export function loadTheme(): ThemeMap
-export function saveTheme(theme: ThemeMap): void
-export function resetTheme(): void
+- `load()` retorna `{}` si no hay datos o el JSON es inválido.
+- `save()` falla silenciosamente si `localStorage` está lleno.
+- `reset()` falla silenciosamente si el storage no está disponible.
+
+El `try/catch` silencioso garantiza que una falla de persistencia nunca rompa el flujo de la aplicación.
+
+## Funciones de alto nivel
+
+Todas operan sobre una variable de módulo (`storage`) inicializada con `localStorageAdapter`:
+
+| Función | Comportamiento |
+|---|---|
+| `loadTheme(): ThemeMap` | Delega en `storage.load()` |
+| `saveTheme(theme: ThemeMap): void` | Delega en `storage.save(theme)` |
+| `resetTheme(): void` | Delega en `storage.reset()` |
+| `setStorageAdapter(adapter: ThemeStorage): void` | Reemplaza el adaptador activo |
+
+```ts
+// Ejemplo: cambiar a un adaptador de API sin tocar el resto de la app
+setStorageAdapter({
+  load: () => fetchThemeFromApi(),
+  save: (theme) => postThemeToApi(theme),
+  reset: () => clearThemeOnApi(),
+});
 ```
 
-## Cambiar Adaptador
+## Nota: strategy pattern de un solo adaptador
 
-### Ejemplo: API Remota
+Hoy solo existe una estrategia real (`localStorageAdapter`); `setStorageAdapter` está listo para un adaptador de API pero **no hay endpoint de theme** — la configuración `settings.brand` es cliente-solo. Intercambiar el adaptador no requiere cambios en `ThemeProvider`, que consume únicamente las funciones de alto nivel.
 
-```typescript
-import { setStorageAdapter } from '@theme/persistence';
+## Consumo desde `ThemeProvider`
 
-const apiAdapter: ThemeStorage = {
-  async load() {
-    const response = await fetch('/api/user/theme');
-    return response.json();
-  },
-  
-  async save(theme) {
-    await fetch('/api/user/theme', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(theme),
-    });
-  },
-  
-  async reset() {
-    await fetch('/api/user/theme', { method: 'DELETE' });
-  },
-};
+`ThemeProvider` importa las funciones de alto nivel con alias:
 
-setStorageAdapter(apiAdapter);
-```
+- init: `loadTheme` (como `loadSaved`) → merge `{...defaultTokens, ...saved}`
+- persistir: `saveTheme` (como `saveSaved`) en cada cambio de `tokens`
+- reset: `resetTheme` (como `resetSaved`) dentro de la API del contexto
 
-### Ejemplo: Mock para Tests
+Detalle del flujo en [architecture.md](./architecture.md).
 
-```typescript
-import { setStorageAdapter } from '@theme/persistence';
+## Referencias
 
-const mockStorage: ThemeMap = {};
-
-const mockAdapter: ThemeStorage = {
-  load: () => ({ ...mockStorage }),
-  save: (theme) => Object.assign(mockStorage, theme),
-  reset: () => Object.keys(mockStorage).forEach(k => delete mockStorage[k]),
-};
-
-setStorageAdapter(mockAdapter);
-```
-
-## Clave de Storage
-
-```typescript
-const STORAGE_KEY = 'brand-theme-v1';
-```
-
-La clave está versionada (`v1`) para soportar migraciones futuras si la estructura del tema cambia.
-
-## Flujo de Persistencia
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Montaje del ThemeProvider                                    │
-│    │                                                            │
-│    └─ loadTheme() → lee de localStorage                         │
-│        ├─ Si existe → parsea JSON → ThemeMap                    │
-│        └─ Si no existe o falla → {}                             │
-└───────────────────────────┬─────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ 2. Cambio de Tema                                               │
-│    │                                                            │
-│    ├─ setColor('primary', '#ff0000')                            │
-│    │   └─ setTokens(merge)                                      │
-│    │       └─ React re-render                                   │
-│    │           └─ useEffect([tokens])                           │
-│    │               └─ saveTheme(tokens)                         │
-│    │                   └─ localStorage.setItem(...)             │
-│    │                                                            │
-│    └─ resetTheme()                                              │
-│        ├─ resetSaved() → localStorage.removeItem()              │
-│        └─ setTokens(defaultTokens)                              │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## Manejo de Errores
-
-Todas las operaciones usan `try/catch`:
-
-- **`load()`**: Si falla, retorna `{}` (usa defaults)
-- **`save()`**: Si falla, silenciosamente ignora (el tema funciona en memoria)
-- **`reset()`**: Si falla, silenciosamente ignora
-
-**Filosofía**: La persistencia es un "nice to have". El tema siempre funciona en memoria aunque el storage falle.
+- Tipo `TokenKey` (fuente del mapa parcial): [tokens.md](./tokens.md)
