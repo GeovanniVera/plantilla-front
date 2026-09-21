@@ -56,6 +56,14 @@
       "successMessage": "Tu contraseña fue cambiada exitosamente.",
       "backToLogin": "Volver"
     },
+    "passwordPolicy": {
+      "title": "La contraseña debe:",
+      "minLength": "Tener al menos 8 caracteres",
+      "uppercase": "Tener al menos una mayúscula",
+      "lowercase": "Tener al menos una minúscula",
+      "symbol": "Tener al menos un símbolo",
+      "error": "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un símbolo"
+    },
     "verifyEmail": {
       "title": "Verificá tu email",
       "subtitle": "Te enviamos un enlace de verificación a tu correo.",
@@ -78,6 +86,8 @@
       "submitting": "Verificando...",
       "resend": "Reenviar código",
       "resending": "Reenviando...",
+      "expiresIn": "El código expira en {{minutes}} minutos",
+      "expiresFallback": "El código expira en unos minutos",
       "backToLogin": "Volver al login"
     }
   },

@@ -87,7 +87,9 @@ describe('ResetPasswordPage', () => {
     fireEvent.submit(screen.getByRole('button', { name: /cambiar contraseña/i }).closest('form')!);
     await waitFor(() => {
       expect(
-        screen.getByText('La contraseña debe tener al menos 6 caracteres'),
+        screen.getByText(
+          'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un símbolo',
+        ),
       ).toBeInTheDocument();
     });
   });
@@ -95,7 +97,7 @@ describe('ResetPasswordPage', () => {
   it('validates password confirmation mismatch', async () => {
     renderResetPasswordPage(true);
     const [passwordInput, confirmPasswordInput] = await screen.findAllByPlaceholderText('••••••');
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123!' } });
     fireEvent.change(confirmPasswordInput, { target: { value: 'different' } });
     fireEvent.submit(screen.getByRole('button', { name: /cambiar contraseña/i }).closest('form')!);
     await waitFor(() => {
@@ -121,10 +123,10 @@ describe('ResetPasswordPage', () => {
     renderResetPasswordPage(true);
     const [passwordInput, confirmPasswordInput] = await screen.findAllByPlaceholderText('••••••');
     fireEvent.change(passwordInput, {
-      target: { value: 'password123' },
+      target: { value: 'Password123!' },
     });
     fireEvent.change(confirmPasswordInput, {
-      target: { value: 'password123' },
+      target: { value: 'Password123!' },
     });
     fireEvent.click(screen.getByRole('button', { name: /cambiar contraseña/i }));
 
@@ -134,8 +136,8 @@ describe('ResetPasswordPage', () => {
   it('shows success, clears reset state, and navigates to login after the delay', async () => {
     renderResetPasswordPage(true);
     const [passwordInput, confirmPasswordInput] = await screen.findAllByPlaceholderText('••••••');
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-    fireEvent.change(confirmPasswordInput, { target: { value: 'password123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123!' } });
+    fireEvent.change(confirmPasswordInput, { target: { value: 'Password123!' } });
     fireEvent.click(screen.getByRole('button', { name: /cambiar contraseña/i }));
 
     expect(

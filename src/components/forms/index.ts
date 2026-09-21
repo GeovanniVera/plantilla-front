@@ -21,6 +21,10 @@ export type { FormProps } from './Form';
 // ─── FormField ───────────────────────────────────────────
 export { default as FormField } from './FormField';
 
+// ─── PasswordRequirements ────────────────────────────────
+export { default as PasswordRequirements } from './PasswordRequirements';
+export type { PasswordRequirementsProps } from './PasswordRequirements';
+
 // ─── Form hooks ──────────────────────────────────────────
 export { useForm } from './useForm';
 export { useFormContext } from './FormContext';

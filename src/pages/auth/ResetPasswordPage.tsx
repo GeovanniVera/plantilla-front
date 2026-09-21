@@ -9,7 +9,9 @@ import { useNavigate } from 'react-router';
 import { LuLock, LuArrowLeft, LuCheck } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
 import Input from '@components/primitives/Input';
+import { PasswordRequirements } from '@components/forms';
 import Spinner from '@components/feedback/Spinner';
+import { validatePassword } from '@lib/validation/password';
 import { useForgotPassword } from '../../auth/ForgotPasswordContext';
 import { useResetPassword } from '../../hooks/useAuth';
 import { AuthFormHeader } from '../../layouts/auth/AuthFormLayout';
@@ -34,8 +36,9 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError('');
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(t(passwordError));
       return;
     }
 
@@ -154,17 +157,7 @@ export default function ResetPasswordPage() {
           </div>
 
           {/* Password requirements */}
-          <div className="bg-surface text-fg-muted rounded-lg p-3 text-xs">
-            <p className="text-fg mb-1 font-medium">La contraseña debe:</p>
-            <ul className="space-y-1">
-              <li className={password.length >= 6 ? 'text-success' : ''}>
-                • Tener al menos 6 caracteres
-              </li>
-              <li className={password === confirmPassword && password ? 'text-success' : ''}>
-                • Coinfirmar con la contraseña
-              </li>
-            </ul>
-          </div>
+          <PasswordRequirements value={password} />
 
           <button
             type="submit"

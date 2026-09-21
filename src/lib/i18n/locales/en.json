@@ -56,6 +56,14 @@
       "successMessage": "Your password was changed successfully.",
       "backToLogin": "Back"
     },
+    "passwordPolicy": {
+      "title": "Password must:",
+      "minLength": "Be at least 8 characters long",
+      "uppercase": "Contain at least one uppercase letter",
+      "lowercase": "Contain at least one lowercase letter",
+      "symbol": "Contain at least one symbol",
+      "error": "Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, and a symbol"
+    },
     "verifyEmail": {
       "title": "Verify your email",
       "subtitle": "We sent a verification link to your inbox.",
@@ -78,6 +86,8 @@
       "submitting": "Verifying...",
       "resend": "Resend code",
       "resending": "Resending...",
+      "expiresIn": "The code expires in {{minutes}} minutes",
+      "expiresFallback": "The code expires in a few minutes",
       "backToLogin": "Back to login"
     }
   },

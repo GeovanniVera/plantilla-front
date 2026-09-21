@@ -13,6 +13,8 @@ import { GuestOnly } from '../../auth/guards';
 import { useRegister } from '../../hooks/useAuth';
 import Input from '@components/primitives/Input';
 import Checkbox from '@components/primitives/Checkbox';
+import { PasswordRequirements } from '@components/forms';
+import { validatePassword } from '@lib/validation/password';
 import { AuthFormHeader, AuthFormActions } from '../../layouts/auth/AuthFormLayout';
 
 function RegisterPage() {
@@ -32,6 +34,12 @@ function RegisterPage() {
 
     if (!acceptTerms) {
       setError('Debés aceptar los términos y condiciones');
+      return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(t(passwordError));
       return;
     }
 
@@ -117,6 +125,9 @@ function RegisterPage() {
               required
             />
           </div>
+
+          {/* Requisitos de la contraseña */}
+          <PasswordRequirements value={password} />
 
           <div className="space-y-1.5">
             <label className="text-fg block text-sm font-medium">

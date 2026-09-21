@@ -49,8 +49,8 @@ describe('RegisterPage', () => {
       target: { value: 'test@test.com' },
     });
     const passwordInputs = screen.getAllByPlaceholderText('••••••');
-    fireEvent.change(passwordInputs[0], { target: { value: 'password123' } });
-    fireEvent.change(passwordInputs[1], { target: { value: 'password123' } });
+    fireEvent.change(passwordInputs[0], { target: { value: 'Password123!' } });
+    fireEvent.change(passwordInputs[1], { target: { value: 'Password123!' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Registrarse' }).closest('form')!);
     await waitFor(() => {
       expect(screen.getByText('Debés aceptar los términos y condiciones')).toBeInTheDocument();
@@ -67,8 +67,8 @@ describe('RegisterPage', () => {
       target: { value: 'new@test.com' },
     });
     const passwordInputs = screen.getAllByPlaceholderText('••••••');
-    fireEvent.change(passwordInputs[0], { target: { value: 'password123' } });
-    fireEvent.change(passwordInputs[1], { target: { value: 'password123' } });
+    fireEvent.change(passwordInputs[0], { target: { value: 'Password123!' } });
+    fireEvent.change(passwordInputs[1], { target: { value: 'Password123!' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: 'Registrarse' }));
 
@@ -98,8 +98,8 @@ describe('RegisterPage', () => {
       target: { value: 'admin@test.com' },
     });
     const passwordInputs = screen.getAllByPlaceholderText('••••••');
-    fireEvent.change(passwordInputs[0], { target: { value: 'password123' } });
-    fireEvent.change(passwordInputs[1], { target: { value: 'password123' } });
+    fireEvent.change(passwordInputs[0], { target: { value: 'Password123!' } });
+    fireEvent.change(passwordInputs[1], { target: { value: 'Password123!' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: 'Registrarse' }));
 
