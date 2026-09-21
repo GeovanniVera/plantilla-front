@@ -3,32 +3,32 @@ import { client, tokenManager, configureClient } from './client';
 import { server } from '../../test/mocks/server';
 import { http, HttpResponse } from 'msw';
 
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
+/**
+ * Storage en memoria para aislar cada test. El refresh del cliente usa
+ * VITE_API_BASE=http://localhost:8080/api (cross-origin), así que los mocks de
+ * refresh DEBEN matchear la ruta con wildcard (no con ruta relativa). Ambos
+ * storages se reemplazan por test para que ningún indicador de sesión se
+ * filtre entre casos.
+ */
+function memoryStorage(): Storage {
+  const values = new Map<string, string>();
   return {
-    getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => {
-      store[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
     get length() {
-      return Object.keys(store).length;
+      return values.size;
     },
-    key: (index: number) => Object.keys(store)[index] ?? null,
+    clear: () => values.clear(),
+    getItem: (key) => values.get(key) ?? null,
+    key: (index) => [...values.keys()][index] ?? null,
+    removeItem: (key) => values.delete(key),
+    setItem: (key, value) => values.set(key, value),
   };
-})();
-
-Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
+}
 
 describe('HTTP Client — Refresh Token Flow', () => {
   beforeEach(() => {
+    vi.stubGlobal('localStorage', memoryStorage());
+    vi.stubGlobal('sessionStorage', memoryStorage());
     tokenManager.clear();
-    localStorage.clear();
     configureClient({
       baseUrl: '/api',
       onUnauthorized: vi.fn(),
@@ -38,6 +38,7 @@ describe('HTTP Client — Refresh Token Flow', () => {
 
   afterEach(() => {
     server.resetHandlers();
+    vi.unstubAllGlobals();
   });
 
   it('retries request after successful refresh on 401', async () => {
@@ -58,17 +59,16 @@ describe('HTTP Client — Refresh Token Flow', () => {
           data: { id: '1', name: 'Test' },
         });
       }),
-      http.post('/api/auth/refresh', () => {
+      http.post('*/auth/refresh', () => {
         return HttpResponse.json({
           success: true,
           message: 'Refreshed',
-          data: { token: 'new-token', refreshToken: 'new-refresh', expiresIn: 3600 },
+          data: { accessToken: 'new-token', expiresIn: 3600 },
         });
       }),
     );
 
     tokenManager.set('old-token');
-    localStorage.setItem('auth_refresh_token', 'refresh-token');
 
     const response = await client.get('/users');
 
@@ -88,7 +88,7 @@ describe('HTTP Client — Refresh Token Flow', () => {
           { status: 401 },
         );
       }),
-      http.post('/api/auth/refresh', () => {
+      http.post('*/auth/refresh', () => {
         return HttpResponse.json(
           { success: false, message: 'Invalid refresh token', code: 'UNAUTHORIZED' },
           { status: 401 },
@@ -97,13 +97,13 @@ describe('HTTP Client — Refresh Token Flow', () => {
     );
 
     tokenManager.set('old-token');
-    localStorage.setItem('auth_refresh_token', 'refresh-token');
 
     await client.get('/users');
 
     expect(logoutHandler).toHaveBeenCalled();
     expect(tokenManager.get()).toBeNull();
-    expect(localStorage.getItem('auth_refresh_token')).toBeNull();
+    // Ningún indicador de sesión queda en storage tras el logout.
+    expect(localStorage.getItem('auth_expires_at')).toBeNull();
 
     window.removeEventListener('auth:logout', logoutHandler);
   });
@@ -113,7 +113,7 @@ describe('HTTP Client — Refresh Token Flow', () => {
     window.addEventListener('auth:logout', logoutHandler);
 
     server.use(
-      http.post('/api/auth/login', () => {
+      http.post('*/auth/login', () => {
         return HttpResponse.json(
           { success: false, message: 'Credenciales incorrectas', code: 'UNAUTHORIZED' },
           { status: 401 },
@@ -121,8 +121,8 @@ describe('HTTP Client — Refresh Token Flow', () => {
       }),
     );
 
-    // Sin sesión: ni token en memoria ni en storage → el 401 es credenciales
-    // inválidas, no sesión expirada. No debe desloguear ni recargar.
+    // Sin sesión: ni token en memoria ni indicador en storage → el 401 es
+    // credenciales inválidas, no sesión expirada. No debe desloguear ni recargar.
     const response = await client.post('/auth/login', { email: 'a@b.com', password: 'wrong' });
 
     expect(response.success).toBe(false);
@@ -147,17 +147,16 @@ describe('HTTP Client — Refresh Token Flow', () => {
           { status: 401 },
         );
       }),
-      http.post('/api/auth/refresh', () => {
+      http.post('*/auth/refresh', () => {
         return HttpResponse.json({
           success: true,
           message: 'Refreshed',
-          data: { token: 'new-token', refreshToken: 'new-refresh', expiresIn: 3600 },
+          data: { accessToken: 'new-token', expiresIn: 3600 },
         });
       }),
     );
 
     tokenManager.set('old-token');
-    localStorage.setItem('auth_refresh_token', 'refresh-token');
 
     await client.get('/users');
 
@@ -261,18 +260,17 @@ describe('HTTP Client — Refresh Token Flow', () => {
           { status: 401 },
         );
       }),
-      http.post('/api/auth/refresh', () => {
+      http.post('*/auth/refresh', () => {
         refreshCount++;
         return HttpResponse.json({
           success: true,
           message: 'Refreshed',
-          data: { token: 'new-token', refreshToken: 'new-refresh', expiresIn: 3600 },
+          data: { accessToken: 'new-token', expiresIn: 3600 },
         });
       }),
     );
 
     tokenManager.set('old-token');
-    localStorage.setItem('auth_refresh_token', 'refresh-token');
 
     await Promise.all([client.get('/users'), client.get('/users'), client.get('/users')]);
 

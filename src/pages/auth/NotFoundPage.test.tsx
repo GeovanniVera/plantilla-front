@@ -52,6 +52,6 @@ describe('NotFoundPage', () => {
   it('navigates home on home button click', () => {
     renderNotFoundPage();
     fireEvent.click(screen.getByRole('button', { name: /ir al inicio/i }));
-    expect(navigateMock).toHaveBeenCalledWith('/');
+    expect(navigateMock).toHaveBeenCalledWith('/dashboard');
   });
 });

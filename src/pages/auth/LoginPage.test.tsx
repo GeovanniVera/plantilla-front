@@ -55,7 +55,7 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Recordarme' }));
     submitCredentials('admin@test.com', 'admin123');
 
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/', { replace: true }));
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/dashboard', { replace: true }));
   });
 
   it('shows the server message after a failed login', async () => {

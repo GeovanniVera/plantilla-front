@@ -72,25 +72,44 @@ describe('AuthProvider', () => {
     await user.click(screen.getByRole('button', { name: 'Log in' }));
     expect(await screen.findByText('admin@test.com')).toBeInTheDocument();
     expect(screen.getByLabelText('permissions')).toHaveTextContent('true:true:true:true');
-    expect(sessionStorage.getItem('auth_token')).toBeTruthy();
+    // Login sin "Recuérdeme": solo el INDICADOR vive en sessionStorage, jamás un token.
+    expect(sessionStorage.getItem('auth_expires_at')).toBeTruthy();
+    expect(sessionStorage.getItem('auth_token')).toBeNull();
     expect(tokenManager.get()).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: 'Log out' }));
     expect(await screen.findByText('anonymous')).toBeInTheDocument();
-    expect(sessionStorage.getItem('auth_token')).toBeNull();
+    expect(sessionStorage.getItem('auth_expires_at')).toBeNull();
     expect(tokenManager.get()).toBeNull();
   });
 
-  it('restores a valid local session through the current-user endpoint', async () => {
-    localStorage.setItem('auth_token', btoa(JSON.stringify({ sub: '1' })));
+  it('restores a valid local session through refresh and the current-user endpoint', async () => {
+    localStorage.setItem('auth_expires_at', String(Date.now() + 3600000));
     renderProvider();
 
     expect(await screen.findByText('admin@test.com')).toBeInTheDocument();
     expect(screen.getByLabelText('permissions')).toHaveTextContent('true:true:true:true');
   });
 
+  it('clears the stored session when refresh fails during restore', async () => {
+    localStorage.setItem('auth_expires_at', String(Date.now() + 3600000));
+    server.use(
+      http.post('*/auth/refresh', () =>
+        HttpResponse.json(
+          { success: false, message: 'Refresh inválido', code: 'UNAUTHORIZED' },
+          { status: 401 },
+        ),
+      ),
+    );
+    renderProvider();
+
+    expect(await screen.findByText('anonymous')).toBeInTheDocument();
+    expect(localStorage.getItem('auth_expires_at')).toBeNull();
+    expect(tokenManager.get()).toBeNull();
+  });
+
   it('clears a stored session rejected by the current-user endpoint', async () => {
-    localStorage.setItem('auth_token', btoa(JSON.stringify({ sub: '1' })));
+    localStorage.setItem('auth_expires_at', String(Date.now() + 3600000));
     server.use(
       http.get('*/auth/me', () =>
         HttpResponse.json(
@@ -102,11 +121,11 @@ describe('AuthProvider', () => {
     renderProvider();
 
     expect(await screen.findByText('anonymous')).toBeInTheDocument();
-    expect(localStorage.getItem('auth_token')).toBeNull();
+    expect(localStorage.getItem('auth_expires_at')).toBeNull();
     expect(tokenManager.get()).toBeNull();
   });
 
-  it('does not leave a localStorage token after a session-only login follows a remembered login', async () => {
+  it('does not leave a localStorage indicator after a session-only login follows a remembered login', async () => {
     const user = userEvent.setup();
     const apiUser = {
       id: '2',
@@ -132,19 +151,28 @@ describe('AuthProvider', () => {
 
     await user.click(screen.getByRole('button', { name: 'Log in remembered' }));
     expect(await screen.findByText('editor@test.com')).toBeInTheDocument();
-    expect(localStorage.getItem('auth_token')).toBe('login-token');
+    expect(localStorage.getItem('auth_expires_at')).toBeTruthy();
 
-    // Segundo login sin "Recuérdeme": debe dejar exactamente un token, en sessionStorage.
+    // Segundo login sin "Recuérdeme": debe dejar exactamente un indicador,
+    // en sessionStorage, y ningún token en ningún storage.
     await user.click(screen.getByRole('button', { name: 'Log in session' }));
+    expect(localStorage.getItem('auth_expires_at')).toBeNull();
+    expect(sessionStorage.getItem('auth_expires_at')).toBeTruthy();
     expect(localStorage.getItem('auth_token')).toBeNull();
-    expect(sessionStorage.getItem('auth_token')).toBe('login-token');
+    expect(sessionStorage.getItem('auth_token')).toBeNull();
   });
 
-  it('restores the sessionStorage session when both storages hold a token', async () => {
+  it('restores the sessionStorage session when both storages hold an indicator', async () => {
     const sessionToken = btoa(JSON.stringify({ sub: '2' }));
-    const localToken = btoa(JSON.stringify({ sub: '1' }));
 
     server.use(
+      http.post('*/auth/refresh', () =>
+        HttpResponse.json({
+          success: true,
+          message: 'Token refrescado',
+          data: { accessToken: sessionToken, expiresIn: 3600 },
+        }),
+      ),
       http.get('*/auth/me', ({ request }) => {
         const authHeader = request.headers.get('Authorization') ?? '';
         const payload = JSON.parse(atob(authHeader.slice(7))) as { sub: string };
@@ -170,14 +198,14 @@ describe('AuthProvider', () => {
       }),
     );
 
-    sessionStorage.setItem('auth_token', sessionToken);
-    localStorage.setItem('auth_token', localToken);
+    sessionStorage.setItem('auth_expires_at', String(Date.now() + 3600000));
+    localStorage.setItem('auth_expires_at', String(Date.now() + 3600000));
 
     renderProvider();
 
     expect(await screen.findByText('editor@test.com')).toBeInTheDocument();
     expect(tokenManager.get()).toBe(sessionToken);
-    // El token profile-wide de localStorage queda intacto pero NO se adopta.
-    expect(localStorage.getItem('auth_token')).toBe(localToken);
+    // El indicador profile-wide de localStorage queda intacto pero NO se adopta.
+    expect(localStorage.getItem('auth_expires_at')).toBeTruthy();
   });
 });

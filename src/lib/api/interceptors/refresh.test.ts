@@ -24,7 +24,7 @@ function memoryStorage(): Storage {
   };
 }
 
-describe('refresh token — session isolation', () => {
+describe('refresh token — session isolation (memory-only)', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', memoryStorage());
     vi.stubGlobal('sessionStorage', memoryStorage());
@@ -46,13 +46,18 @@ describe('refresh token — session isolation', () => {
       ),
     );
 
-    authStorage.setToken('session-token', 3600, false);
+    authStorage.setActiveSession(false, 3600);
 
     const refreshed = await tryRefreshToken();
 
     expect(refreshed).toBe(true);
-    expect(authStorage.getToken(false)).toBe('refreshed-token');
-    expect(authStorage.getToken(true)).toBeNull();
+    // El access token vive en memoria; el storage solo guarda el indicador.
+    expect(tokenManager.get()).toBe('refreshed-token');
+    expect(authStorage.getActiveSession()).toEqual({ remember: false });
+    expect(sessionStorage.getItem('auth_expires_at')).not.toBeNull();
+    expect(localStorage.getItem('auth_expires_at')).toBeNull();
+    // Contrato memory-only: ningún storage contiene jamás un token.
+    expect(sessionStorage.getItem('auth_token')).toBeNull();
     expect(localStorage.getItem('auth_token')).toBeNull();
   });
 
@@ -67,13 +72,16 @@ describe('refresh token — session isolation', () => {
       ),
     );
 
-    authStorage.setToken('local-token', 3600, true);
+    authStorage.setActiveSession(true, 3600);
 
     const refreshed = await tryRefreshToken();
 
     expect(refreshed).toBe(true);
-    expect(authStorage.getToken(true)).toBe('refreshed-token');
-    expect(authStorage.getToken(false)).toBeNull();
+    expect(tokenManager.get()).toBe('refreshed-token');
+    expect(authStorage.getActiveSession()).toEqual({ remember: true });
+    expect(localStorage.getItem('auth_expires_at')).not.toBeNull();
+    expect(sessionStorage.getItem('auth_expires_at')).toBeNull();
+    expect(localStorage.getItem('auth_token')).toBeNull();
   });
 
   it('clears the storage where the session lives on failure, leaving other storages untouched', async () => {
@@ -86,15 +94,16 @@ describe('refresh token — session isolation', () => {
       ),
     );
 
-    authStorage.setToken('session-token', 3600, false);
-    // Token de otra pestaña en localStorage: no debe tocarse desde esta sesión.
-    authStorage.setToken('other-tab-token', 3600, true);
+    authStorage.setActiveSession(false, 3600);
+    // Sesión de otra pestaña en localStorage: no debe tocarse desde esta sesión.
+    authStorage.setActiveSession(true, 3600);
 
     const refreshed = await tryRefreshToken();
 
     expect(refreshed).toBe(false);
-    expect(authStorage.getToken(false)).toBeNull();
-    expect(authStorage.getToken(true)).toBe('other-tab-token');
+    expect(authStorage.getActiveSession()).toEqual({ remember: true });
+    expect(sessionStorage.getItem('auth_expires_at')).toBeNull();
+    expect(localStorage.getItem('auth_expires_at')).not.toBeNull();
     expect(tokenManager.get()).toBeNull();
   });
 });

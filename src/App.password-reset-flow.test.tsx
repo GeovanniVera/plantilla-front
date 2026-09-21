@@ -1,9 +1,26 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { authStorage } from './lib/auth/token-store';
 import './lib/i18n/config';
+
+// jsdom no implementa matchMedia y el Sidebar de MainLayout lo consulta vía
+// useIsMobile/useMediaQuery. Sin el polyfill, el ErrorBoundary captura el
+// TypeError al llegar al dashboard.
+if (!window.matchMedia) {
+  window.matchMedia = ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}
 
 function memoryStorage(): Storage {
   const values = new Map<string, string>();
@@ -32,10 +49,15 @@ describe('password reset router flow', () => {
   });
 
   it('preserves recovery state across all three routes', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
     render(
-      <MemoryRouter initialEntries={['/forgot-password']}>
-        <App />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/forgot-password']}>
+          <App />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     fireEvent.change(await screen.findByPlaceholderText('tu@email.com'), {
@@ -45,14 +67,18 @@ describe('password reset router flow', () => {
 
     expect(await screen.findByRole('heading', { name: 'Email enviado' })).toBeInTheDocument();
     expect(
-      await screen.findByText(
-        'Enviamos un código de 6 dígitos a flow@test.com',
-        {},
-        { timeout: 3000 },
-      ),
+      await screen.findByText('Revisa tu bandeja de entrada y ingresa el código de 6 dígitos.'),
     ).toBeInTheDocument();
 
-    const otpInputs = screen.getAllByRole('textbox');
+    // La página navega a /verify-otp tras un setTimeout de 2s
+    let otpInputs: HTMLElement[] = [];
+    await waitFor(
+      () => {
+        otpInputs = screen.getAllByRole('textbox');
+        expect(otpInputs).toHaveLength(6);
+      },
+      { timeout: 4000 },
+    );
     ['1', '2', '3', '4', '5', '6'].forEach((digit, index) => {
       fireEvent.change(otpInputs[index], { target: { value: digit } });
     });

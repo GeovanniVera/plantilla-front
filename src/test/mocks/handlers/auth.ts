@@ -55,7 +55,6 @@ export const authHandlers = [
       data: {
         user: record.user,
         accessToken: makeToken(record.user.id),
-        refreshToken: `refresh-${record.user.id}`,
         expiresIn: 3600,
       },
     });
@@ -97,35 +96,23 @@ export const authHandlers = [
     }
   }),
 
-  http.post('*/auth/refresh', async ({ request }) => {
-    const body = (await request.json()) as { refreshToken: string };
+  http.post('*/auth/refresh', () => {
+    // El cliente no envía body en el refresh: el refresh token viaja en cookie
+    // HttpOnly. No leer request.json() aquí (un body vacío rompe el mock).
     return HttpResponse.json({
       success: true,
       message: 'Token refrescado',
       data: {
         user: MOCK_USERS['admin@test.com'].user,
         accessToken: makeToken('1'),
-        refreshToken: body.refreshToken,
         expiresIn: 3600,
       },
     });
   }),
 
-  http.post('*/auth/register', async ({ request }) => {
-    const body = (await request.json()) as { name: string; email: string; password: string };
-    const newUser: User = {
-      id: String(Object.keys(MOCK_USERS).length + 1),
-      email: body.email,
-      name: body.name,
-      roles: ['viewer'],
-      permissions: ['users:read'],
-      isVerified: false,
-    };
-    return HttpResponse.json({
-      success: true,
-      message: 'Registro exitoso',
-      data: { user: newUser, token: makeToken(newUser.id) },
-    });
+  http.post('*/auth/register', () => {
+    // El contrato es ApiResponse<void>: solo mensaje opaco, sin user ni token
+    return HttpResponse.json({ success: true, message: 'Registro exitoso' });
   }),
 
   http.post('*/auth/forgot-password', () => {
@@ -162,7 +149,7 @@ export const authHandlers = [
       return HttpResponse.json({
         success: true,
         message: 'OTP verificado',
-        data: { verified: true, token: `reset-token-${Date.now()}` },
+        data: { resetToken: 'reset-token-123456' },
       });
     }
 

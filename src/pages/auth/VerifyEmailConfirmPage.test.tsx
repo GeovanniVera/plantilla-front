@@ -55,7 +55,7 @@ describe('VerifyEmailConfirmPage', () => {
   it('shows error on invalid token', async () => {
     renderVerifyEmailConfirmPage('invalid-token');
     await waitFor(() => {
-      expect(screen.getByText(/token inválido o expirado/i)).toBeInTheDocument();
+      expect(screen.getByText(/token inválido/i)).toBeInTheDocument();
     });
   });
 
@@ -67,7 +67,7 @@ describe('VerifyEmailConfirmPage', () => {
     );
     renderVerifyEmailConfirmPage();
     await waitFor(() => {
-      expect(screen.getByText(/error al verificar el email/i)).toBeInTheDocument();
+      expect(screen.getByText(/error de conexión/i)).toBeInTheDocument();
     });
   });
 

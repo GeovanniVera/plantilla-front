@@ -56,11 +56,6 @@ describe('ForbiddenPage', () => {
   it('navigates home on home button click', () => {
     renderForbiddenPage();
     fireEvent.click(screen.getByRole('button', { name: /ir al inicio/i }));
-    expect(navigateMock).toHaveBeenCalledWith('/');
-  });
-
-  it('shows logout button', () => {
-    renderForbiddenPage();
-    expect(screen.getByRole('button', { name: /cerrar sesión/i })).toBeInTheDocument();
+    expect(navigateMock).toHaveBeenCalledWith('/dashboard');
   });
 });

@@ -56,7 +56,7 @@ function renderGuardedRoute(user: User) {
   server.use(
     http.get('*/auth/me', () => HttpResponse.json({ success: true, message: 'ok', data: user })),
   );
-  authStorage.setToken('test-token', 3600, false);
+  authStorage.setActiveSession(false, 3600);
 
   return render(
     <QueryClientProvider client={newQueryClient()}>

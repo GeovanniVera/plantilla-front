@@ -89,7 +89,7 @@ describe('App — cableado de la ruta /verify-email', () => {
         return HttpResponse.json({ success: true, message: 'ok', data: user });
       }),
     );
-    authStorage.setToken('test-token', 3600, false);
+    authStorage.setActiveSession(false, 3600);
 
     render(
       <QueryClientProvider client={newQueryClient()}>
