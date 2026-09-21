@@ -56,6 +56,7 @@ afterAll(() => server.close())
 | `POST /auth/verify-email` | Token mágico `verify-token-abc123` → éxito; otro → 400 `VALIDATION_ERROR` |
 | `POST /auth/resend-verification` | `success: true` |
 | `POST /auth/verify-otp` | OTP mágico `123456` → éxito; `000000` → expirado; otro → inválido |
+| `GET /auth/password-policy` | Devuelve la política (8–128, mayúscula, minúscula, símbolo) y expiraciones (`otpExpiresInMinutes: 15`, `resetTokenExpiresInMinutes: 30`) |
 
 ### Usuarios de prueba
 

@@ -10,7 +10,7 @@ Inventario y mapa de dependencias de los módulos de soporte de la aplicación: 
 |---|---|---|
 | [config.md](config.md) | Variables de entorno, validación y defaults | `src/config/env.ts` |
 | [i18n.md](i18n.md) | Configuración de i18next, mapas de error, locales | `src/lib/i18n/` |
-| [lib.md](lib.md) | API client, token store y servicios | `src/lib/api/`, `src/lib/auth/` |
+| [lib.md](lib.md) | API client, token store, servicios y validación | `src/lib/api/`, `src/lib/auth/`, `src/lib/validation/` |
 | [test.md](test.md) | Proyectos Vitest, setup, mocks MSW, cobertura | `vite.config.ts`, `src/test/` |
 | [app.md](app.md) | Orden de providers, rutas, guards, layouts y estilos | `src/main.tsx`, `src/App.tsx`, `src/auth/`, `src/layouts/`, `src/styles/` |
 
@@ -32,7 +32,8 @@ lib (src/lib/)
   ├── api/interceptors/refresh.ts ── usa api/client + auth/token-store + config/env
   ├── api/types/api-response.ts   ── contrato de tipos (fuente de verdad)
   ├── api/services/               ── usa api/client + api/types
-  └── auth/token-store.ts   ── storage de tokens (local/sessionStorage)
+  ├── auth/token-store.ts   ── storage de tokens (local/sessionStorage)
+  └── validation/password.ts ── política de contraseñas compartida (RegisterPage, ResetPasswordPage)
 
 test (src/test/)
   ├── setup.ts             ── jest-dom + MSW (mocks/handlers/auth.ts)

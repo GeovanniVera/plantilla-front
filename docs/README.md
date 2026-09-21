@@ -50,7 +50,7 @@ src/
 ├── features/      # Features de dominio: audit, profile, roles, settings, users
 ├── hooks/         # Hooks React Query de auth, useMediaQuery, useIsMobile
 ├── layouts/       # AuthLayout, MainLayout, ErrorLayout
-├── lib/           # API client, token store e i18n
+├── lib/           # API client, token store, validación e i18n
 ├── pages/         # Páginas de auth, admin, ajustes y raíz
 ├── routes/        # Código muerto: el router real vive en src/App.tsx
 ├── styles/        # Estilos globales

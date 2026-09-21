@@ -4,11 +4,12 @@ Inventario del barrel de hooks de la aplicación, con foco en los hooks de auten
 
 ## Inventario del barrel (`src/hooks/index.ts`)
 
-Exporta **exactamente 8 hooks**, todos de `./useAuth`:
+Exporta **exactamente 9 hooks**, todos de `./useAuth`:
 
 | Hook | Tipo | Descripción |
 |---|---|---|
 | `useMe` | Query | Usuario actual (`GET /auth/me`) |
+| `usePasswordPolicy` | Query | Política pública de contraseñas y expiraciones (`GET /auth/password-policy`) |
 | `useLogin` | Mutation | Inicia sesión (delega en `AuthContext.login`) |
 | `useLogout` | Mutation | Cierra sesión (delega en `AuthContext.logout`) |
 | `useRegister` | Mutation | Registro de usuario |
@@ -45,11 +46,11 @@ Los hooks combinan dos fuentes de estado:
 
 - `useLogin` y `useLogout` son **delgados**: delegan la persistencia y el estado en `AuthContext`; React Query solo orquesta la mutación y el cache.
 - El resto de las mutaciones (`useRegister`, `useForgotPassword`, `useResetPassword`, `useVerifyEmail`, `useResendVerification`) llaman a `authService` directamente.
-- `useMe` es la única query: `queryKey ['auth', 'me']`, sin retry, `staleTime` de 5 minutos.
+- Hay dos queries: `useMe` (`queryKey ['auth', 'me']`) y `usePasswordPolicy` (`queryKey ['auth', 'password-policy']`), ambas sin retry y con `staleTime` de 5 minutos.
 
 ## Documentación
 
-- [Hooks de auth (useAuth)](useAuth.md) — los 8 hooks en detalle: firmas, queryKeys, invalidaciones y uso.
+- [Hooks de auth (useAuth)](useAuth.md) — los 9 hooks en detalle: firmas, queryKeys, invalidaciones y uso.
 - [Hooks responsive](responsive.md) — `useMediaQuery` y `useIsMobile`.
 - [Notas de uso y limitaciones](gaps.md) — colisión `useForgotPassword`, barrel incompleto, template muerto y otros gotchas.
 

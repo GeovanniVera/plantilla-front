@@ -64,7 +64,7 @@ Estos símbolos existen en el módulo pero **no** se exportan desde `index.ts`; 
 
 | Dependencia | Uso |
 |---|---|
-| `src/lib/api/services/auth.service` | `login`, `me`, `logout`, `verifyOtp`, `resetPassword`, `forgotPassword`, `register`, `verifyEmail`, `resendVerification` |
+| `src/lib/api/services/auth.service` | `login`, `me`, `logout`, `verifyOtp`, `resetPassword`, `forgotPassword`, `register`, `verifyEmail`, `resendVerification`, `getPasswordPolicy` |
 | `src/lib/api/client` | `tokenManager` (access token en memoria del cliente HTTP) |
 | `src/lib/auth/token-store.ts` | `authStorage` (persistencia en `localStorage`/`sessionStorage`) |
 

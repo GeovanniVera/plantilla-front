@@ -1,6 +1,6 @@
 # Hooks de autenticación (`useAuth.ts`)
 
-Detalle de los 8 hooks de React Query exportados por `src/hooks/index.ts`, todos definidos en `src/hooks/useAuth.ts`. Requieren `AuthProvider` (excepto las mutaciones que no usan el contexto, marcadas abajo).
+Detalle de los 9 hooks de React Query exportados por `src/hooks/index.ts`, todos definidos en `src/hooks/useAuth.ts`. Requieren `AuthProvider` (excepto las mutaciones que no usan el contexto, marcadas abajo).
 
 ## `useMe`
 
@@ -15,6 +15,23 @@ Query del usuario actual. Sin token válido, `queryFn` lanza `Error(response.mes
 
 ```tsx
 const { data: user, isLoading, error } = useMe();
+```
+
+## `usePasswordPolicy`
+
+| | |
+|---|---|
+| Firma | `() => UseQueryResult<PasswordPolicyResponse>` |
+| queryKey | `['auth', 'password-policy']` |
+| Opciones | `retry: false`, `staleTime: 5 * 60 * 1000` (5 minutos) |
+| Servicio | `authService.getPasswordPolicy()` → `GET /auth/password-policy` |
+| Dependencia de contexto | Ninguna |
+
+Query de la política pública de contraseñas y los tiempos de expiración del flujo de recuperación. El backend es la fuente única de verdad. El `queryFn` lanza `Error(response.message || 'No se pudo obtener la política de contraseñas')` si la respuesta no es exitosa. La consume `VerifyOTPPage` para mostrar la vigencia real del OTP.
+
+```tsx
+const { data: policy } = usePasswordPolicy();
+policy?.otpExpiresInMinutes;
 ```
 
 ## `useLogin`
@@ -108,6 +125,7 @@ Reenvía el email de verificación.
 | Hook | Tipo | Firma | Servicio / Contexto | Invalidación |
 |---|---|---|---|---|
 | `useMe` | Query | `()` | `authService.me()` | — |
+| `usePasswordPolicy` | Query | `()` | `authService.getPasswordPolicy()` | — |
 | `useLogin` | Mutation | `{ email, password, remember? }` | `AuthContext.login` | invalida `['auth','me']` |
 | `useLogout` | Mutation | `() => void` | `AuthContext.logout` | `queryClient.clear()` (settled) |
 | `useRegister` | Mutation | `{ name, email, password, acceptedTerms }` | `authService.register` | — |

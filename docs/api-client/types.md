@@ -104,6 +104,26 @@ interface RefreshResponse {
 }
 ```
 
+### `PasswordPolicyResponse`
+
+Respuesta de `GET /auth/password-policy`: política de contraseñas y tiempos de expiración del flujo de recuperación. El backend es la fuente única de verdad.
+
+```ts
+interface PasswordPolicy {
+  minLength: number;          // 8
+  maxLength: number;          // 128
+  requiresUppercase: boolean;
+  requiresLowercase: boolean;
+  requiresSymbol: boolean;
+}
+
+interface PasswordPolicyResponse {
+  otpExpiresInMinutes: number;         // vigencia del OTP de recuperación
+  resetTokenExpiresInMinutes: number;  // vigencia del token emitido tras verificar el OTP
+  passwordPolicy: PasswordPolicy;
+}
+```
+
 ## Tipos de paginación
 
 ```ts

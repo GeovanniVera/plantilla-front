@@ -33,6 +33,7 @@ authService.resetPassword(token, password)          → ApiResponse<void>
 authService.verifyEmail(token)                      → ApiResponse<{ email: string }>
 authService.resendVerification(email)               → ApiResponse<void>
 authService.verifyOtp(email, otp)                   → ApiResponse<{ resetToken: string }>
+authService.getPasswordPolicy()                     → ApiResponse<PasswordPolicyResponse>
 ```
 
 Endpoints correspondientes:
@@ -44,8 +45,15 @@ Endpoints correspondientes:
 | forgot / reset password | `POST /auth/forgot-password`, `POST /auth/reset-password` |
 | verify / resend email | `POST /auth/verify-email`, `POST /auth/resend-verification` |
 | verify OTP | `POST /auth/verify-otp` — contrato documentado: `{ resetToken }`, NO `{ verified, token }` |
+| password policy | `GET /auth/password-policy` — política de contraseñas y expiraciones (público) |
 
 > `_template.service.ts` es una plantilla CRUD genérico (`templateService` con `/resource`) que NO se usa en runtime; sirve de modelo para crear servicios nuevos.
+
+## Validación (`src/lib/validation/`)
+
+Utilidades de validación compartidas por los formularios:
+
+- `password.ts` — política de contraseñas única del frontend (`PASSWORD_MIN_LENGTH = 8`, `PASSWORD_MAX_LENGTH = 128`, `PASSWORD_REQUIREMENTS` como datos) y `validatePassword(value)` / `isPasswordValid(value)`. Replica exactamente la política del backend (`PasswordPolicyValidator`) e incluye la nota de paridad del conjunto de símbolos (clase ASCII explícita `[^a-zA-Z0-9 \t\n\r\f\v]`). Ver [../auth/flows.md](../auth/flows.md#política-de-contraseñas-registro-y-reset).
 
 ## Token store (`src/lib/auth/token-store.ts`)
 

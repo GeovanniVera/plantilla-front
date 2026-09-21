@@ -34,7 +34,7 @@ Los barrels solo importan módulos hoja (nunca otro barrel de familia), lo que m
 | Guía | Contenido |
 |---|---|
 | [Primitives](primitives.md) | `Button`, `Input` (dual API), `Select`, `Textarea`, `Checkbox`, `Radio`, `Badge`, `StatusDot`, puente `Form.module.css` |
-| [Forms](forms.md) | `useForm`, `Form`, `FormField`, `FormContext`/`useFormContext`, `CheckboxSearchList`, contratos de props en `forms/types.ts` |
+| [Forms](forms.md) | `useForm`, `Form`, `FormField`, `PasswordRequirements`, `FormContext`/`useFormContext`, `CheckboxSearchList`, contratos de props en `forms/types.ts` |
 | [Overlays](overlays.md) | `Modal`, `Drawer`, `DrawerStack`, `ConfirmDialog`, `ModalContext`/`useModalClose` |
 | [Feedback](feedback.md) | `ToastProvider`/`useToast`, `Spinner`, `Skeleton` + presets |
 | [Navigation](navigation.md) | `Breadcrumb`, `Tabs`, sidebar completo (`Sidebar`, `NavItem`, `NavGroup`, `SidebarLogo`, `UserAvatar`, `UserClock`) |

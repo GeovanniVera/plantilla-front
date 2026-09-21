@@ -55,13 +55,15 @@ Formulario de login con `useLogin` (de `src/hooks/useAuth.ts`). Comportamientos 
 
 Formulario de registro con `useRegister`. Tras registrarse **no hay auto-login**: se redirige a `/verify-email`.
 
+Antes de enviar, valida la contraseña con `validatePassword` (política compartida en `src/lib/validation/password.ts`) y muestra el checklist `PasswordRequirements`. Una contraseña que no cumple la política corta el submit con el mensaje traducido de `auth.passwordPolicy.error`. Además exige que la confirmación coincida.
+
 ## ForgotPasswordPage / VerifyOTPPage / ResetPasswordPage
 
 Flujo de recovery en 3 pasos bajo `ForgotPasswordProvider`:
 
 1. **ForgotPasswordPage** — pide el email y dispara el OTP.
-2. **VerifyOTPPage** — valida el OTP de 6 dígitos y obtiene el `resetToken`.
-3. **ResetPasswordPage** — envía la nueva contraseña junto con el token.
+2. **VerifyOTPPage** — valida el OTP de 6 dígitos y obtiene el `resetToken`. Muestra la vigencia del OTP leyéndola del backend con `usePasswordPolicy()` (`GET /auth/password-policy`); mientras la query carga muestra un texto sin número (`auth.verifyOTP.expiresFallback`). Ya no usa el "10 minutos" hardcodeado.
+3. **ResetPasswordPage** — envía la nueva contraseña junto con el token. Valida la política completa con `validatePassword` y renderiza `PasswordRequirements` (reemplaza al checklist local de "6 caracteres/confirmar").
 
 Todas envueltas en `GuestOnly` (un usuario autenticado no ve recovery).
 

@@ -32,6 +32,8 @@ useRegister().mutate({ name, email, password, acceptedTerms })
 
 `register` retorna solo un mensaje opaco (`ApiResponse<void>`): **no** devuelve user ni token. Tras registrarse, el usuario debe verificar su email (flujo siguiente) antes de acceder a rutas protegidas.
 
+Antes del submit, `RegisterPage` valida la contraseña con la política compartida (`validatePassword` de `src/lib/validation/password.ts`) y muestra el checklist `PasswordRequirements`. Una contraseña que no cumple la política corta el submit con el mensaje `auth.passwordPolicy.error` (el registro carece de auto-login y no envía nada al backend hasta pasar la validación).
+
 ## Recuperación de contraseña (forgot → OTP → reset)
 
 Máquina de estado gestionada por `ForgotPasswordContext` (`src/auth/ForgotPasswordContext.tsx`), con tres rutas:
@@ -57,8 +59,19 @@ Comportamiento clave:
 - `reset()` reinicia todo el estado (útil al salir del flujo o tras completarlo).
 - `useForgotPassword()` lanza `Error` fuera de `ForgotPasswordProvider`.
 - `ForgotPasswordProvider` y `useForgotPassword` (contexto) **no** se exportan por el barrel de auth: importe desde `src/auth/ForgotPasswordContext.tsx`.
+- `/verify-otp` consulta la política del backend con `usePasswordPolicy()` (`GET /auth/password-policy`) para mostrar la vigencia real del OTP (`auth.verifyOTP.expiresIn` con `otpExpiresInMinutes`); mientras la query carga muestra el texto sin número `auth.verifyOTP.expiresFallback`. Ya no hay un "10 minutos" hardcodeado.
+- Antes del submit, `ResetPasswordPage` valida la contraseña completa con `validatePassword` (misma política que el backend) y renderiza el checklist `PasswordRequirements`; además exige que coincida con la confirmación.
 
 > ⚠ Colisión de nombres: `useForgotPassword` también existe en `src/hooks/useAuth.ts` como mutación React Query (`authService.forgotPassword(email)`). Para el flujo de 3 pasos use el hook del contexto; para disparar el email de recuperación sin máquina de estado, use el de React Query. Ver [Notas de uso del barrel de hooks](../hooks/gaps.md).
+
+### Política de contraseñas (registro y reset)
+
+La política es compartida y se aplica solo donde la contraseña se **crea o cambia** (registro y reset, no login):
+
+- `src/lib/validation/password.ts` es la fuente única en el frontend: `PASSWORD_MIN_LENGTH = 8`, `PASSWORD_MAX_LENGTH = 128` y `PASSWORD_REQUIREMENTS` (mayúscula, minúscula, símbolo) como datos.
+- `PasswordRequirements` (`src/components/forms/PasswordRequirements.tsx`) renderiza el checklist en vivo a partir de `PASSWORD_REQUIREMENTS`.
+- `validatePassword(value)` devuelve la clave i18n del error (`auth.passwordPolicy.error`) o `null`.
+- El backend es la fuente de verdad de la política; el frontend la replica y además la obtiene en `GET /auth/password-policy` (ver `usePasswordPolicy()`).
 
 ## Verificación de email
 

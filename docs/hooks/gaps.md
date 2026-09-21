@@ -22,7 +22,7 @@ Existen **dos** hooks con el mismo nombre en el proyecto:
 
 ## 2. Barrel incompleto: `useIsMobile` y `useMediaQuery` fuera de `src/hooks/index.ts`
 
-El barrel exporta solo los 8 hooks de auth. Los hooks responsive existen pero **no** se re-exportan:
+El barrel exporta solo los 9 hooks de auth. Los hooks responsive existen pero **no** se re-exportan:
 
 ```ts
 // ✔ Funciona

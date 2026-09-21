@@ -4,7 +4,7 @@ Orquestación de formularios: hook de estado con validación, contenedor con con
 
 ## Barrel (`forms/index.ts`)
 
-Exporta: `Form`, `FormField`, `useForm`, `useFormContext` + tipos (`UseFormOptions`, `FormValidator`, `ZodSchema`, `FormContextValue`, `FormFieldProps`, `FormFieldVariant`, `InputVariant`, `FieldType`, `FieldConfig`).
+Exporta: `Form`, `FormField`, `PasswordRequirements`, `useForm`, `useFormContext` + tipos (`UseFormOptions`, `FormValidator`, `ZodSchema`, `FormContextValue`, `FormFieldProps`, `FormFieldVariant`, `InputVariant`, `FieldType`, `FieldConfig`, `PasswordRequirementsProps`).
 
 **No exporta** `CheckboxSearchList` (deep import: `@components/forms/CheckboxSearchList`).
 
@@ -127,6 +127,23 @@ Lista de checkboxes con filtro de búsqueda. No está exportada por el barrel.
 | `maxHeightClass` | `string` | `'max-h-64'` | Altura máxima del área de scroll |
 
 Filtra por `label` y `description` (case-insensitive). Útil para permisos, roles o cualquier lista seleccionable.
+
+## PasswordRequirements
+
+Checklist en vivo de los requisitos de contraseña, reutilizable por cualquier formulario donde la contraseña se cree o cambie. Renderiza la política compartida `PASSWORD_REQUIREMENTS` de `src/lib/validation/password.ts` y marca cada fila como cumplida o no según el `value` actual.
+
+| Prop | Tipo | Descripción |
+|---|---|---|
+| `value` | `string` | Valor actual del campo de contraseña |
+
+```tsx
+<PasswordRequirements value={password} />
+```
+
+- Cada fila lleva `data-testid="password-requirement-<id>"` y `data-passed="true|false"` (ids: `minLength`, `uppercase`, `lowercase`, `symbol`).
+- Las etiquetas y el título salen de claves i18n `auth.passwordPolicy.*`.
+- El máximo de longitud se valida en `validatePassword`, pero no se lista como fila (no es accionable).
+- Lo usan `RegisterPage` y `ResetPasswordPage`.
 
 ## Contratos en `forms/types.ts`
 
