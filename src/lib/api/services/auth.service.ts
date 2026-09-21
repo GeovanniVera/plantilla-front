@@ -1,5 +1,10 @@
 import { client } from '../client';
-import type { ApiResponse, AuthResponse, User } from '../types/api-response';
+import type {
+  ApiResponse,
+  AuthResponse,
+  PasswordPolicyResponse,
+  User,
+} from '../types/api-response';
 
 export const authService = {
   login: (email: string, password: string): Promise<ApiResponse<AuthResponse>> =>
@@ -36,4 +41,13 @@ export const authService = {
    */
   verifyOtp: (email: string, otp: string): Promise<ApiResponse<{ resetToken: string }>> =>
     client.post<{ resetToken: string }>('/auth/verify-otp', { email, otp }),
+
+  /**
+   * Política pública de contraseñas y tiempos de expiración.
+   *
+   * El backend es la fuente única de verdad: el frontend lee de acá valores
+   * como la expiración del OTP en lugar de hardcodearlos.
+   */
+  getPasswordPolicy: (): Promise<ApiResponse<PasswordPolicyResponse>> =>
+    client.get<PasswordPolicyResponse>('/auth/password-policy'),
 };

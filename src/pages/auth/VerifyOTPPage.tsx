@@ -10,12 +10,14 @@ import { LuArrowLeft, LuShield } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
 import Spinner from '@components/feedback/Spinner';
 import { useForgotPassword } from '../../auth/ForgotPasswordContext';
+import { usePasswordPolicy } from '../../hooks/useAuth';
 import { AuthFormHeader } from '../../layouts/auth/AuthFormLayout';
 
 export default function VerifyOTPPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { email, verifyOtp } = useForgotPassword();
+  const { data: passwordPolicy } = usePasswordPolicy();
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -151,7 +153,11 @@ export default function VerifyOTPPage() {
         {/* Info */}
         <div className="bg-surface text-fg-muted flex items-center justify-center gap-2 rounded-lg p-4 text-sm">
           <LuShield size={16} className="text-accent shrink-0" />
-          <span>El código expira en 10 minutos</span>
+          <span>
+            {passwordPolicy
+              ? t('auth.verifyOTP.expiresIn', { minutes: passwordPolicy.otpExpiresInMinutes })
+              : t('auth.verifyOTP.expiresFallback')}
+          </span>
         </div>
       </div>
     </div>

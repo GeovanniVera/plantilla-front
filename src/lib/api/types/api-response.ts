@@ -188,6 +188,32 @@ export interface RefreshResponse {
   expiresIn?: number;
 }
 
+/**
+ * Reglas de composición de la contraseña.
+ */
+export interface PasswordPolicy {
+  minLength: number;
+  maxLength: number;
+  requiresUppercase: boolean;
+  requiresLowercase: boolean;
+  requiresSymbol: boolean;
+}
+
+/**
+ * Política de contraseñas y tiempos de expiración del flujo de recuperación.
+ *
+ * El backend es la fuente única de verdad: el frontend consume estos valores
+ * para no duplicar literales (por ejemplo, el tiempo de expiración del OTP).
+ */
+export interface PasswordPolicyResponse {
+  /** Minutos de vigencia del OTP de recuperación. */
+  otpExpiresInMinutes: number;
+  /** Minutos de vigencia del token de recuperación emitido tras verificar el OTP. */
+  resetTokenExpiresInMinutes: number;
+  /** Reglas de composición de la contraseña. */
+  passwordPolicy: PasswordPolicy;
+}
+
 // ─── Tipos de tema ─────────────────────────────────────────
 /**
  * Tokens de tema del sistema.

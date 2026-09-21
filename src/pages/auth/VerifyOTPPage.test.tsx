@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { http, HttpResponse, delay } from 'msw';
 import VerifyOTPPage from './VerifyOTPPage';
 import { ForgotPasswordProvider } from '../../auth/ForgotPasswordContext';
+import { server } from '../../test/mocks/server';
 import '../../lib/i18n/config';
 
 const navigateMock = vi.fn();
@@ -108,5 +110,22 @@ describe('VerifyOTPPage', () => {
     const inputs = screen.getAllByRole('textbox');
     fireEvent.keyDown(inputs[0], { key: 'Backspace' });
     expect(navigateMock).not.toHaveBeenCalled();
+  });
+
+  it('shows the OTP expiry from the fetched password policy', async () => {
+    renderVerifyOTPPage();
+    expect(await screen.findByText('El código expira en 15 minutos')).toBeInTheDocument();
+  });
+
+  it('shows a generic expiry text without a number while the policy is loading', () => {
+    server.use(
+      http.get('*/auth/password-policy', async () => {
+        await delay('infinite');
+        return HttpResponse.json({});
+      }),
+    );
+
+    renderVerifyOTPPage();
+    expect(screen.getByText('El código expira en unos minutos')).toBeInTheDocument();
   });
 });

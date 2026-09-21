@@ -165,4 +165,22 @@ export const authHandlers = [
       { status: 400 },
     );
   }),
+
+  http.get('*/auth/password-policy', () => {
+    return HttpResponse.json({
+      success: true,
+      message: 'Política de contraseñas',
+      data: {
+        otpExpiresInMinutes: 15,
+        resetTokenExpiresInMinutes: 30,
+        passwordPolicy: {
+          minLength: 8,
+          maxLength: 128,
+          requiresUppercase: true,
+          requiresLowercase: true,
+          requiresSymbol: true,
+        },
+      },
+    });
+  }),
 ];

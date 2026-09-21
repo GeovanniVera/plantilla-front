@@ -26,6 +26,27 @@ export function useMe() {
   });
 }
 
+/**
+ * Política pública de contraseñas y tiempos de expiración.
+ *
+ * El backend es la fuente única de verdad: el frontend la consume para no
+ * duplicar literales (por ejemplo, la expiración del OTP).
+ */
+export function usePasswordPolicy() {
+  return useQuery({
+    queryKey: ['auth', 'password-policy'],
+    queryFn: async () => {
+      const response = await authService.getPasswordPolicy();
+      if (!response.success || !response.data) {
+        throw new Error(response.message || 'No se pudo obtener la política de contraseñas');
+      }
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
 export function useLogin() {
   const queryClient = useQueryClient();
   const { login } = useAuth();
