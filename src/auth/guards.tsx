@@ -53,16 +53,8 @@ export function ProtectedRoute({
   redirectTo = '/login',
   requireVerification = true,
 }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, isVerified, user } = useAuth();
+  const { isAuthenticated, isLoading, isVerified } = useAuth();
   const location = useLocation();
-
-  console.log('[GUARD] ProtectedRoute:', {
-    isAuthenticated,
-    isLoading,
-    isVerified: isVerified(),
-    requireVerification,
-    user,
-  });
 
   if (isLoading) return <AuthLoading />;
   if (!isAuthenticated) return <Navigate to={redirectTo} state={{ from: location }} replace />;

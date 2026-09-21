@@ -43,7 +43,13 @@ function RegisterPage() {
     registerMutation.mutate(
       { name, email, password, acceptedTerms: acceptTerms },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
+          // El cliente resuelve { success: false } en vez de rechazar en errores
+          // HTTP (ej: 409 email duplicado): discriminar antes de navegar.
+          if (!response.success) {
+            setError(response.message || t('errors.unknown'));
+            return;
+          }
           // No auto-login: el backend requiere verificación de email primero
           // Redirigir a página de "revisa tu email"
           navigate('/verify-email', { state: { email } });

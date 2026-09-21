@@ -67,8 +67,9 @@ export default function VerifyEmailConfirmPage() {
     );
   }
 
-  // Error from mutation
-  if (verifyEmailMutation.error) {
+  // Error: el cliente resuelve { success: false } en vez de rechazar en errores
+  // HTTP o de red; `mutation.error` nunca se setea.
+  if (verifyEmailMutation.data?.success === false) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-6 p-8 text-center">
         <div className="bg-danger-bg flex size-16 items-center justify-center rounded-full">
@@ -76,7 +77,7 @@ export default function VerifyEmailConfirmPage() {
         </div>
         <h2 className="text-fg text-xl font-bold">{t('errors.unknown')}</h2>
         <p className="text-fg-muted text-sm">
-          {verifyEmailMutation.error.message || 'Error al verificar el email'}
+          {verifyEmailMutation.data.message || 'Error al verificar el email'}
         </p>
         <button
           type="button"

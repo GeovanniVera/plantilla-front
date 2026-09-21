@@ -20,22 +20,37 @@ const REQUEST_TIMEOUT = Number(import.meta.env.VITE_REQUEST_TIMEOUT) || 15000;
 // ─── Gestión de token ──────────────────────────────────────
 /** Token de acceso actual (en memoria, no persistido) */
 let accessToken: string | null = null;
+/** Expiración del token en memoria (epoch ms); null si se desconoce */
+let accessTokenExpiresAt: number | null = null;
 
 /**
- * Administra el token de acceso en memoria.
- * Se usa junto con authStorage para persistencia en localStorage.
+ * Administra el token de acceso en memoria (memory-only).
+ *
+ * El access token jamás toca localStorage/sessionStorage (vector XSS): en
+ * storage solo persiste un indicador de sesión vía authStorage. Si el token
+ * expira, el cliente lo refresca proactivamente vía `POST /auth/refresh`
+ * (refresh token en cookie HttpOnly) antes de reenviar la petición.
  */
 export const tokenManager = {
   /** @returns Token actual o null si no hay sesión */
   get: () => accessToken,
-  /** Guarda el token en memoria */
-  set: (token: string) => {
+  /**
+   * Guarda el token en memoria con su expiración.
+   * @param token - Access token
+   * @param expiresIn - Segundos de vida del token; opcional
+   */
+  set: (token: string, expiresIn?: number) => {
     accessToken = token;
+    accessTokenExpiresAt = expiresIn ? Date.now() + expiresIn * 1000 : null;
   },
   /** Limpia el token de memoria */
   clear: () => {
     accessToken = null;
+    accessTokenExpiresAt = null;
   },
+  /** Indica si el token en memoria existe y ya expiró (refresco proactivo) */
+  isExpired: () =>
+    Boolean(accessToken) && accessTokenExpiresAt !== null && Date.now() >= accessTokenExpiresAt,
 };
 
 // ─── Clase de error personalizada ──────────────────────────
@@ -131,15 +146,17 @@ let config = { ...defaultConfig };
 
 // ─── Helper: sesión activa ─────────────────────────────────
 /**
- * Indica si la petición podía llevar sesión (token en memoria o persistido).
+ * Indica si la petición podía llevar sesión (token en memoria o indicador
+ * de sesión persistido en storage).
  *
  * Un 401 solo es "sesión expirada" cuando la request enviaba un token.
  * En endpoints públicos (login, register), un 401 es credenciales
  * inválidas y NO debe disparar refresh ni logout (que recargan la página).
  *
- * La procedencia del token se resuelve a través de la sesión activa
- * (sessionStorage primero): si hay token en cualquier storage, la request
- * podía llevar sesión. El resultado es el mismo que consultar ambos storages.
+ * La procedencia de la sesión se resuelve a través del indicador activo
+ * (sessionStorage primero): si hay token en memoria o indicador en cualquier
+ * storage, la request podía llevar sesión. El resultado es el mismo que
+ * consultar ambos storages.
  */
 function hasSessionToken(): boolean {
   return Boolean(accessToken) || authStorage.getActiveSession() !== null;
@@ -197,15 +214,19 @@ async function request<T>(
     headers: {
       // FormData: no forzar Content-Type (fetch setea el boundary automáticamente)
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      // Anti-CSRF: el backend exige X-Requested-With en /auth/refresh (cookie HttpOnly);
+      // se envía en todas las peticiones y options?.headers puede sobrescribirlo.
+      'X-Requested-With': 'XMLHttpRequest',
       ...options?.headers,
     },
+    credentials: 'include',
     ...options,
   };
 
   // Inyectar token de autorización si existe
   if (accessToken) {
-    // Proactive refresh: if token is expired, refresh before sending the request
-    if (authStorage.isExpired()) {
+    // Proactive refresh: if the in-memory token is expired, refresh before sending the request
+    if (tokenManager.isExpired()) {
       const refreshed = await tryRefreshToken();
       if (!refreshed) {
         tokenManager.clear();

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, type ReactNode } from 'react';
 import { AuthContext } from './context';
 import { authService } from '../lib/api/services/auth.service';
 import { tokenManager } from '../lib/api/client';
+import { tryRefreshToken } from '../lib/api/interceptors/refresh';
 import { authStorage } from '../lib/auth/token-store';
 import type { AuthState } from './types';
 
@@ -37,40 +38,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // ─── Restaurar sesión al montar ──────────────────────────
   useEffect(() => {
     const restoreSession = async () => {
-      console.log('[AUTH] Restaurando sesión...');
-
-      // Adoptar la MISMA sesión y storage donde fue creada. sessionStorage tiene
-      // prioridad: una sesión tab-scoped no debe ser secuestrada por un token
-      // profile-wide que otro login dejó en localStorage.
+      // El access token no se persiste (memory-only): el storage solo guarda
+      // un INDICADOR de sesión. Tras un reload hay que refrescar el token vía
+      // `POST /auth/refresh` (cookie HttpOnly) y recién después pedir /auth/me.
+      // sessionStorage tiene prioridad: una sesión tab-scoped no debe ser
+      // secuestrada por un indicador profile-wide que otro login dejó en
+      // localStorage.
       const activeSession = authStorage.getActiveSession();
-      const token = activeSession?.token ?? null;
       const remember = activeSession?.remember ?? false;
 
-      console.log('[AUTH] Token encontrado:', {
-        hasToken: !!token,
-        source: token ? (remember ? 'localStorage' : 'sessionStorage') : 'ninguno',
-      });
-
-      if (!token) {
-        console.log('[AUTH] No hay token, sesión no restaurada');
+      if (!activeSession) {
         setState((prev) => ({ ...prev, isLoading: false }));
         return;
       }
 
       try {
-        tokenManager.set(token);
-        console.log('[AUTH] Llamando a /auth/me...');
+        const refreshed = await tryRefreshToken();
+        if (!refreshed) {
+          authStorage.clear(remember);
+          tokenManager.clear();
+          setState({ user: null, token: null, isAuthenticated: false, isLoading: false });
+          return;
+        }
+
         const meResponse = await authService.me();
         // Discriminar por `success` antes de leer `data`: la variante de error
         // del union no expone el campo, y accederlo sin narrow rompe el typecheck.
-        console.log('[AUTH] Respuesta de /auth/me:', {
-          success: meResponse.success,
-          hasData: meResponse.success && !!meResponse.data,
-          user: meResponse.success ? meResponse.data : undefined,
-        });
-
         if (!meResponse.success || !meResponse.data) {
-          console.log('[AUTH] /auth/me falló, limpiando sesión');
           authStorage.clear(remember);
           tokenManager.clear();
           setState({
@@ -82,21 +76,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return;
         }
 
-        console.log('[AUTH] Sesión restaurada exitosamente:', { user: meResponse.data });
-        console.log(
-          '[AUTH] isVerified from /me:',
-          meResponse.data?.isVerified,
-          typeof meResponse.data?.isVerified,
-        );
         setState({
           user: meResponse.data,
-          token,
+          token: tokenManager.get(),
           isAuthenticated: true,
           isLoading: false,
         });
-      } catch (error) {
-        console.error('[AUTH] Error al restaurar sesión:', error);
-        // Token inválido o expirado → limpiar sesión
+      } catch {
+        // Error inesperado al restaurar sesión → limpiar sesión
         authStorage.clear(remember);
         tokenManager.clear();
         setState({
@@ -147,15 +134,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const { user, accessToken: newToken, expiresIn } = response.data;
 
-    console.log('[AUTH] Login exitoso:', { user, hasToken: !!newToken, expiresIn, remember });
-    console.log('[AUTH] isVerified:', user?.isVerified, typeof user?.isVerified);
-
-    // Persistir token (refresh token viene en HttpOnly cookie)
-    // Un login debe dejar exactamente un token en exactamente un storage:
-    // limpiar ambos antes de escribir evita que un token viejo secuestre el restore.
+    // Persistir solo el INDICADOR de sesión (refresh token viene en HttpOnly
+    // cookie); el access token queda en memoria (memory-only).
+    // Un login debe dejar exactamente un indicador en exactamente un storage:
+    // limpiar ambos antes de escribir evita que un indicador viejo secuestre el restore.
     authStorage.clearAll();
-    authStorage.setToken(newToken, expiresIn, remember);
-    tokenManager.set(newToken);
+    authStorage.setActiveSession(remember, expiresIn);
+    tokenManager.set(newToken, expiresIn);
 
     // Actualizar estado
     setState({
@@ -164,8 +149,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       isAuthenticated: true,
       isLoading: false,
     });
-
-    console.log('[AUTH] Estado actualizado:', { user, isAuthenticated: true });
   }, []);
 
   // ─── Logout ──────────────────────────────────────────────

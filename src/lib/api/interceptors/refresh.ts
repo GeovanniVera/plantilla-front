@@ -28,10 +28,14 @@ async function doRefresh(): Promise<boolean> {
 
   try {
     const API_BASE = env.VITE_API_BASE;
-    // No enviamos refreshToken en el body — viene en HttpOnly cookie
+    // No enviamos refreshToken en el body — viene en HttpOnly cookie.
+    // X-Requested-With: anti-CSRF que el backend exige en /auth/refresh (cookie HttpOnly).
     const response = await fetch(`${API_BASE}${env.VITE_AUTH_REFRESH_PATH}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
       credentials: 'include', // Importante: enviar cookies HttpOnly
     });
 
@@ -47,8 +51,10 @@ async function doRefresh(): Promise<boolean> {
 
     const { accessToken, expiresIn } = data.data;
 
-    tokenManager.set(accessToken);
-    authStorage.setToken(accessToken, expiresIn, remember);
+    // El access token vive SOLO en memoria; en storage solo se actualiza el
+    // indicador de sesión (nunca un valor de token).
+    tokenManager.set(accessToken, expiresIn);
+    authStorage.setActiveSession(remember, expiresIn);
     // No hay refreshToken en el body — viene en cookie
 
     return true;
@@ -61,10 +67,10 @@ async function doRefresh(): Promise<boolean> {
  * Invalida la sesión tras un refresh fallido.
  *
  * Limpia el storage donde vive la sesión activa (no siempre localStorage) para
- * no dejar tokens huérfanos en sessionStorage. Si no hay sesión identificable,
- * aplica una invalidación dura sobre ambos storages.
+ * no dejar indicadores huérfanos en sessionStorage. Si no hay sesión
+ * identificable, aplica una invalidación dura sobre ambos storages.
  */
-function invalidate(activeSession: { token: string; remember: boolean } | null): false {
+function invalidate(activeSession: { remember: boolean } | null): false {
   if (activeSession) {
     authStorage.clear(activeSession.remember);
   } else {
