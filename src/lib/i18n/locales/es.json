@@ -132,6 +132,59 @@
       "all": "Todos los eventos"
     }
   },
+  "admin": {
+    "users": {
+      "title": "Usuarios",
+      "count": "{{total}} usuarios registrados",
+      "searchLabel": "Buscar usuarios",
+      "searchPlaceholder": "Buscar por email o nombre",
+      "statusLabel": "Filtrar por estado",
+      "sortLabel": "Ordenar por",
+      "refreshing": "Actualizando...",
+      "loading": "Cargando usuarios...",
+      "status": {
+        "all": "Todos",
+        "active": "Activo",
+        "suspended": "Suspendido",
+        "unverified": "Sin verificar"
+      },
+      "sort": {
+        "createdAt": "Fecha de registro",
+        "name": "Nombre",
+        "email": "Email",
+        "asc": "Ascendente",
+        "desc": "Descendente",
+        "toggle": "Cambiar dirección del orden"
+      },
+      "table": {
+        "name": "Nombre",
+        "email": "Email",
+        "roles": "Roles",
+        "status": "Estado"
+      },
+      "actions": {
+        "suspend": "Suspender",
+        "reactivate": "Reactivar"
+      },
+      "empty": {
+        "title": "Sin usuarios",
+        "description": "No se encontraron usuarios con los filtros aplicados."
+      },
+      "toast": {
+        "suspended": "Usuario {{name}} suspendido",
+        "reactivated": "Usuario {{name}} reactivado",
+        "error": "Error al realizar la operación"
+      },
+      "confirm": {
+        "suspendTitle": "Suspender usuario",
+        "suspendMessage": "¿Estás seguro de suspender a {{name}}? El usuario no podrá acceder al sistema.",
+        "suspendLabel": "Suspender",
+        "reactivateTitle": "Reactivar usuario",
+        "reactivateMessage": "¿Reactivar la cuenta de {{name}}? El usuario podrá acceder nuevamente.",
+        "reactivateLabel": "Reactivar"
+      }
+    }
+  },
   "errors": {
     "network": "Error de conexión con el servidor",
     "timeout": "La request tardó demasiado. Intentá de nuevo.",

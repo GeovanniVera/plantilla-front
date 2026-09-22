@@ -61,7 +61,8 @@ const listedUser = {
   roles: ['viewer'],
   isVerified: true,
   suspended: false,
-  createdAt: '2026-01-01T00:00:00Z',
+  // La más reciente: con el orden por defecto createdAt,desc queda primera.
+  createdAt: '2026-12-31T00:00:00Z',
 };
 
 const catalogRoles = [
@@ -89,23 +90,103 @@ let roleRequests = 0;
 type AssignmentRequest = { method: string; url: string; body: unknown };
 let assignRequests: AssignmentRequest[] = [];
 
+interface TestListUser {
+  id: string;
+  email: string;
+  name: string;
+  roles: string[];
+  isVerified: boolean;
+  suspended: boolean;
+  createdAt: string;
+}
+
+type ListRequest = {
+  page: number;
+  size: number;
+  sort?: string;
+  status?: string;
+  search?: string;
+};
+let listRequests: ListRequest[] = [];
+
+// Dataset de 25 usuarios para que haya varias páginas (size 10 → 3 páginas).
+const generatedUsers: TestListUser[] = Array.from({ length: 24 }, (_, i) => ({
+  id: `gen-${i}`,
+  email: `user${i}@test.com`,
+  name: `User ${String(i).padStart(2, '0')}`,
+  roles: ['viewer'],
+  isVerified: i % 2 === 0,
+  suspended: i % 5 === 0,
+  createdAt: `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00Z`,
+}));
+
+const allUsers: TestListUser[] = [listedUser, ...generatedUsers];
+
+function filterUsers(status?: string, search?: string): TestListUser[] {
+  let result = allUsers;
+
+  if (status) {
+    result = result.filter((u) =>
+      status === 'SUSPENDED'
+        ? u.suspended
+        : status === 'ACTIVE'
+          ? !u.suspended && u.isVerified
+          : !u.suspended && !u.isVerified,
+    );
+  }
+
+  if (search) {
+    const term = search.toLowerCase();
+    result = result.filter(
+      (u) => u.email.toLowerCase().includes(term) || u.name.toLowerCase().includes(term),
+    );
+  }
+
+  return result;
+}
+
+function sortUsers(users: TestListUser[], sort?: string): TestListUser[] {
+  if (!sort) return users;
+
+  const [field, direction = 'asc'] = sort.split(',') as [keyof TestListUser, string];
+  const sorted = [...users].sort((a, b) => String(a[field]).localeCompare(String(b[field])));
+  return direction === 'desc' ? sorted.reverse() : sorted;
+}
+
+function paginatedResponse(content: TestListUser[], total: number, page: number, size: number) {
+  return {
+    success: true,
+    message: 'ok',
+    data: {
+      content,
+      totalElements: total,
+      totalPages: Math.max(1, Math.ceil(total / size)),
+      number: page,
+      size,
+    },
+  };
+}
+
 beforeEach(() => {
   roleRequests = 0;
   assignRequests = [];
+  listRequests = [];
   server.use(
-    http.get('*/admin/users', () =>
-      HttpResponse.json({
-        success: true,
-        message: 'ok',
-        data: {
-          content: [listedUser],
-          totalElements: 1,
-          totalPages: 1,
-          number: 0,
-          size: 10,
-        },
-      }),
-    ),
+    http.get('*/admin/users', ({ request }) => {
+      const url = new URL(request.url);
+      const page = Number(url.searchParams.get('page') ?? '0');
+      const size = Number(url.searchParams.get('size') ?? '10');
+      const sort = url.searchParams.get('sort') ?? undefined;
+      const status = url.searchParams.get('status') ?? undefined;
+      const search = url.searchParams.get('search') ?? undefined;
+      listRequests.push({ page, size, sort, status, search });
+
+      const filtered = sortUsers(filterUsers(status, search), sort);
+      const start = page * size;
+      return HttpResponse.json(
+        paginatedResponse(filtered.slice(start, start + size), filtered.length, page, size),
+      );
+    }),
     http.get('*/admin/roles', () => {
       roleRequests += 1;
       return HttpResponse.json({ success: true, message: 'ok', data: catalogRoles });
@@ -352,5 +433,75 @@ describe('UserRolesDrawer — control positivo con catálogo cargado', () => {
     const body = assignRequests[0].body as { roleIds: string[] };
     expect(assignRequests[0].method).toBe('POST');
     expect([...body.roleIds].sort()).toEqual(['r1', 'r2']);
+  });
+});
+
+describe('UsersPage — paginación, filtros y orden server-side', () => {
+  it('la request inicial usa page 0, size 10 y createdAt,desc', async () => {
+    renderPage(usersAndRoles);
+    await screen.findByText('Alice');
+
+    expect(listRequests[0]).toMatchObject({ page: 0, size: 10, sort: 'createdAt,desc' });
+  });
+
+  it('cambiar de página pide la página correcta', async () => {
+    renderPage(usersAndRoles);
+    await screen.findByText('Alice');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Página 2' }));
+
+    await waitFor(() => {
+      expect(listRequests.some((r) => r.page === 1)).toBe(true);
+    });
+  });
+
+  it('cambiar el filtro de estado envía status y vuelve a la página 0', async () => {
+    renderPage(usersAndRoles);
+    await screen.findByText('Alice');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Página 2' }));
+    await waitFor(() => expect(listRequests.some((r) => r.page === 1)).toBe(true));
+
+    fireEvent.change(screen.getByLabelText('Filtrar por estado'), {
+      target: { value: 'SUSPENDED' },
+    });
+
+    await waitFor(() => {
+      expect(listRequests.some((r) => r.page === 0 && r.status === 'SUSPENDED')).toBe(true);
+    });
+  });
+
+  it('la búsqueda se debouncea y envía el parámetro search', async () => {
+    renderPage(usersAndRoles);
+    await screen.findByText('Alice');
+
+    const requestsBefore = listRequests.length;
+    fireEvent.change(screen.getByLabelText('Buscar usuarios'), {
+      target: { value: 'alice' },
+    });
+
+    // Sin esperar el debounce no debe dispararse una request por la tecla.
+    expect(listRequests.length).toBe(requestsBefore);
+
+    await waitFor(() => {
+      expect(listRequests.some((r) => r.search === 'alice')).toBe(true);
+    });
+  });
+
+  it('ordenar envía sort=field,dir y el toggle invierte la dirección', async () => {
+    renderPage(usersAndRoles);
+    await screen.findByText('Alice');
+
+    fireEvent.change(screen.getByLabelText('Ordenar por'), {
+      target: { value: 'name' },
+    });
+    await waitFor(() => {
+      expect(listRequests.some((r) => r.sort === 'name,desc')).toBe(true);
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar dirección del orden' }));
+    await waitFor(() => {
+      expect(listRequests.some((r) => r.sort === 'name,asc')).toBe(true);
+    });
   });
 });

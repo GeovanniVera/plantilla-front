@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import ResponsiveTable from '@components/data-display/table/ResponsiveTable';
 import { Can } from '../../../auth/Can';
 import Button from '@components/primitives/Button';
@@ -13,24 +14,23 @@ interface UserTableProps {
 }
 
 export function UserTable({ users, onSuspend, onReactivate, onRowClick }: UserTableProps) {
+  const { t } = useTranslation();
+
   const columns = [
     {
       key: 'name',
-      header: 'Nombre',
+      header: t('admin.users.table.name'),
       minWidth: '200px',
-      filterType: 'text' as const,
     },
     {
       key: 'email',
-      header: 'Email',
+      header: t('admin.users.table.email'),
       minWidth: '250px',
-      filterType: 'text' as const,
     },
     {
       key: 'roles',
-      header: 'Roles',
+      header: t('admin.users.table.roles'),
       minWidth: '150px',
-      filterType: 'select' as const,
       render: (value: unknown) => {
         const roles = value as string[];
         return (
@@ -49,10 +49,8 @@ export function UserTable({ users, onSuspend, onReactivate, onRowClick }: UserTa
     },
     {
       key: 'status',
-      header: 'Estado',
+      header: t('admin.users.table.status'),
       minWidth: '120px',
-      filterType: 'select' as const,
-      filterOptions: ['Activo', 'Suspendido', 'Sin verificar'],
       render: (_: unknown, row: AdminUser) => (
         <UserStatusBadge suspended={row.suspended} isVerified={row.isVerified} />
       ),
@@ -73,7 +71,7 @@ export function UserTable({ users, onSuspend, onReactivate, onRowClick }: UserTa
                   e.stopPropagation();
                   onSuspend(row);
                 }}
-                title="Suspender"
+                title={t('admin.users.actions.suspend')}
               >
                 <LuShieldOff size={16} />
               </Button>
@@ -85,7 +83,7 @@ export function UserTable({ users, onSuspend, onReactivate, onRowClick }: UserTa
                   e.stopPropagation();
                   onReactivate(row);
                 }}
-                title="Reactivar"
+                title={t('admin.users.actions.reactivate')}
               >
                 <LuShieldOff size={16} />
               </Button>
@@ -96,17 +94,18 @@ export function UserTable({ users, onSuspend, onReactivate, onRowClick }: UserTa
     },
   ];
 
+  // Sin paginación ni filtros internos: el servidor pagina, filtra y ordena.
+  // Activar `pagination` re-cortaría en cliente la página ya paginada
+  // (doble paginación) y los filtros de cabecera solo verían la página actual.
   return (
     <ResponsiveTable
       columns={columns}
       data={users}
       keyExtractor={(row) => row.id}
-      filters={true}
-      pagination={true}
-      pageSize={10}
+      pagination={false}
       onRowClick={onRowClick}
-      emptyTitle="Sin usuarios"
-      emptyDescription="No se encontraron usuarios con los filtros aplicados."
+      emptyTitle={t('admin.users.empty.title')}
+      emptyDescription={t('admin.users.empty.description')}
     />
   );
 }

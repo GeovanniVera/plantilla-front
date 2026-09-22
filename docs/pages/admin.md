@@ -18,13 +18,16 @@ Hub de administración con **4 cards** (Usuarios, Roles, Permisos, Auditoría), 
 
 ## UsersPage
 
-Listado de usuarios paginado (`useUsers`). Comportamiento clave:
+Listado de usuarios con **paginación, filtros y orden resueltos en el servidor** (`useUsers`). Comportamiento clave:
 
+- **Paginación server-side**: la página maneja `page`/`size` con el componente compartido `Pagination`; `UserTable` ya **no** pagina en cliente, así que no hay doble paginación. Cualquier cambio de página, tamaño, filtro u orden vuelve a la página 0.
+- **Filtros**: selector de estado (`ACTIVE` / `SUSPENDED` / `UNVERIFIED`, derivado igual que el badge) y búsqueda por email o nombre. La búsqueda se debouncea con `useDebouncedValue` (300 ms) para no disparar una request por tecla.
+- **Orden**: selector de campo (`createdAt` default, `name`, `email`) + botón que invierte la dirección; viaja como `sort=field,dir`.
 - Deriva el estado por fila: `suspended ? 'Suspendido' : isVerified ? 'Activo' : 'Sin verificar'`.
 - **Suspender/reactivar con confirmación**: `ConfirmDialog` con mensaje específico por acción y variantes (`warning` para suspender, `default` para reactivar); toast de éxito/error.
 - **Drawer de roles**: `UserRolesDrawer` (feature users, que consume roles) — ver [docs/features/users.md](../features/users.md#userrolesdrawer).
 
-Consume: `useUsers`, `useSuspendUser`, `useReactivateUser`, `UserTable`, `UserRolesDrawer`, `ConfirmDialog`.
+Consume: `useUsers`, `useSuspendUser`, `useReactivateUser`, `UserTable`, `UserRolesDrawer`, `ConfirmDialog`, `Pagination`, `useDebouncedValue`.
 
 ## RolesPage
 

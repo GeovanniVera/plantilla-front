@@ -1,16 +1,36 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { userService } from '../services/user.service';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { userService, type UserListFilters } from '../services/user.service';
 
-export function useUsers(page = 0, size = 10) {
+export interface UseUsersParams extends UserListFilters {
+  page?: number;
+  size?: number;
+}
+
+/**
+ * Listado administrativo de usuarios paginado en servidor.
+ *
+ * La queryKey incluye cada criterio para cachear por combinación.
+ * `keepPreviousData` mantiene la página anterior visible mientras llega la
+ * nueva, evitando el parpadeo a vacío al paginar o filtrar.
+ */
+export function useUsers({
+  page = 0,
+  size = 10,
+  sort,
+  direction,
+  status,
+  search,
+}: UseUsersParams = {}) {
   return useQuery({
-    queryKey: ['admin', 'users', page, size],
+    queryKey: ['admin', 'users', { page, size, sort, direction, status, search }],
     queryFn: async () => {
-      const response = await userService.list(page, size);
+      const response = await userService.list(page, size, { sort, direction, status, search });
       if (!response.success || !response.data) {
         throw new Error(response.message || 'Error al listar usuarios');
       }
       return response.data;
     },
+    placeholderData: keepPreviousData,
   });
 }
 

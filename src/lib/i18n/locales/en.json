@@ -132,6 +132,59 @@
       "all": "All events"
     }
   },
+  "admin": {
+    "users": {
+      "title": "Users",
+      "count": "{{total}} registered users",
+      "searchLabel": "Search users",
+      "searchPlaceholder": "Search by email or name",
+      "statusLabel": "Filter by status",
+      "sortLabel": "Sort by",
+      "refreshing": "Refreshing...",
+      "loading": "Loading users...",
+      "status": {
+        "all": "All",
+        "active": "Active",
+        "suspended": "Suspended",
+        "unverified": "Unverified"
+      },
+      "sort": {
+        "createdAt": "Registration date",
+        "name": "Name",
+        "email": "Email",
+        "asc": "Ascending",
+        "desc": "Descending",
+        "toggle": "Toggle sort direction"
+      },
+      "table": {
+        "name": "Name",
+        "email": "Email",
+        "roles": "Roles",
+        "status": "Status"
+      },
+      "actions": {
+        "suspend": "Suspend",
+        "reactivate": "Reactivate"
+      },
+      "empty": {
+        "title": "No users",
+        "description": "No users matched the applied filters."
+      },
+      "toast": {
+        "suspended": "User {{name}} suspended",
+        "reactivated": "User {{name}} reactivated",
+        "error": "The operation failed"
+      },
+      "confirm": {
+        "suspendTitle": "Suspend user",
+        "suspendMessage": "Are you sure you want to suspend {{name}}? The user will not be able to access the system.",
+        "suspendLabel": "Suspend",
+        "reactivateTitle": "Reactivate user",
+        "reactivateMessage": "Reactivate {{name}}'s account? The user will be able to sign in again.",
+        "reactivateLabel": "Reactivate"
+      }
+    }
+  },
   "errors": {
     "network": "Connection error. Check your internet.",
     "timeout": "Request timed out. Try again.",

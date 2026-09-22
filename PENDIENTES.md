@@ -16,7 +16,7 @@ Estado: **v1 funcional** — cerrada con pendientes conocidos documentados.
 | 3 | Pantalla de checkout | Formulario de pago con InMemory (y luego Stripe/PayPal) |
 | 4 | Notificaciones in-app en UI | El backend expone `/notifications` pero no hay campana/panel en el frontend |
 | 5 | Gestión de archivos para el usuario | El backend tiene storage pero no hay UI de "mis archivos" |
-| 6 | Paginación real de tablas | `ResponsiveTable` pagina client-side; migrar a paginación server-side con el backend |
+| 6 | Paginación real de tablas | **Parcial**: `UsersPage`/`UserTable` ya usan paginación, filtros y orden server-side. `ResponsiveTable` mantiene su paginación client-side como capacidad genérica para tablas sin endpoint paginado (ej. permisos). |
 
 ## 🟢 Mejoras recomendadas
 

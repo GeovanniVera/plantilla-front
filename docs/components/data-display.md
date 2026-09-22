@@ -180,6 +180,7 @@ Pagination({ currentPage, totalPages, onPageChange, totalItems?, pageSize?, onPa
 - Selector de tamaño con opciones **[5, 10, 20, 50]**.
 - Reglas de visibilidad: sin navegación si `totalPages <= 1`; el selector de tamaño solo aparece si hay `onPageSizeChange` y (`totalItems` indefinido o `> 5` — con datasets pequeños todo tamaño renderiza igual, hotfix 7D). Con `totalPages <= 1` y sin `onPageSizeChange` el componente retorna `null`.
 - Textos en español hardcodeados ("registros", "Página", aria-labels "Página anterior"/"Página siguiente"/"Registros por página").
+- **Reutilizable fuera de la tabla**: se exporta por el barrel (`@components/data-display/table`) y puede manejarse con estado externo para paginación **server-side** (`currentPage` 1-indexed; `onPageSizeChange` debe resetear la página). Referencias: `MiActividadPage` (auditoría) y `UsersPage` (usuarios, con filtros y orden server-side).
 
 #### ColumnToggle
 

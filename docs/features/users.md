@@ -17,7 +17,7 @@ src/features/users/
 
 | Endpoint | Método | Propósito |
 |---|---|---|
-| `GET /admin/users?page&size` | `userService.list(page, size)` | Listado paginado de usuarios. |
+| `GET /admin/users?page&size&sort&status&search` | `userService.list(page, size, filters)` | Listado paginado, filtrado y ordenado **en servidor**. |
 | `GET /admin/users/:id` | `userService.get(id)` | Usuario por ID. |
 | `POST /admin/users/:id/suspend` | `userService.suspend(id)` | Suspender usuario. |
 | `POST /admin/users/:id/reactivate` | `userService.reactivate(id)` | Reactivar usuario. |
@@ -26,12 +26,14 @@ src/features/users/
 
 - `AdminUser` — `id`, `email`, `name`, `roles: string[]`, `isVerified`, `suspended`, `createdAt`.
 - `PaginatedUsers` — `content: AdminUser[]`, `totalElements`, `totalPages`, `number`, `size`.
+- `UserListFilters` — `status?: 'SUSPENDED' | 'ACTIVE' | 'UNVERIFIED'`, `search?`, `sort?: 'name' | 'email' | 'createdAt'`, `direction?: 'asc' | 'desc'`.
+- `UserStatusFilter`, `UserSortField`, `SortDirection` — alias de los literales anteriores.
 
 ## Hooks (`hooks/useUsers.ts`)
 
 | Hook | Tipo | Query key / invalidación | Notas |
 |---|---|---|---|
-| `useUsers(page, size)` | Query | `['admin', 'users', page, size]` | Listado paginado. |
+| `useUsers(params)` | Query | `['admin', 'users', { page, size, sort, direction, status, search }]` | Listado server-side; `placeholderData: keepPreviousData` para no parpadear al paginar/filtrar. |
 | `useUser(id)` | Query | `['admin', 'users', id]` | `enabled: !!id`. **Sin consumidor en la UI.** |
 | `useSuspendUser()` | Mutation | Invalida `['admin', 'users']` | |
 | `useReactivateUser()` | Mutation | Invalida `['admin', 'users']` | |
@@ -40,7 +42,7 @@ src/features/users/
 
 ### `UserTable`
 
-Tabla de usuarios con acciones por fila. Las acciones **suspend / reactivate** se renderizan solo bajo `users.write` (`Can`). Recibe `users`, `onSuspend`, `onReactivate`.
+Tabla de usuarios con acciones por fila. Las acciones **suspend / reactivate** se renderizan solo bajo `users.write` (`Can`). Recibe `users` (la página actual), `onSuspend`, `onReactivate` y `onRowClick`. La **paginación y los filtros internos de `ResponsiveTable` están desactivados**: el servidor ya entrega una página filtrada y ordenada, y activarlos re-cortaría en cliente lo recibido (doble paginación).
 
 ### `UserStatusBadge`
 
