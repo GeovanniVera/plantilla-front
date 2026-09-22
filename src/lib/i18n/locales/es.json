@@ -75,6 +75,8 @@
       "successMessage": "Tu cuenta fue activada exitosamente.",
       "resend": "Reenviar email de verificación",
       "resending": "Enviando...",
+      "expiresIn": "El enlace expira en {{hours}} horas",
+      "expiresFallback": "El enlace expira en unas horas",
       "backToLogin": "Volver al login"
     },
     "verifyOTP": {

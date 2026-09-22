@@ -15,7 +15,7 @@ import { LuMail, LuLogOut } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../auth';
 import Spinner from '@components/feedback/Spinner';
-import { useResendVerification } from '../../hooks/useAuth';
+import { useResendVerification, usePasswordPolicy } from '../../hooks/useAuth';
 import { AuthFormHeader } from '../../layouts/auth/AuthFormLayout';
 
 export default function VerifyEmailPage() {
@@ -24,6 +24,7 @@ export default function VerifyEmailPage() {
   const location = useLocation();
   const { user, logout, isAuthenticated, isVerified } = useAuth();
   const resendMutation = useResendVerification();
+  const { data: passwordPolicy } = usePasswordPolicy();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
@@ -126,7 +127,13 @@ export default function VerifyEmailPage() {
           <ul className="list-inside list-disc space-y-1">
             <li>Revisá tu bandeja de entrada</li>
             <li>Revisá la carpeta de spam</li>
-            <li>El enlace expira en 24 horas</li>
+            <li>
+              {passwordPolicy
+                ? t('auth.verifyEmail.expiresIn', {
+                    hours: passwordPolicy.verificationExpiresInHours,
+                  })
+                : t('auth.verifyEmail.expiresFallback')}
+            </li>
           </ul>
         </div>
 

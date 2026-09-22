@@ -6,7 +6,7 @@ import VerifyEmailPage from './VerifyEmailPage';
 import { AuthContext } from '../../auth/context';
 import type { AuthContextValue, User } from '../../auth/types';
 import { server } from '../../test/mocks/server';
-import { http } from 'msw';
+import { http, HttpResponse, delay } from 'msw';
 import '../../lib/i18n/config';
 
 const navigateMock = vi.fn();
@@ -120,5 +120,44 @@ describe('VerifyEmailPage', () => {
     await waitFor(() => {
       expect(navigateMock).toHaveBeenCalledWith('/login');
     });
+  });
+
+  it('shows the verification link expiry from the fetched password policy', async () => {
+    // Valor no-default: si la UI hardcodeara 24, esta aserción falla.
+    server.use(
+      http.get('*/auth/password-policy', () =>
+        HttpResponse.json({
+          success: true,
+          message: 'Política de contraseñas',
+          data: {
+            otpExpiresInMinutes: 15,
+            resetTokenExpiresInMinutes: 30,
+            verificationExpiresInHours: 5,
+            passwordPolicy: {
+              minLength: 8,
+              maxLength: 128,
+              requiresUppercase: true,
+              requiresLowercase: true,
+              requiresSymbol: true,
+            },
+          },
+        }),
+      ),
+    );
+
+    renderVerifyEmailPage();
+    expect(await screen.findByText('El enlace expira en 5 horas')).toBeInTheDocument();
+  });
+
+  it('shows a generic expiry text without a number while the policy is loading', () => {
+    server.use(
+      http.get('*/auth/password-policy', async () => {
+        await delay('infinite');
+        return HttpResponse.json({});
+      }),
+    );
+
+    renderVerifyEmailPage();
+    expect(screen.getByText('El enlace expira en unas horas')).toBeInTheDocument();
   });
 });

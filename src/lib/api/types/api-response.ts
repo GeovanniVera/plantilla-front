@@ -210,6 +210,8 @@ export interface PasswordPolicyResponse {
   otpExpiresInMinutes: number;
   /** Minutos de vigencia del token de recuperación emitido tras verificar el OTP. */
   resetTokenExpiresInMinutes: number;
+  /** Horas de vigencia del enlace de verificación de email. */
+  verificationExpiresInHours: number;
   /** Reglas de composición de la contraseña. */
   passwordPolicy: PasswordPolicy;
 }

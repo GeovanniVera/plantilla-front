@@ -75,6 +75,8 @@
       "successMessage": "Your account was activated successfully.",
       "resend": "Resend verification email",
       "resending": "Sending...",
+      "expiresIn": "The link expires in {{hours}} hours",
+      "expiresFallback": "The link expires in a few hours",
       "backToLogin": "Back to login"
     },
     "verifyOTP": {

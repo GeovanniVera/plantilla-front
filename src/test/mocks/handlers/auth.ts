@@ -173,6 +173,7 @@ export const authHandlers = [
       data: {
         otpExpiresInMinutes: 15,
         resetTokenExpiresInMinutes: 30,
+        verificationExpiresInHours: 24,
         passwordPolicy: {
           minLength: 8,
           maxLength: 128,
