@@ -5,11 +5,10 @@
  * Expandida: al hacer clic despliega todos los detalles del evento
  * (entidad, IP, dispositivo, request ID, actor y cambios before/after).
  */
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { LuChevronDown } from 'react-icons/lu';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import ExpandableCard from '@components/layout/ExpandableCard';
 import type { AuditLog } from '../services/audit.service';
 import { getActionLabel, getActionTitle, describeEntity } from '../utils/audit-labels';
 
@@ -90,7 +89,6 @@ interface AuditActivityItemProps {
 }
 
 export default function AuditActivityItem({ log }: AuditActivityItemProps) {
-  const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
   const label = getActionLabel(log.action);
   const title = getActionTitle(log, t);
@@ -107,51 +105,36 @@ export default function AuditActivityItem({ log }: AuditActivityItemProps) {
   const hasDetails = details.length > 0 || Boolean(log.before) || Boolean(log.after);
 
   return (
-    <div className="bg-surface border-border-base overflow-hidden rounded-lg border">
-      <button
-        type="button"
-        onClick={() => setExpanded((p) => !p)}
-        disabled={!hasDetails}
-        aria-expanded={expanded}
-        className="focus-visible:ring-accent flex w-full items-start gap-3 p-4 text-left transition-colors duration-150 hover:bg-[rgba(0,0,0,0.03)] disabled:cursor-default"
-      >
+    <ExpandableCard
+      expandable={hasDetails}
+      leading={
         <div
           className={`flex size-9 shrink-0 items-center justify-center rounded-full ${TONE_CLASSES[label.tone]}`}
         >
           <Icon size={16} />
         </div>
-
-        <div className="min-w-0 flex-1">
+      }
+      summary={
+        <>
           <p className="text-fg text-sm font-medium">{title}</p>
           <p className="text-fg-muted mt-0.5 text-xs">{formatDate(log.createdAt)}</p>
-        </div>
-
-        {hasDetails && (
-          <LuChevronDown
-            size={16}
-            className={`text-fg-muted mt-1 shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-          />
-        )}
-      </button>
-
-      {expanded && hasDetails && (
-        <div className="border-border-base border-t px-4 py-3">
-          {details.length > 0 && (
-            <dl className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
-              {details.map((row) => (
-                <div key={row.label} className="min-w-0">
-                  <dt className="text-fg-muted text-[11px] font-semibold tracking-wide uppercase">
-                    {row.label}
-                  </dt>
-                  <dd className="text-fg text-xs break-words">{row.value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-
-          {(log.before || log.after) && <ChangesDiff before={log.before} after={log.after} />}
-        </div>
+        </>
+      }
+    >
+      {details.length > 0 && (
+        <dl className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+          {details.map((row) => (
+            <div key={row.label} className="min-w-0">
+              <dt className="text-fg-muted text-[11px] font-semibold tracking-wide uppercase">
+                {row.label}
+              </dt>
+              <dd className="text-fg text-xs break-words">{row.value}</dd>
+            </div>
+          ))}
+        </dl>
       )}
-    </div>
+
+      {(log.before || log.after) && <ChangesDiff before={log.before} after={log.after} />}
+    </ExpandableCard>
   );
 }

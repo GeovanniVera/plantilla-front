@@ -14,6 +14,10 @@
 export { default as Card } from './Card';
 export type { CardVariant } from './Card';
 
+// ─── ExpandableCard ──────────────────────────────────
+export { default as ExpandableCard } from './ExpandableCard';
+export type { ExpandableCardProps } from './ExpandableCard';
+
 // ─── StatCard ────────────────────────────────────────
 export { StatCard, StatCardGroup } from './StatCard';
 export type { StatCardProps, StatCardGroupProps } from './StatCard';

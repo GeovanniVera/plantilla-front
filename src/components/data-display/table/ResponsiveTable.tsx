@@ -1,4 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import DataTable from './DataTable';
+import ExpandableCard from '@components/layout/ExpandableCard';
 import { FilterBar } from './parts/FilterBar';
 import Pagination from './parts/Pagination';
 import { useTableFilters } from './hooks/useTableFilters';
@@ -19,13 +21,15 @@ export interface ResponsiveTableProps<T extends object> extends BaseTableProps<T
  * Tabla responsive.
  *
  * En desktop renderiza el DataTable completo (tabla con filtros y paginación).
- * En mobile (≤768px) renderiza cards verticales apiladas, reutilizando las
- * mismas columnas, filtros y paginación.
+ * En mobile (≤768px) renderiza cards expandibles, reutilizando las mismas
+ * columnas, filtros y paginación.
  *
  * Cada card muestra:
- * - label (header de la columna) + valor (render si existe, si no el crudo)
- * - La columna con header vacío (ej: acciones) se renderiza al final de la card
- * - La card completa es clicable si hay onRowClick
+ * - Colapsada: sólo la primera columna de datos (sin etiqueta).
+ * - Expandida: las columnas restantes con su label/valor y, separada por un
+ *   borde superior, la columna de acciones (header vacío). Si hay
+ *   `onRowClick`, se agrega una acción explícita "ver detalle" al final.
+ * - Sin contenido que expandir, la card es estática (sin botón ni chevron).
  */
 export default function ResponsiveTable<T extends object>({
   columns,
@@ -39,6 +43,7 @@ export default function ResponsiveTable<T extends object>({
   emptyDescription = 'No se encontraron registros.',
   ...tableProps
 }: ResponsiveTableProps<T>) {
+  const { t } = useTranslation();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // Filtros
@@ -74,10 +79,12 @@ export default function ResponsiveTable<T extends object>({
     );
   }
 
-  // ─── Mobile: cards verticales ────────────────────────────
-  // Separar la columna de acciones (header vacío) del resto
+  // ─── Mobile: cards expandibles ───────────────────────────
+  // La primera columna de datos es la línea colapsada; el resto (y la columna
+  // de acciones, header vacío) vive en el cuerpo expandible.
   const actionColumn = columns.find((col) => !col.header);
   const dataColumns = columns.filter((col) => col.header);
+  const [summaryColumn, ...detailColumns] = dataColumns;
 
   return (
     <div className="flex flex-col gap-3">
@@ -95,52 +102,69 @@ export default function ResponsiveTable<T extends object>({
         <div className="flex flex-col gap-3">
           {displayData.map((row, index) => {
             const key = keyExtractor(row, index);
-            const clickable = !!onRowClick;
+            const raw = row as Record<string, unknown>;
+
+            const summaryValue = summaryColumn ? raw[summaryColumn.key] : undefined;
+            const summary = summaryColumn
+              ? summaryColumn.render
+                ? summaryColumn.render(summaryValue, row, index)
+                : String(summaryValue ?? '')
+              : null;
+
+            const action = actionColumn?.render
+              ? actionColumn.render(raw[actionColumn.key], row, index)
+              : null;
+            const hasBody = detailColumns.length > 0 || action !== null || onRowClick !== undefined;
 
             return (
-              <div
+              <ExpandableCard
                 key={key}
-                role={clickable ? 'button' : undefined}
-                tabIndex={clickable ? 0 : undefined}
-                onClick={onRowClick ? () => onRowClick(row, index) : undefined}
-                onKeyDown={
-                  clickable
-                    ? (e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          onRowClick(row, index);
-                        }
-                      }
-                    : undefined
-                }
-                className={[
-                  'bg-surface border-border-base flex w-full flex-col gap-2 rounded-lg border p-4 text-left transition-[border-color,box-shadow] duration-150',
-                  clickable ? 'hover:border-accent-line cursor-pointer' : '',
-                ].join(' ')}
+                interactive={hasBody}
+                expandable={hasBody}
+                summary={<span className="text-fg text-sm font-medium break-words">{summary}</span>}
               >
-                {dataColumns.map((col) => {
-                  const value = (row as Record<string, unknown>)[col.key];
-                  const rendered = col.render ? col.render(value, row, index) : String(value ?? '');
-                  return (
-                    <div key={col.key} className="flex flex-col gap-0.5">
-                      <span className="text-fg-muted text-[11px] font-semibold tracking-wide uppercase">
-                        {col.header}
-                      </span>
-                      <span className="text-fg text-sm">{rendered}</span>
-                    </div>
-                  );
-                })}
+                {detailColumns.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {detailColumns.map((col) => {
+                      const value = raw[col.key];
+                      const rendered = col.render
+                        ? col.render(value, row, index)
+                        : String(value ?? '');
+                      return (
+                        <div key={col.key} className="flex flex-col gap-0.5">
+                          <span className="text-fg-muted text-[11px] font-semibold tracking-wide uppercase">
+                            {col.header}
+                          </span>
+                          <span className="text-fg text-sm">{rendered}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
-                {actionColumn?.render && (
-                  <div className="border-border-base mt-1 border-t pt-2">
-                    {actionColumn.render(
-                      (row as Record<string, unknown>)[actionColumn.key],
-                      row,
-                      index,
+                {(action !== null || onRowClick !== undefined) && (
+                  <div
+                    className={[
+                      'border-border-base flex items-center justify-between gap-2 border-t pt-2',
+                      detailColumns.length > 0 ? 'mt-2' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    {action !== null && <div className="min-w-0 flex-1">{action}</div>}
+
+                    {onRowClick !== undefined && (
+                      <button
+                        type="button"
+                        onClick={() => onRowClick(row, index)}
+                        className="text-accent focus-visible:ring-accent rounded-sm text-sm font-medium hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                      >
+                        {t('common.viewDetail')}
+                      </button>
                     )}
                   </div>
                 )}
-              </div>
+              </ExpandableCard>
             );
           })}
         </div>
