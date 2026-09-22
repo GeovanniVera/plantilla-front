@@ -24,7 +24,7 @@ export default function VerifyEmailConfirmPage() {
     if (!token || hasCalled.current) return;
     hasCalled.current = true;
     verifyEmailMutation.mutate(token);
-  }, [token]);
+  }, [token, verifyEmailMutation]);
 
   // Redirigir a login después de verificación exitosa
   useEffect(() => {

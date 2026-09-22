@@ -58,7 +58,7 @@ function Breadcrumbs() {
   return (
     <nav className={styles.breadcrumbs}>
       {items.map((item, i) => (
-        <span key={i} className={styles.crumb}>
+        <span key={item.href ?? item.label} className={styles.crumb}>
           {i > 0 && <span className={styles.crumbSep}>›</span>}
           {item.isLast ? (
             <span className={styles.crumbCurrent}>{item.label}</span>

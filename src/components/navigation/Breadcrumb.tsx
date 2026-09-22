@@ -62,8 +62,8 @@ export function Breadcrumb({ items, separator, className }: BreadcrumbProps) {
             </li>
           </>
         ) : (
-          middleItems.map((item, i) => (
-            <li key={i} className="inline-flex items-center gap-1">
+          middleItems.map((item) => (
+            <li key={item.href ?? item.label} className="inline-flex items-center gap-1">
               <span aria-hidden="true">{sep}</span>
               {item.href ? (
                 <a href={item.href} className={linkClasses}>
