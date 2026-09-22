@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  padding: 12px;
+  gap: 12px;
 }
 
 /* ─── Topbar ─── */
@@ -14,8 +16,10 @@
   flex-shrink: 0;
   min-height: 56px;
   padding: 0 40px;
-  border-bottom: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
   background: var(--bg);
+  box-shadow: var(--shadow-panel);
 }
 
 /* Row below the topbar; only `main` scrolls inside it. */
@@ -23,6 +27,7 @@
   display: flex;
   flex: 1;
   min-height: 0;
+  gap: 12px;
 }
 
 .main {
@@ -95,11 +100,25 @@
 }
 
 @media (max-width: 768px) {
+  /* Mobile: el topbar vuelve al look anterior — full-bleed, sin radio ni
+     sombra, solo borde inferior. Por eso el shell tampoco aporta padding ni
+     gap acá: un panel flotante recortado por el viewport no aporta nada, y
+     dejar el inset sin el radio lo dejaba "suspendido", que se veía peor. */
+  .shell {
+    padding: 0;
+    gap: 0;
+  }
+
   .topbar {
     padding: 0 20px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .main {
+    /* Vuelve a 56px: el shell ya no aporta padding propio en mobile. */
     padding-bottom: 56px;
   }
 

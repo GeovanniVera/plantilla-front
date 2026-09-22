@@ -7,7 +7,9 @@
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   background: var(--bg);
-  border-right: 1px solid var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-panel);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -164,7 +166,9 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Sidebar mobile — fixed, oculto por defecto */
+  /* Mobile sidebar — fixed and hidden by default.
+     Panel treatment (radius/border) is inherited from `.sidebar`; geometry
+     stays edge-anchored so the translateX(-100%) slide-in is untouched. */
   .sidebarMobile {
     display: flex;
     position: fixed;

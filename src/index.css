@@ -26,6 +26,11 @@
     /* Sombra suave y realista para tarjetas o menús */
     rgba(26, 21, 37, 0.06) 0 10px 15px -3px, rgba(26, 21, 37, 0.03) 0 4px 6px -2px;
 
+  /* Relieve para superficies que se despegan sobre fondo blanco. El contacto
+     corto marca el borde del panel y la caída amplia da la profundidad; sin
+     los dos, sobre blanco el relieve no se lee. */
+  --shadow-panel: rgba(26, 21, 37, 0.1) 0 1px 2px 0, rgba(26, 21, 37, 0.08) 0 10px 30px -6px;
+
   /* --- Pilas de fuentes tipográficas --- */
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
   --heading: 'Fraunces', serif;
