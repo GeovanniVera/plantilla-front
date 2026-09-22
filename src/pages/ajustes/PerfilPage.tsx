@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useId, useState, useRef } from 'react';
 import { useAuth } from '../../auth';
 import Badge from '@components/primitives/Badge';
 import Button from '@components/primitives/Button';
@@ -16,17 +16,21 @@ export default function PerfilPage() {
 
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [photo, setPhoto] = useState<File | null>(null);
+  // The selected file only feeds the save handler, never the rendered output,
+  // so a ref avoids a pointless re-render on selection.
+  const photoRef = useRef<File | null>(null);
   // La foto del backend requiere sesión; el archivo recién elegido se previsualiza
   // como data URL y tiene prioridad.
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const authenticatedPhoto = useAuthenticatedImage(user?.photoUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const nameId = useId();
+  const emailId = useId();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPhoto(file);
+    photoRef.current = file;
     const reader = new FileReader();
     reader.onload = () => setPhotoPreview(reader.result as string);
     reader.readAsDataURL(file);
@@ -41,7 +45,7 @@ export default function PerfilPage() {
 
   const doSave = async () => {
     try {
-      await updateProfile.mutateAsync({ name, photo: photo ?? undefined });
+      await updateProfile.mutateAsync({ name, photo: photoRef.current ?? undefined });
       toast.success('Perfil actualizado correctamente');
     } catch {
       toast.error('Error al actualizar el perfil');
@@ -108,8 +112,11 @@ export default function PerfilPage() {
               {/* Formulario */}
               <div className="space-y-4">
                 <div>
-                  <label className="text-fg mb-1.5 block text-sm font-medium">Nombre</label>
+                  <label htmlFor={nameId} className="text-fg mb-1.5 block text-sm font-medium">
+                    Nombre
+                  </label>
                   <Input
+                    id={nameId}
                     type="text"
                     value={name}
                     onChange={setName}
@@ -118,8 +125,11 @@ export default function PerfilPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-fg mb-1.5 block text-sm font-medium">Email</label>
+                  <label htmlFor={emailId} className="text-fg mb-1.5 block text-sm font-medium">
+                    Email
+                  </label>
                   <Input
+                    id={emailId}
                     type="email"
                     value={email}
                     onChange={setEmail}

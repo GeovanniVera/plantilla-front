@@ -79,7 +79,7 @@ export function UserRolesDrawer({ isOpen, onClose, user }: UserRolesDrawerProps)
   // badges del catálogo mostraría "Sin roles asignados" si no está disponible.
   const currentRoles = (
     <div className="space-y-2">
-      <label className="text-fg-muted text-sm">Roles actuales</label>
+      <div className="text-fg-muted text-sm">Roles actuales</div>
       <div className="flex flex-wrap gap-1">
         {user.roles.length > 0 ? (
           user.roles.map((roleName) => (
@@ -122,14 +122,14 @@ export function UserRolesDrawer({ isOpen, onClose, user }: UserRolesDrawerProps)
       <Drawer.Body>
         <div className="space-y-4">
           <div>
-            <label className="text-fg-muted text-sm">Email</label>
+            <div className="text-fg-muted text-sm">Email</div>
             <p className="text-fg text-sm font-medium">{user.email}</p>
           </div>
 
           <Can privilege="roles.assign" fallback={readOnlyView}>
             {isCatalogLoaded ? (
-              <div>
-                <label className="text-fg mb-2 block text-sm font-medium">Roles</label>
+              <fieldset>
+                <legend className="text-fg mb-2 block text-sm font-medium">Roles</legend>
                 <CheckboxSearchList
                   options={roles.map((role: Role) => ({
                     id: role.id,
@@ -142,7 +142,7 @@ export function UserRolesDrawer({ isOpen, onClose, user }: UserRolesDrawerProps)
                   emptyMessage="No hay roles en el sistema"
                   noResultsMessage="No se encontraron roles"
                 />
-              </div>
+              </fieldset>
             ) : (
               catalogUnavailableView
             )}

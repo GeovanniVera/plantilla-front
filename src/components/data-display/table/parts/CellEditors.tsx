@@ -34,9 +34,18 @@ interface SelectEditorProps {
   onChange: (value: string) => void;
   onCommit: () => void;
   onCancel: () => void;
+  /** Accessible name for the select; usually the column header being edited. */
+  'aria-label'?: string;
 }
 
-export function SelectEditor({ value, options, onChange, onCommit, onCancel }: SelectEditorProps) {
+export function SelectEditor({
+  value,
+  options,
+  onChange,
+  onCommit,
+  onCancel,
+  'aria-label': ariaLabel,
+}: SelectEditorProps) {
   const selectRef = useRef<HTMLSelectElement>(null);
 
   useEffect(() => {
@@ -46,6 +55,7 @@ export function SelectEditor({ value, options, onChange, onCommit, onCancel }: S
   return (
     <select
       ref={selectRef}
+      aria-label={ariaLabel}
       className={SELECT_EDITOR_CLASSES}
       style={SELECT_ARROW_STYLE}
       value={value}
@@ -74,9 +84,17 @@ interface BooleanEditorProps {
   onChange: (value: string) => void;
   onCommit: () => void;
   onCancel: () => void;
+  /** Accessible name for the switch; usually the column header being edited. */
+  'aria-label'?: string;
 }
 
-export function BooleanEditor({ value, onChange, onCommit, onCancel }: BooleanEditorProps) {
+export function BooleanEditor({
+  value,
+  onChange,
+  onCommit,
+  onCancel,
+  'aria-label': ariaLabel,
+}: BooleanEditorProps) {
   const isActive = value === 'true';
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -93,6 +111,9 @@ export function BooleanEditor({ value, onChange, onCommit, onCancel }: BooleanEd
   return (
     <div
       ref={containerRef}
+      role="switch"
+      aria-checked={isActive}
+      aria-label={ariaLabel}
       className={BOOLEAN_EDITOR_CLASSES}
       tabIndex={0}
       onBlur={onCancel}

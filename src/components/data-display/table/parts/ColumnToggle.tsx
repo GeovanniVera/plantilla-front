@@ -28,6 +28,11 @@ const LIST_CLASSES = 'py-1 max-h-60 overflow-y-auto';
 const ITEM_CLASSES =
   'flex items-center gap-2 px-3 py-1.5 cursor-pointer transition-colors duration-100 hover:bg-accent-subtle';
 
+// Real control that backs the custom checkbox chrome. Kept out of the flex
+// flow and invisible so the painted box stays the only visible affordance,
+// while keyboard and label activation work natively (house pattern: Checkbox).
+const CHECKBOX_INPUT_CLASSES = 'peer absolute size-0 opacity-0 pointer-events-none';
+
 function checkboxClasses(visible: boolean) {
   return `size-4 rounded-[4px] flex items-center justify-center shrink-0 transition-colors duration-150 border-[1.5px] ${
     visible ? 'border-accent bg-accent' : 'border-border-base bg-transparent'
@@ -85,8 +90,14 @@ export function ColumnToggle({ columns, onToggle, onShowAll }: ColumnToggleProps
 
           <div className={LIST_CLASSES}>
             {columns.map((col) => (
-              <label key={col.key} onClick={() => onToggle(col.key)} className={ITEM_CLASSES}>
-                <div className={checkboxClasses(col.visible)}>
+              <label key={col.key} className={ITEM_CLASSES}>
+                <input
+                  type="checkbox"
+                  checked={col.visible}
+                  onChange={() => onToggle(col.key)}
+                  className={CHECKBOX_INPUT_CLASSES}
+                />
+                <div aria-hidden="true" className={checkboxClasses(col.visible)}>
                   {col.visible && <LuCheck size={10} color="#fff" />}
                 </div>
                 <span className={ITEM_LABEL_CLASSES(col.visible)}>{col.header}</span>

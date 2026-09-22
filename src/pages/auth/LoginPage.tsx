@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router';
 import { LuMail, LuLock, LuCircleAlert } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +25,8 @@ function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const emailId = useId();
+  const passwordId = useId();
 
   const from = (location.state as { from?: Location })?.from?.pathname || '/dashboard';
   const suspendedMessage = searchParams.get('error');
@@ -68,8 +70,11 @@ function LoginPage() {
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">{t('auth.login.email')}</label>
+            <label htmlFor={emailId} className="text-fg block text-sm font-medium">
+              {t('auth.login.email')}
+            </label>
             <Input
+              id={emailId}
               type="email"
               value={email}
               onChange={setEmail}
@@ -81,8 +86,11 @@ function LoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">{t('auth.login.password')}</label>
+            <label htmlFor={passwordId} className="text-fg block text-sm font-medium">
+              {t('auth.login.password')}
+            </label>
             <Input
+              id={passwordId}
               type="password"
               value={password}
               onChange={setPassword}

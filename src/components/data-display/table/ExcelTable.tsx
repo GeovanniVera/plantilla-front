@@ -233,6 +233,7 @@ export default function ExcelTable<T extends object>({
               onChange={setEditValue}
               onCommit={commitEdit}
               onCancel={cancelEdit}
+              aria-label={column.header}
             />
           ) : column.filterType === 'boolean' ? (
             <BooleanEditor
@@ -240,6 +241,7 @@ export default function ExcelTable<T extends object>({
               onChange={setEditValue}
               onCommit={commitEdit}
               onCancel={cancelEdit}
+              aria-label={column.header}
             />
           ) : (
             <InputBase

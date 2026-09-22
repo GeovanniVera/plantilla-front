@@ -4,7 +4,7 @@
  * Primer paso del flujo: ingresa el email.
  * El backend enviará un OTP al correo indicado.
  */
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { LuMail, LuArrowLeft } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +22,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmailLocal] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const emailId = useId();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,10 +111,11 @@ export default function ForgotPasswordPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">
+            <label htmlFor={emailId} className="text-fg block text-sm font-medium">
               {t('auth.forgotPassword.email')}
             </label>
             <Input
+              id={emailId}
               type="email"
               value={email}
               onChange={setEmailLocal}

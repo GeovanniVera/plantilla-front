@@ -22,7 +22,13 @@ export default function ThemePreview() {
 
         <div className={styles.extras}>
           <span className={styles.badge}>Badge</span>
-          <input type="text" placeholder="Input de texto" className={styles.input} readOnly />
+          <input
+            type="text"
+            placeholder="Input de texto"
+            aria-label="Input de texto de ejemplo"
+            className={styles.input}
+            readOnly
+          />
         </div>
       </div>
     </div>

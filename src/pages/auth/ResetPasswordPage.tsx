@@ -4,7 +4,7 @@
  * Tercer paso del flujo: ingresa la nueva contraseña.
  * Requiere token válido del paso anterior.
  */
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useNavigate, Navigate } from 'react-router';
 import { LuLock, LuArrowLeft, LuCheck } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +25,8 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const passwordId = useId();
+  const confirmPasswordId = useId();
 
   // Redirigir declarativamente si no hay token. `success` es la excepción: tras
   // un reset exitoso el contexto se limpia (token → null) y la pantalla de
@@ -124,10 +126,11 @@ export default function ResetPasswordPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">
+            <label htmlFor={passwordId} className="text-fg block text-sm font-medium">
               {t('auth.resetPassword.password')}
             </label>
             <Input
+              id={passwordId}
               type="password"
               value={password}
               onChange={setPassword}
@@ -141,10 +144,11 @@ export default function ResetPasswordPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">
+            <label htmlFor={confirmPasswordId} className="text-fg block text-sm font-medium">
               {t('auth.resetPassword.confirmPassword')}
             </label>
             <Input
+              id={confirmPasswordId}
               type="password"
               value={confirmPassword}
               onChange={setConfirmPassword}

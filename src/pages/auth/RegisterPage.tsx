@@ -5,7 +5,7 @@
  * Campos: nombre, email, contraseña, aceptar términos.
  * Post-registro: auto-login y redirección a "verifica tu email".
  */
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { LuMail, LuLock, LuCircleAlert, LuUser } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +29,10 @@ function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [error, setError] = useState('');
+  const nameId = useId();
+  const emailId = useId();
+  const passwordId = useId();
+  const confirmPasswordId = useId();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,8 +98,11 @@ function RegisterPage() {
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">{t('auth.register.name')}</label>
+            <label htmlFor={nameId} className="text-fg block text-sm font-medium">
+              {t('auth.register.name')}
+            </label>
             <Input
+              id={nameId}
               type="text"
               value={name}
               onChange={setName}
@@ -107,8 +114,11 @@ function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">{t('auth.register.email')}</label>
+            <label htmlFor={emailId} className="text-fg block text-sm font-medium">
+              {t('auth.register.email')}
+            </label>
             <Input
+              id={emailId}
               type="email"
               value={email}
               onChange={setEmail}
@@ -120,10 +130,11 @@ function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">
+            <label htmlFor={passwordId} className="text-fg block text-sm font-medium">
               {t('auth.register.password')}
             </label>
             <Input
+              id={passwordId}
               type="password"
               value={password}
               onChange={setPassword}
@@ -140,10 +151,11 @@ function RegisterPage() {
           <PasswordRequirements value={password} />
 
           <div className="space-y-1.5">
-            <label className="text-fg block text-sm font-medium">
+            <label htmlFor={confirmPasswordId} className="text-fg block text-sm font-medium">
               {t('auth.register.confirmPassword')}
             </label>
             <Input
+              id={confirmPasswordId}
               type="password"
               value={confirmPassword}
               onChange={setConfirmPassword}
