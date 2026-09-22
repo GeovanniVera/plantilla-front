@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
 import VerifyEmailPage from './VerifyEmailPage';
 import { AuthProvider } from '../../auth';
-import { RedirectIfVerified } from '../../auth/guards';
+import { RequireUnverified } from '../../auth/guards';
 import { AuthContext } from '../../auth/context';
 import type { AuthContextValue } from '../../auth/types';
 import { authStorage } from '../../lib/auth/token-store';
@@ -66,12 +66,37 @@ function renderGuardedRoute(user: User) {
             <Route
               path="/verify-email"
               element={
-                <RedirectIfVerified>
+                <RequireUnverified>
                   <VerifyEmailPage />
-                </RedirectIfVerified>
+                </RequireUnverified>
               }
             />
             <Route path="/dashboard" element={<div>Dashboard Page</div>} />
+            <Route path="/login" element={<div>Login Page</div>} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+/** Monta la ruta real con el guard y SIN sesión activa (usuario anónimo). */
+function renderGuardedRouteAnonymous() {
+  return render(
+    <QueryClientProvider client={newQueryClient()}>
+      <MemoryRouter initialEntries={['/verify-email']}>
+        <AuthProvider>
+          <Routes>
+            <Route
+              path="/verify-email"
+              element={
+                <RequireUnverified>
+                  <VerifyEmailPage />
+                </RequireUnverified>
+              }
+            />
+            <Route path="/dashboard" element={<div>Dashboard Page</div>} />
+            <Route path="/login" element={<div>Login Page</div>} />
           </Routes>
         </AuthProvider>
       </MemoryRouter>
@@ -97,7 +122,14 @@ afterEach(() => {
   server.resetHandlers();
 });
 
-describe('RedirectIfVerified — ruta /verify-email', () => {
+describe('RequireUnverified — ruta /verify-email', () => {
+  it('redirige al login a un usuario anónimo y no muestra la página', async () => {
+    renderGuardedRouteAnonymous();
+
+    expect(await screen.findByText('Login Page')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /reenviar/i })).not.toBeInTheDocument();
+  });
+
   it('redirige al dashboard a un usuario verificado y no muestra reenviar', async () => {
     renderGuardedRoute(verifiedUser);
 

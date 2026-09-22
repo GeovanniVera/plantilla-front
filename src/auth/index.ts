@@ -35,7 +35,7 @@ export {
   RequirePrivilege,
   RequireRole,
   GuestOnly,
-  RedirectIfVerified,
+  RequireUnverified,
   RequireVerification,
 } from './guards';
 

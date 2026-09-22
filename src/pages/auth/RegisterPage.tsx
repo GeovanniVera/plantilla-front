@@ -3,13 +3,14 @@
  *
  * Formulario plano con inputs del design system.
  * Campos: nombre, email, contraseña, aceptar términos.
- * Post-registro: redirección a página de "verifica tu email" (sin auto-login).
+ * Post-registro: auto-login y redirección a "verifica tu email".
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { LuMail, LuLock, LuCircleAlert, LuUser } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
 import { GuestOnly } from '../../auth/guards';
+import { useAuth } from '../../auth';
 import { useRegister } from '../../hooks/useAuth';
 import Input from '@components/primitives/Input';
 import Checkbox from '@components/primitives/Checkbox';
@@ -20,6 +21,7 @@ import { AuthFormHeader, AuthFormActions } from '../../layouts/auth/AuthFormLayo
 function RegisterPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const registerMutation = useRegister();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -51,16 +53,24 @@ function RegisterPage() {
     registerMutation.mutate(
       { name, email, password, acceptedTerms: acceptTerms },
       {
-        onSuccess: (response) => {
+        onSuccess: async (response) => {
           // El cliente resuelve { success: false } en vez de rechazar en errores
           // HTTP (ej: 409 email duplicado): discriminar antes de navegar.
           if (!response.success) {
             setError(response.message || t('errors.unknown'));
             return;
           }
-          // No auto-login: el backend requiere verificación de email primero
-          // Redirigir a página de "revisa tu email"
-          navigate('/verify-email', { state: { email } });
+          // El backend ahora emite sesión para cuentas sin verificar (autoridad
+          // UNVERIFIED), así que hacemos auto-login: el guard RequireUnverified
+          // deja ver /verify-email a un usuario autenticado sin verificar.
+          try {
+            await login(email, password);
+            navigate('/verify-email', { state: { email } });
+          } catch {
+            // El registro se completó pero falló el login automático: pedir
+            // login manual (que ahora sí funciona para cuentas sin verificar).
+            navigate('/login', { replace: true });
+          }
         },
         onError: (err) => setError(err.message || t('errors.unknown')),
       },

@@ -38,8 +38,8 @@ describe('auth barrel exports', () => {
     expect(auth.GuestOnly).toBeDefined();
   });
 
-  it('exports RedirectIfVerified', () => {
-    expect(auth.RedirectIfVerified).toBeDefined();
+  it('exports RequireUnverified', () => {
+    expect(auth.RequireUnverified).toBeDefined();
   });
 
   it('exports RequireVerification', () => {

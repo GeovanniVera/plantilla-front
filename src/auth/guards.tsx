@@ -194,11 +194,11 @@ export function GuestOnly({ children, redirectTo = '/dashboard' }: GuestOnlyProp
   return <>{children}</>;
 }
 
-// ─── RedirectIfVerified ────────────────────────────────────
+// ─── RequireUnverified ─────────────────────────────────────
 /**
- * Props de RedirectIfVerified.
+ * Props de RequireUnverified.
  */
-interface RedirectIfVerifiedProps {
+interface RequireUnverifiedProps {
   /** Componentes hijos a renderizar si el email no está verificado */
   children: ReactNode;
   /** Ruta de redirección si el email ya está verificado (default: '/dashboard') */
@@ -206,34 +206,36 @@ interface RedirectIfVerifiedProps {
 }
 
 /**
- * Guard para las rutas de verificación de email.
+ * Guard para la ruta de verificación de email (`/verify-email`).
  *
- * A diferencia de GuestOnly, NO expulsa a un usuario autenticado sin verificar:
- * la condición es exactamente la contraria. Solo redirige cuando el email YA
- * está verificado y el usuario autenticado, caso en el que la pantalla de
- * verificación no tiene sentido. Un usuario anónimo o autenticado sin verificar
- * sigue viendo la pantalla.
+ * El único estado legítimo para ver esta pantalla es "autenticado y sin
+ * verificar". El backend emite una sesión restringida (autoridad UNVERIFIED)
+ * para cuentas no verificadas, así que un usuario anónimo no tiene sesión con
+ * la que reenviar el email y un usuario ya verificado no tiene nada que hacer
+ * acá.
+ *
+ * - Anónimo → /login
+ * - Autenticado y verificado → redirectTo (default: /dashboard)
+ * - Autenticado y sin verificar → renderiza children
  *
  * @example
  * ```tsx
  * <Route
  *   path="/verify-email"
  *   element={
- *     <RedirectIfVerified>
+ *     <RequireUnverified>
  *       <VerifyEmailPage />
- *     </RedirectIfVerified>
+ *     </RequireUnverified>
  *   }
  * />
  * ```
  */
-export function RedirectIfVerified({
-  children,
-  redirectTo = '/dashboard',
-}: RedirectIfVerifiedProps) {
+export function RequireUnverified({ children, redirectTo = '/dashboard' }: RequireUnverifiedProps) {
   const { isAuthenticated, isLoading, isVerified } = useAuth();
 
   if (isLoading) return <AuthLoading />;
-  if (isAuthenticated && isVerified()) return <Navigate to={redirectTo} replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (isVerified()) return <Navigate to={redirectTo} replace />;
 
   return <>{children}</>;
 }

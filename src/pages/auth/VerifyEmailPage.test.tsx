@@ -3,7 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import VerifyEmailPage from './VerifyEmailPage';
-import { AuthProvider } from '../../auth';
+import { AuthContext } from '../../auth/context';
+import type { AuthContextValue, User } from '../../auth/types';
 import { server } from '../../test/mocks/server';
 import { http } from 'msw';
 import '../../lib/i18n/config';
@@ -12,14 +13,39 @@ const navigateMock = vi.fn();
 vi.mock('react-router', async () => ({
   ...(await vi.importActual('react-router')),
   useNavigate: () => navigateMock,
+  // Sin `state.email`: la página debe preferir el email del usuario autenticado.
   useLocation: () => ({
-    state: { email: 'test@test.com' },
+    state: {},
     pathname: '/verify-email',
     search: '',
     hash: '',
     key: 'default',
   }),
 }));
+
+const unverifiedUser: User = {
+  id: '2',
+  email: 'test@test.com',
+  name: 'Unverified User',
+  roles: ['viewer'],
+  permissions: [],
+  isVerified: false,
+};
+
+function authValue(): AuthContextValue {
+  return {
+    user: unverifiedUser,
+    token: 'token',
+    isAuthenticated: true,
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+    hasPrivilege: () => false,
+    hasAnyPrivilege: () => false,
+    hasRole: () => false,
+    isVerified: () => false,
+  };
+}
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -28,11 +54,11 @@ const queryClient = new QueryClient({
 function renderVerifyEmailPage() {
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/verify-email']}>
-        <AuthProvider>
+      <AuthContext.Provider value={authValue()}>
+        <MemoryRouter initialEntries={['/verify-email']}>
           <VerifyEmailPage />
-        </AuthProvider>
-      </MemoryRouter>
+        </MemoryRouter>
+      </AuthContext.Provider>
     </QueryClientProvider>,
   );
 }
@@ -52,7 +78,7 @@ describe('VerifyEmailPage', () => {
     expect(container).toBeDefined();
   });
 
-  it('shows the email address from location state', () => {
+  it('shows the email address from the authenticated user', () => {
     renderVerifyEmailPage();
     expect(screen.getByText('test@test.com')).toBeInTheDocument();
   });

@@ -34,13 +34,11 @@ function LoginPage() {
     loginMutation.mutate(
       { email, password, remember },
       {
+        // Un usuario sin verificar inicia sesión correctamente (el backend ya no
+        // rechaza ese login). `from` apunta a /dashboard y ProtectedRoute lo
+        // redirige a /verify-email al no estar verificado: no hace falta un
+        // branch de error para ese caso.
         onSuccess: () => navigate(from, { replace: true }),
-        onError: (err) => {
-          // Si la cuenta no está verificada, redirigir a verificación
-          if (err.message?.includes('no verificada')) {
-            navigate('/verify-email', { state: { email } });
-          }
-        },
       },
     );
   };

@@ -9,7 +9,7 @@
  * - Botón para reenviar email
  * - Botón para cerrar sesión
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { LuMail, LuLogOut } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
@@ -27,19 +27,14 @@ export default function VerifyEmailPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
-  // Si el usuario ya está verificado, no debería ver esta pantalla
-  useEffect(() => {
-    if (user?.isVerified) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, navigate]);
-
   // Un usuario autenticado ya verificado no puede reenviar: el backend responde
   // 200 opaco (anti-enumeración) sin hacer nada, y la UI mostraría un falso
   // "Email reenviado exitosamente".
   const canResend = !(isAuthenticated && isVerified());
 
-  // Email del usuario o del state (post-registration)
+  // El guard RequireUnverified garantiza que acá hay un usuario autenticado sin
+  // verificar, así que `user.email` es la fuente principal. El state queda como
+  // fallback defensivo para renders directos (tests, stories).
   const email = user?.email || (location.state as { email?: string })?.email || '';
 
   const handleResend = () => {
