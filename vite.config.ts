@@ -45,6 +45,10 @@ export default defineConfig({
           environment: 'jsdom',
           setupFiles: ['./src/test/setup.ts'],
           globals: true,
+          // Los tests de rutas encadenan varios awaits (sesión, lazy, MSW) y en
+          // CI el runner va saturado por el proyecto de browser en paralelo: el
+          // default de 5 s es demasiado justo para ese caso, no para la lógica.
+          testTimeout: 15000,
         },
       },
       {
