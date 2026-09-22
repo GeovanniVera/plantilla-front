@@ -31,7 +31,6 @@ export default function DashboardPage() {
       title: 'Usuarios',
       desc: 'Ver, suspender y reactivar usuarios.',
       privilege: 'users.read',
-      accent: '#6366f1',
     },
     {
       to: '/admin/roles',
@@ -39,7 +38,6 @@ export default function DashboardPage() {
       title: 'Roles',
       desc: 'Crear y editar roles con permisos.',
       privilege: 'roles.read',
-      accent: '#10b981',
     },
     {
       to: '/admin/permisos',
@@ -47,7 +45,6 @@ export default function DashboardPage() {
       title: 'Permisos',
       desc: 'Catálogo de permisos del sistema.',
       privilege: 'permissions.read',
-      accent: '#f59e0b',
     },
   ];
 
@@ -78,14 +75,9 @@ export default function DashboardPage() {
 
         {/* Stats */}
         <StatCardGroup>
-          <StatCard
-            value={unreadCount}
-            label={t('notifications.title')}
-            icon={LuBell}
-            accent="#6366f1"
-          />
-          <StatCard value={0} label="Archivos" icon={LuFolderOpen} accent="#10b981" />
-          <StatCard value={0} label="Pagos" icon={LuCreditCard} accent="#f59e0b" />
+          <StatCard value={unreadCount} label={t('notifications.title')} icon={LuBell} />
+          <StatCard value={0} label="Archivos" icon={LuFolderOpen} />
+          <StatCard value={0} label="Pagos" icon={LuCreditCard} />
         </StatCardGroup>
 
         {/* Acciones rápidas: la sección entera desaparece si no hay acciones visibles. */}
@@ -112,18 +104,7 @@ export default function DashboardPage() {
                   >
                     <Card.Body>
                       <div className="flex items-start justify-between gap-3">
-                        <div
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 10,
-                            background: `${action.accent}12`,
-                            color: action.accent,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
+                        <div className="bg-accent-subtle text-accent flex size-10 items-center justify-center rounded-[10px]">
                           <Icon size={20} />
                         </div>
                         <LuArrowRight size={16} className="text-fg-muted" />

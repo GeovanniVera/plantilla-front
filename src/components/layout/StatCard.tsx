@@ -5,7 +5,11 @@ export interface StatCardProps {
   value: number;
   /** Label descriptivo (se muestra en mayúsculas) */
   label: string;
-  /** Color de acento (borde superior + ícono) */
+  /**
+   * Color de acento (borde superior + ícono). Acepta cualquier color CSS,
+   * incluida una variable del tema (ej. `var(--info)`). Por defecto sigue el
+   * accent del tema.
+   */
   accent?: string;
   /** Componente ícono de react-icons (ej: LuTriangleAlert) */
   icon?: IconType;
@@ -16,18 +20,23 @@ export interface StatCardProps {
  * Diseño minimalista con borde superior de color, ícono en caja y número destacado.
  *
  * @example
- * <StatCard value={25} label="Total" icon={LuCalendar} accent="#64748b" />
- * <StatCard value={5} label="Disponibles" icon={LuCheck} accent="#10b981" />
+ * <StatCard value={25} label="Total" icon={LuCalendar} />
+ * <StatCard value={5} label="Disponibles" icon={LuCheck} accent="var(--info)" />
  */
-export function StatCard({ value, label, accent = '#94a3b8', icon: Icon }: StatCardProps) {
-  /* --accent-color / --icon-bg stay prop-driven inline variables: they
-   * are per-instance values, NOT design tokens. The component always
-   * sets them, so the utilities below can reference them without
-   * fallbacks. */
+export function StatCard({ value, label, accent = 'var(--accent)', icon: Icon }: StatCardProps) {
+  /* --accent-color / --icon-bg son variables inline por instancia: el accent es
+   * un color CSS cualquiera y su default sigue el tema. El fondo suave del icono
+   * se deriva con color-mix porque pegarle el sufijo alpha a un hex
+   * (`${accent}12`) no funciona cuando el accent es una variable CSS. */
   return (
     <div
       className={STAT_CARD_CLASSES}
-      style={{ '--accent-color': accent, '--icon-bg': `${accent}12` } as React.CSSProperties}
+      style={
+        {
+          '--accent-color': accent,
+          '--icon-bg': `color-mix(in srgb, ${accent} 12%, transparent)`,
+        } as React.CSSProperties
+      }
     >
       {Icon && (
         <div className={ICON_BOX_CLASSES}>
