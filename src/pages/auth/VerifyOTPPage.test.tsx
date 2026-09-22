@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Routes, Route } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse, delay } from 'msw';
 import VerifyOTPPage from './VerifyOTPPage';
@@ -41,15 +41,32 @@ function VerifyOTPPageWithContext({ email }: { email: string }) {
   return <VerifyOTPPage />;
 }
 
+/** Monta la ruta real: sin email, el guard declarativo debe ir a /forgot-password. */
+function renderVerifyOTPPageWithoutEmail() {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={['/verify-otp']}>
+        <ForgotPasswordProvider>
+          <Routes>
+            <Route path="/verify-otp" element={<VerifyOTPPage />} />
+            <Route path="/forgot-password" element={<div>Forgot Password Page</div>} />
+          </Routes>
+        </ForgotPasswordProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 describe('VerifyOTPPage', () => {
   beforeEach(() => {
     queryClient.clear();
     navigateMock.mockReset();
   });
 
-  it('redirects to forgot-password when no email', () => {
-    renderVerifyOTPPage('');
-    expect(navigateMock).toHaveBeenCalledWith('/forgot-password');
+  it('redirects to forgot-password when no email', async () => {
+    renderVerifyOTPPageWithoutEmail();
+    expect(await screen.findByText('Forgot Password Page')).toBeInTheDocument();
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 
   it('renders OTP input fields', () => {

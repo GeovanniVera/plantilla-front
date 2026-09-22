@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Routes, Route } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ResetPasswordPage from './ResetPasswordPage';
 import { ForgotPasswordProvider } from '../../auth/ForgotPasswordContext';
@@ -58,15 +58,32 @@ function renderResetPasswordPage(withToken = false) {
   );
 }
 
+/** Monta la ruta real: sin token ni success, el guard declarativo va a /forgot-password. */
+function renderResetPasswordPageWithoutToken() {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={['/reset-password']}>
+        <ForgotPasswordProvider>
+          <Routes>
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/forgot-password" element={<div>Forgot Password Page</div>} />
+          </Routes>
+        </ForgotPasswordProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 describe('ResetPasswordPage', () => {
   beforeEach(() => {
     queryClient.clear();
     navigateMock.mockReset();
   });
 
-  it('redirects to forgot-password when no token', () => {
-    renderResetPasswordPage();
-    expect(navigateMock).toHaveBeenCalledWith('/forgot-password');
+  it('redirects to forgot-password when no token', async () => {
+    renderResetPasswordPageWithoutToken();
+    expect(await screen.findByText('Forgot Password Page')).toBeInTheDocument();
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 
   it('renders the form when token exists', async () => {

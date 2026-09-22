@@ -5,7 +5,7 @@
  * El OTP está ligado a un token para el siguiente paso.
  */
 import { useState, useRef, type KeyboardEvent, type ClipboardEvent } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Navigate } from 'react-router';
 import { LuArrowLeft, LuShield } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
 import Spinner from '@components/feedback/Spinner';
@@ -23,10 +23,10 @@ export default function VerifyOTPPage() {
   const [error, setError] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Redirigir si no hay email
+  // Redirigir declarativamente si no hay email: navegar durante el render es un
+  // efecto ilegal (doble disparo bajo StrictMode) y no impide el render.
   if (!email) {
-    navigate('/forgot-password');
-    return null;
+    return <Navigate to="/forgot-password" replace />;
   }
 
   const handleChange = (index: number, value: string) => {

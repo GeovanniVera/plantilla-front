@@ -5,7 +5,7 @@
  * Requiere token válido del paso anterior.
  */
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, Navigate } from 'react-router';
 import { LuLock, LuArrowLeft, LuCheck } from 'react-icons/lu';
 import { useTranslation } from 'react-i18next';
 import Input from '@components/primitives/Input';
@@ -26,10 +26,11 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Redirigir si no hay token
+  // Redirigir declarativamente si no hay token. `success` es la excepción: tras
+  // un reset exitoso el contexto se limpia (token → null) y la pantalla de
+  // éxito debe seguir renderizándose.
   if (!token && !success) {
-    navigate('/forgot-password');
-    return null;
+    return <Navigate to="/forgot-password" replace />;
   }
 
   const handleSubmit = (e: React.FormEvent) => {
