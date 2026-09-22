@@ -33,6 +33,7 @@ client.post<T>(path, body?, options?): Promise<ApiResponse<T>>
 client.put<T>(path, body?, options?): Promise<ApiResponse<T>>
 client.patch<T>(path, body?, options?): Promise<ApiResponse<T>>
 client.delete<T>(path, options?): Promise<ApiResponse<T>>
+client.getBlob(path): Promise<Blob | null>  // descarga binaria autenticada (fotos protegidas)
 
 // Token en memoria
 tokenManager.get(): string | null

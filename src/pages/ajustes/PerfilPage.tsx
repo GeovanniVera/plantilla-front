@@ -6,6 +6,7 @@ import Input from '@components/primitives/Input';
 import Card from '@components/layout/Card';
 import { useToast } from '@components/feedback';
 import { useUpdateProfile } from '../../features/profile/hooks/useProfile';
+import { useAuthenticatedImage } from '@hooks/useAuthenticatedImage';
 import { LuCamera, LuShieldCheck } from 'react-icons/lu';
 
 export default function PerfilPage() {
@@ -16,7 +17,10 @@ export default function PerfilPage() {
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
   const [photo, setPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(user?.photoUrl ?? null);
+  // La foto del backend requiere sesión; el archivo recién elegido se previsualiza
+  // como data URL y tiene prioridad.
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const authenticatedPhoto = useAuthenticatedImage(user?.photoUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +48,7 @@ export default function PerfilPage() {
     }
   };
 
-  const avatar = photoPreview || undefined;
+  const avatar = photoPreview || authenticatedPhoto || undefined;
   const initial = (user?.name ?? 'U').charAt(0).toUpperCase();
 
   return (

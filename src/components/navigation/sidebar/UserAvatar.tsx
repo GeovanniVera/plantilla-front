@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSidebar } from './context';
+import { useAuthenticatedImage } from '@hooks/useAuthenticatedImage';
 
 interface UserAvatarProps {
   /** Nombre o alias del usuario (corto) */
@@ -37,14 +38,14 @@ const ROLE_CLASSES = 'text-[11px] font-medium text-secondary leading-[1.3] flex 
 export default function UserAvatar({ name, role, photoUrl }: UserAvatarProps) {
   const { expanded } = useSidebar();
   const [imgError, setImgError] = useState(false);
-
-  const showImg = photoUrl && !imgError;
+  // La foto requiere sesión: se descarga autenticada y se expone como object URL.
+  const resolvedPhotoUrl = useAuthenticatedImage(photoUrl);
 
   return (
     <div className={`${CARD_BASE_CLASSES} ${expanded ? CARD_EXPANDED_CLASSES : ''}`}>
-      {showImg ? (
+      {resolvedPhotoUrl && !imgError ? (
         <img
-          src={photoUrl}
+          src={resolvedPhotoUrl}
           alt={name}
           className={AVATAR_IMG_CLASSES}
           onError={() => setImgError(true)}

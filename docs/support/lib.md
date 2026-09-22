@@ -12,6 +12,7 @@ Resumen de la API pública:
 
 ```ts
 client.get/post/put/patch/delete<T>(path, body?, options?): Promise<ApiResponse<T>>
+client.getBlob(path): Promise<Blob | null>  // descarga binaria con el mismo manejo de auth/refresh
 tokenManager.get(): string | null      // token en memoria
 tokenManager.set(token: string): void
 tokenManager.clear(): void

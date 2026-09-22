@@ -162,6 +162,87 @@ function hasSessionToken(): boolean {
   return Boolean(accessToken) || authStorage.getActiveSession() !== null;
 }
 
+// ─── Helper: headers autenticados ──────────────────────────
+/**
+ * Construye los headers de una petición autenticada, inyectando el access
+ * token de memoria y refrescándolo proactivamente si ya expiró.
+ *
+ * Centraliza la lógica que comparten las peticiones JSON (`request`) y las
+ * binarias (`getBlob`), para no duplicar el manejo del token ni del refresh.
+ *
+ * @param baseHeaders - Headers base de la petición
+ * @returns Headers con `Authorization`, o `null` si había sesión pero el
+ *          refresh falló (el llamador debe cortar y desloguear).
+ */
+async function buildAuthenticatedHeaders(
+  baseHeaders: Record<string, string>,
+): Promise<Record<string, string> | null> {
+  if (!accessToken) {
+    return baseHeaders;
+  }
+
+  // Proactive refresh: si el token en memoria expiró, renovarlo antes de enviar.
+  if (tokenManager.isExpired()) {
+    const refreshed = await tryRefreshToken();
+    if (!refreshed) {
+      tokenManager.clear();
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+      return null;
+    }
+  }
+
+  return { ...baseHeaders, Authorization: `Bearer ${accessToken}` };
+}
+
+// ─── Helper: fetch binario autenticado ─────────────────────
+/**
+ * Ejecuta un GET binario con el mismo manejo de auth/refresh que `request`.
+ *
+ * No parsea JSON ni normaliza errores: devuelve la `Response` cruda (o `null`).
+ * Reutiliza el refresh del cliente (no un `fetch` naive) para que una descarga
+ * autenticada no se rompa cuando el access token expira.
+ *
+ * @param path - Ruta relativa a la URL base (ej: '/files/abc.png')
+ * @returns Response autenticada, o `null` si no hay sesión o la petición falla
+ */
+async function requestRaw(path: string): Promise<Response | null> {
+  const url = `${config.baseUrl}${path}`;
+  const baseHeaders = { 'X-Requested-With': 'XMLHttpRequest' };
+
+  const headers = await buildAuthenticatedHeaders(baseHeaders);
+  if (headers === null) {
+    return null;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(url, { method: 'GET', headers, credentials: 'include' });
+  } catch {
+    return null;
+  }
+
+  // 401 con sesión: refrescar y reintentar una vez (misma política que `request`).
+  if (response.status === 401 && hasSessionToken()) {
+    const refreshed = await tryRefreshToken();
+    if (!refreshed) {
+      tokenManager.clear();
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+      return null;
+    }
+    const retryHeaders = await buildAuthenticatedHeaders(baseHeaders);
+    if (retryHeaders === null) {
+      return null;
+    }
+    try {
+      response = await fetch(url, { method: 'GET', headers: retryHeaders, credentials: 'include' });
+    } catch {
+      return null;
+    }
+  }
+
+  return response.ok ? response : null;
+}
+
 // ─── Helper: Mapear status HTTP a ApiErrorCode ─────────────
 function mapStatusToErrorCode(status: number): ApiErrorCode {
   switch (status) {
@@ -223,27 +304,18 @@ async function request<T>(
     ...options,
   };
 
-  // Inyectar token de autorización si existe
-  if (accessToken) {
-    // Proactive refresh: if the in-memory token is expired, refresh before sending the request
-    if (tokenManager.isExpired()) {
-      const refreshed = await tryRefreshToken();
-      if (!refreshed) {
-        tokenManager.clear();
-        window.dispatchEvent(new CustomEvent('auth:logout'));
-        return {
-          success: false,
-          message: getErrorMessage('UNAUTHORIZED'),
-          code: 'UNAUTHORIZED',
-        };
-      }
-    }
-
-    requestConfig.headers = {
-      ...requestConfig.headers,
-      Authorization: `Bearer ${accessToken}`,
+  // Inyectar token de autorización si existe (mismo helper que las descargas binarias)
+  const authenticatedHeaders = await buildAuthenticatedHeaders(
+    requestConfig.headers as Record<string, string>,
+  );
+  if (authenticatedHeaders === null) {
+    return {
+      success: false,
+      message: getErrorMessage('UNAUTHORIZED'),
+      code: 'UNAUTHORIZED',
     };
   }
+  requestConfig.headers = authenticatedHeaders;
 
   // Serializar cuerpo para peticiones que lo requieran
   if (body && method !== 'GET') {
@@ -439,6 +511,28 @@ export const client = {
    * @returns Promise con ApiResponse<T>
    */
   get: <T>(path: string, options?: RequestInit) => request<T>('GET', path, undefined, options),
+
+  /**
+   * Descarga un recurso binario (p. ej. una foto de perfil protegida).
+   *
+   * Reutiliza el manejo de autenticación y refresh del cliente, de modo que el
+   * header `Authorization` se adjunta y una expiración de token no rompe la
+   * descarga. No parsea JSON: devuelve el `Blob` listo para `createObjectURL`.
+   *
+   * @param path - Ruta relativa (ej: '/files/abc.png')
+   * @returns Blob, o null si no hay sesión o la petición falla
+   */
+  getBlob: async (path: string): Promise<Blob | null> => {
+    const response = await requestRaw(path);
+    if (!response) {
+      return null;
+    }
+    try {
+      return await response.blob();
+    } catch {
+      return null;
+    }
+  },
 
   /**
    * Realiza una petición POST.

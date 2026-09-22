@@ -141,6 +141,8 @@ Hardcodea `to="/dashboard"`.
 
 Fallback a la inicial sobre fondo accent si no hay `photoUrl` o la imagen falla (`onError`).
 
+La foto de perfil requiere sesión (el backend sirve `/files/**` solo con JWT). Un `<img src>` no puede enviar el header `Authorization`, así que `UserAvatar` descarga la imagen con `client.getBlob` (que adjunta el token y lo refresca si expiró), la convierte a object URL con `URL.createObjectURL` y revoca la URL al cambiar o desmontar. La lógica vive en `@hooks/useAuthenticatedImage`; las URLs externas al API (p. ej. Cloudinary) se usan tal cual.
+
 ### UserClock
 
 Reloj en vivo: `setInterval` de 1s, formato con locale `es-ES` (hora + fecha abreviada). Sin props.
