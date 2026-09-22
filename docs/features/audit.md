@@ -46,11 +46,18 @@ Fila expandible de actividad. Colapsada muestra ícono + acción + fecha (format
 
 | Función | Propósito |
 |---|---|
-| `getActionLabel(action)` | Devuelve `AuditLabel` (texto legible, ícono, tono) para una acción. |
-| `getActionFilterOptions()` | Opciones del filtro de tipo de evento (fuente única: `ACTION_LABELS`). |
+| `getActionLabel(action)` | Devuelve `AuditLabel` (claves i18n `titleKey`/`titleOtherKey`?/`filterKey`, ícono, tono) para una acción. |
+| `getActionTitle(log, t)` | Resuelve el título visible **según la relación actor/entidad** y traduce con `t`. |
+| `getActionFilterOptions()` | Opciones del filtro de tipo de evento (fuente única: `ACTION_LABELS`); devuelve `{ value, filterKey }` para que el llamador traduzca. |
 | `describeEntity(entityType?, entityId?)` | Describe la entidad afectada en lenguaje legible (p. ej. `usuario (abc12345…)`). |
 
-Acciones mapeadas: `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `LOGOUT`, `ACCOUNT_SUSPENDED`, `ACCOUNT_REACTIVATED`, `PASSWORD_CHANGED`, `ROLE_CHANGED`. Acciones desconocidas caen en un label genérico ("Evento de seguridad", tono neutral).
+Los textos ya no están hardcodeados en el código: son claves i18n (`audit.actions.<ACTION>.title`, `.titleOther`, `.filter` y `audit.actions.unknown` en `src/lib/i18n/locales/{es,en}.json`).
+
+**Títulos actor/entidad-aware**: el título se elige según `log.actorId` vs `log.entityId`. Para las acciones dependientes de la relación (`ACCOUNT_SUSPENDED`, `ACCOUNT_REACTIVATED`, `ROLE_CHANGED`) se usa `.titleOther` cuando el actor actuó sobre otra entidad y `.title` (perspectiva propia) en caso contrario. Si falta cualquiera de los dos ids se considera "no es otra entidad" de forma explícita (cubre `LOGIN_FAILED` de email desconocido, con ambos ids `null`). Como `/admin/audit-logs/mine` filtra por `actorId = usuario autenticado`, en esa vista todos los eventos son acciones que el usuario hizo sobre terceros; el wording `title` propio solo aplica a acciones sobre la propia cuenta (`LOGIN_*`, `LOGOUT`, `PASSWORD_CHANGED`) y a las relaciones actor==entidad.
+
+**Filtros neutros**: `getActionFilterOptions()` expone la clave neutra `.filter` (p. ej. "Suspensión de cuenta"), separada del título en perspectiva del actor (p. ej. "Suspendiste una cuenta"). `AuditActivityItem` usa `getActionTitle`, mientras que el dropdown de `MiActividadPage` usa `filterKey`.
+
+Acciones mapeadas: `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `LOGOUT`, `ACCOUNT_SUSPENDED`, `ACCOUNT_REACTIVATED`, `PASSWORD_CHANGED`, `ROLE_CHANGED`. Acciones desconocidas caen en el label genérico (`audit.actions.unknown` = "Evento de seguridad", tono neutral).
 
 ## Permisos
 

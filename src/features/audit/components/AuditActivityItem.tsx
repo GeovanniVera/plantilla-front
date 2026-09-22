@@ -6,11 +6,12 @@
  * (entidad, IP, dispositivo, request ID, actor y cambios before/after).
  */
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LuChevronDown } from 'react-icons/lu';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { AuditLog } from '../services/audit.service';
-import { getActionLabel, describeEntity } from '../utils/audit-labels';
+import { getActionLabel, getActionTitle, describeEntity } from '../utils/audit-labels';
 
 const TONE_CLASSES: Record<string, string> = {
   success: 'bg-success-bg text-success',
@@ -90,7 +91,9 @@ interface AuditActivityItemProps {
 
 export default function AuditActivityItem({ log }: AuditActivityItemProps) {
   const [expanded, setExpanded] = useState(false);
+  const { t } = useTranslation();
   const label = getActionLabel(log.action);
+  const title = getActionTitle(log, t);
   const Icon = label.icon;
   const entity = describeEntity(log.entityType, log.entityId);
 
@@ -119,7 +122,7 @@ export default function AuditActivityItem({ log }: AuditActivityItemProps) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-fg text-sm font-medium">{label.text}</p>
+          <p className="text-fg text-sm font-medium">{title}</p>
           <p className="text-fg-muted mt-0.5 text-xs">{formatDate(log.createdAt)}</p>
         </div>
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LuFilter } from 'react-icons/lu';
 import { useMyAuditLogs } from '../../features/audit/hooks/useAudit';
 import AuditActivityItem from '../../features/audit/components/AuditActivityItem';
@@ -8,13 +9,21 @@ import Pagination from '@components/data-display/table/parts/Pagination';
 
 const PAGE_SIZE = 5;
 
-/* Opción real (seleccionable) para volver a "todos", no placeholder
- * disabled: el placeholder no permite re-seleccionar una vez filtrado. */
-const EVENT_OPTIONS = [{ value: '', label: 'Todos los eventos' }, ...getActionFilterOptions()];
-
 export default function MiActividadPage() {
+  const { t } = useTranslation();
   const [action, setAction] = useState('');
   const [page, setPage] = useState(0);
+
+  /* Opción real (seleccionable) para volver a "todos", no placeholder
+   * disabled: el placeholder no permite re-seleccionar una vez filtrado. */
+  const eventOptions = [
+    { value: '', label: t('audit.filter.all') },
+    ...getActionFilterOptions().map((option) => ({
+      value: option.value,
+      label: t(option.filterKey),
+    })),
+  ];
+
   const { data, isLoading, isFetching } = useMyAuditLogs(
     page,
     PAGE_SIZE,
@@ -49,7 +58,7 @@ export default function MiActividadPage() {
           <Select
             value={action}
             onChange={handleActionChange}
-            options={EVENT_OPTIONS}
+            options={eventOptions}
             size="sm"
             className="w-full sm:w-64"
             startAdornment={<LuFilter size={16} />}

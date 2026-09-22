@@ -93,6 +93,45 @@
       "backToLogin": "Back to login"
     }
   },
+  "audit": {
+    "actions": {
+      "LOGIN_SUCCEEDED": {
+        "title": "You signed in",
+        "filter": "Successful sign-in"
+      },
+      "LOGIN_FAILED": {
+        "title": "Failed sign-in attempt",
+        "filter": "Failed sign-in"
+      },
+      "LOGOUT": {
+        "title": "You signed out",
+        "filter": "Sign-out"
+      },
+      "ACCOUNT_SUSPENDED": {
+        "title": "Your account was suspended",
+        "titleOther": "You suspended an account",
+        "filter": "Account suspension"
+      },
+      "ACCOUNT_REACTIVATED": {
+        "title": "Your account was reactivated",
+        "titleOther": "You reactivated an account",
+        "filter": "Account reactivation"
+      },
+      "PASSWORD_CHANGED": {
+        "title": "You changed your password",
+        "filter": "Password change"
+      },
+      "ROLE_CHANGED": {
+        "title": "Your roles were changed",
+        "titleOther": "You changed an account's roles",
+        "filter": "Role change"
+      },
+      "unknown": "Security event"
+    },
+    "filter": {
+      "all": "All events"
+    }
+  },
   "errors": {
     "network": "Connection error. Check your internet.",
     "timeout": "Request timed out. Try again.",

@@ -93,6 +93,45 @@
       "backToLogin": "Volver al login"
     }
   },
+  "audit": {
+    "actions": {
+      "LOGIN_SUCCEEDED": {
+        "title": "Iniciaste sesión",
+        "filter": "Inicio de sesión exitoso"
+      },
+      "LOGIN_FAILED": {
+        "title": "Intento de inicio de sesión fallido",
+        "filter": "Inicio de sesión fallido"
+      },
+      "LOGOUT": {
+        "title": "Cerraste sesión",
+        "filter": "Cierre de sesión"
+      },
+      "ACCOUNT_SUSPENDED": {
+        "title": "Tu cuenta fue suspendida",
+        "titleOther": "Suspendiste una cuenta",
+        "filter": "Suspensión de cuenta"
+      },
+      "ACCOUNT_REACTIVATED": {
+        "title": "Tu cuenta fue reactivada",
+        "titleOther": "Reactivaste una cuenta",
+        "filter": "Reactivación de cuenta"
+      },
+      "PASSWORD_CHANGED": {
+        "title": "Cambiaste tu contraseña",
+        "filter": "Cambio de contraseña"
+      },
+      "ROLE_CHANGED": {
+        "title": "Se modificaron tus roles",
+        "titleOther": "Modificaste los roles de una cuenta",
+        "filter": "Cambio de roles"
+      },
+      "unknown": "Evento de seguridad"
+    },
+    "filter": {
+      "all": "Todos los eventos"
+    }
+  },
   "errors": {
     "network": "Error de conexión con el servidor",
     "timeout": "La request tardó demasiado. Intentá de nuevo.",
