@@ -78,6 +78,10 @@ export function CalendarList({
   const daysInMonth = calendarDays.filter((d) => isSameMonth(d, currentMonth));
 
   const renderPill = (event: CalendarEvent) => {
+    /* A real <button> would be the semantic default, but Firefox only starts a
+     * drag from a button's text content (Bug 568313) — pills are small and are
+     * normally grabbed from their padding. Keep the div draggable and expose it
+     * as a button via role + tabIndex + Enter/Space so drag behavior survives. */
     return (
       <div
         key={event.id}
@@ -89,12 +93,24 @@ export function CalendarList({
           .filter(Boolean)
           .join(' ')}
         draggable
+        role={onEventClick ? 'button' : undefined}
+        tabIndex={onEventClick ? 0 : undefined}
         onDragStart={(e) => onDragStart(e, event)}
         onDragEnd={onDragEnd}
         onClick={(e) => {
           e.stopPropagation();
           onEventClick?.(event);
         }}
+        onKeyDown={
+          onEventClick
+            ? (e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                e.stopPropagation();
+                onEventClick(event);
+              }
+            : undefined
+        }
         title={`${event.title}${event.start ? ` — ${format(event.start, 'HH:mm')}` : ''}`}
       >
         <span className={PILL_TITLE_BASE_CLASSES}>{event.title}</span>

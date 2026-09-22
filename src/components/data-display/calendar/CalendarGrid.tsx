@@ -23,8 +23,11 @@ const PILL_TITLE_BASE_CLASSES =
   'font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-[80px]';
 const PILL_TIME_CLASSES = 'font-medium opacity-70 whitespace-nowrap text-[10px]';
 
+/* `w-full text-left` preserve the full-width, left-aligned layout the previous
+ * div got from the flex column + inherited text alignment; native buttons
+ * default to intrinsic width and centered text. */
 const OVERFLOW_CLASSES =
-  'flex items-center px-1.5 py-0.5 rounded-[4px] text-[10px] font-semibold text-foreground opacity-50 cursor-pointer transition-opacity duration-150 hover:opacity-80 hover:bg-surface';
+  'flex w-full items-center px-1.5 py-0.5 rounded-[4px] text-[10px] font-semibold text-foreground opacity-50 cursor-pointer transition-opacity duration-150 hover:opacity-80 hover:bg-surface text-left';
 
 /* Colores de pills de eventos — literales locales deliberados (.12 tint + strong text),
  * NO design tokens (decisión fase 6B). */
@@ -89,6 +92,10 @@ export function CalendarGrid({
   const eventsByDay = groupEventsByDay(events);
 
   const renderPill = (event: CalendarEvent) => {
+    /* A real <button> would be the semantic default, but Firefox only starts a
+     * drag from a button's text content (Bug 568313) — pills are small and are
+     * normally grabbed from their padding. Keep the div draggable and expose it
+     * as a button via role + tabIndex + Enter/Space so drag behavior survives. */
     return (
       <div
         key={event.id}
@@ -100,12 +107,25 @@ export function CalendarGrid({
           .filter(Boolean)
           .join(' ')}
         draggable
+        role={onEventClick ? 'button' : undefined}
+        tabIndex={onEventClick ? 0 : undefined}
         onDragStart={(e) => onDragStart(e, event)}
         onDragEnd={onDragEnd}
         onClick={(e) => {
           e.stopPropagation();
           onEventClick?.(event);
         }}
+        onKeyDown={
+          onEventClick
+            ? (e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                // Keep the event from bubbling into the day cell's handler.
+                e.stopPropagation();
+                onEventClick(event);
+              }
+            : undefined
+        }
         title={`${event.title}${event.start ? ` — ${format(event.start, 'HH:mm')}` : ''}`}
       >
         <span className={PILL_TITLE_BASE_CLASSES}>{event.title}</span>
@@ -137,13 +157,33 @@ export function CalendarGrid({
           const isDragTarget = dragOverDate && isSameDay(dragOverDate, day);
 
           return (
+            /* The cell is a real grid item containing buttons, so it cannot be
+             * a <button> (nested interactive content). It keeps its layout and
+             * exposes day selection as a button via role + tabIndex +
+             * Enter/Space, only when a day click handler exists. */
             <div
               key={dayKey}
               className={cellClasses(!isCurrentMonth, isTodayDate, !!isDragTarget)}
+              role={onDayClick ? 'button' : undefined}
+              tabIndex={onDayClick ? 0 : undefined}
+              // Name the cell explicitly so its accessible name is the date,
+              // not the concatenated text of the pills it contains.
+              aria-label={onDayClick ? format(day, 'd MMMM yyyy') : undefined}
               onDragOver={(e) => onDragOver(e, day)}
               onDragLeave={onDragLeave}
               onDrop={(e) => onDrop(e, day)}
-              onClick={() => onDayClick?.(day, dayEvents)}
+              onClick={onDayClick ? () => onDayClick(day, dayEvents) : undefined}
+              onKeyDown={
+                onDayClick
+                  ? (e) => {
+                      // Ignore keys bubbling from pills/overflow inside the cell.
+                      if (e.target !== e.currentTarget) return;
+                      if (e.key !== 'Enter' && e.key !== ' ') return;
+                      e.preventDefault();
+                      onDayClick(day, dayEvents);
+                    }
+                  : undefined
+              }
             >
               <div
                 className={`${DAY_NUMBER_CLASSES} ${isTodayDate ? DAY_NUMBER_TODAY_CLASSES : ''}`}
@@ -153,7 +193,8 @@ export function CalendarGrid({
               <div className={EVENTS_CONTAINER_CLASSES}>
                 {dayEvents.slice(0, 3).map((evt) => renderPill(evt))}
                 {dayEvents.length > 3 && (
-                  <div
+                  <button
+                    type="button"
                     className={OVERFLOW_CLASSES}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -161,7 +202,7 @@ export function CalendarGrid({
                     }}
                   >
                     +{dayEvents.length - 3} más
-                  </div>
+                  </button>
                 )}
               </div>
             </div>

@@ -247,6 +247,7 @@ export function DatePicker({
               zIndex: 9999,
             }}
             role="dialog"
+            aria-label={placeholder}
           >
             <Calendar
               selected={value}
@@ -319,6 +320,7 @@ export function DateRangePicker({
               zIndex: 9999,
             }}
             role="dialog"
+            aria-label={placeholder}
           >
             <CalendarRange
               from={from}
