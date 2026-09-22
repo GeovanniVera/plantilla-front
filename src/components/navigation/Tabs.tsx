@@ -1,4 +1,4 @@
-import { useState, createContext, useContext, useCallback } from 'react';
+import { useState, createContext, useContext, useCallback, useMemo } from 'react';
 import type {
   TabsProps,
   TabsListProps,
@@ -85,8 +85,13 @@ export function Tabs({
     [isControlled, onChange],
   );
 
+  const contextValue = useMemo(
+    () => ({ activeTab, variant, setActiveTab }),
+    [activeTab, variant, setActiveTab],
+  );
+
   return (
-    <TabsContext.Provider value={{ activeTab, variant, setActiveTab }}>
+    <TabsContext.Provider value={contextValue}>
       <div className={`${ROOT_CLASSES} ${className ?? ''}`}>{children}</div>
     </TabsContext.Provider>
   );

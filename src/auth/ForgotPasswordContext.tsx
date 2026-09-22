@@ -8,7 +8,7 @@
  *
  * El backend real reemplazará las funciones mock.
  */
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 import { authService } from '../lib/api/services/auth.service';
 
 interface ForgotPasswordState {
@@ -72,19 +72,20 @@ export function ForgotPasswordProvider({ children }: { children: ReactNode }) {
     setState({ email: '', token: null, otpVerified: false });
   }, []);
 
-  return (
-    <ForgotPasswordContext.Provider
-      value={{
-        ...state,
-        setEmail,
-        verifyOtp,
-        resetPassword,
-        reset,
-      }}
-    >
-      {children}
-    </ForgotPasswordContext.Provider>
+  // All members are either primitive state fields or stable callbacks, so the
+  // value only changes when the state does.
+  const value = useMemo(
+    () => ({
+      ...state,
+      setEmail,
+      verifyOtp,
+      resetPassword,
+      reset,
+    }),
+    [state, setEmail, verifyOtp, resetPassword, reset],
   );
+
+  return <ForgotPasswordContext.Provider value={value}>{children}</ForgotPasswordContext.Provider>;
 }
 
 export function useForgotPassword() {

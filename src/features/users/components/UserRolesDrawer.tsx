@@ -36,7 +36,8 @@ export function UserRolesDrawer({ isOpen, onClose, user }: UserRolesDrawerProps)
 
   useEffect(() => {
     if (user && isOpen) {
-      const roleIds = roles.filter((r: Role) => user.roles.includes(r.name)).map((r: Role) => r.id);
+      const userRoleNames = new Set(user.roles);
+      const roleIds = roles.filter((r: Role) => userRoleNames.has(r.name)).map((r: Role) => r.id);
       setSelectedRoles(new Set(roleIds));
     }
   }, [user, isOpen, roles]);

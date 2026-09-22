@@ -80,7 +80,10 @@ function useActive(path: string) {
 
 function AppNavItems() {
   const isActive = useActive;
-  const [adminOpen, setAdminOpen] = useState(isActive('/admin'));
+  // `isActive` is a hook, so it must run at the top level every render; compute
+  // the initial value here and hand the plain value to useState.
+  const initialAdminOpen = isActive('/admin');
+  const [adminOpen, setAdminOpen] = useState(initialAdminOpen);
 
   return (
     <>
@@ -145,7 +148,9 @@ function AppNavItems() {
 
 function AppFooter() {
   const isActive = useActive;
-  const [ajustesOpen, setAjustesOpen] = useState(isActive('/ajustes'));
+  // Same as AppNavItems: `isActive` is a hook and must stay a top-level call.
+  const initialAjustesOpen = isActive('/ajustes');
+  const [ajustesOpen, setAjustesOpen] = useState(initialAjustesOpen);
   const { logout } = useAuth();
   const navigate = useNavigate();
 

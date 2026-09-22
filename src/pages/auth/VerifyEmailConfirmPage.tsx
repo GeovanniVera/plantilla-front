@@ -46,7 +46,7 @@ export default function VerifyEmailConfirmPage() {
         <button
           type="button"
           onClick={() => navigate('/login')}
-          className="bg-accent hover:bg-accent-hover mt-4 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm"
+          className="bg-accent hover:bg-accent-hover mt-4 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-[background-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm"
         >
           {t('auth.login.backToLogin')}
         </button>
@@ -82,7 +82,7 @@ export default function VerifyEmailConfirmPage() {
         <button
           type="button"
           onClick={() => navigate('/login')}
-          className="bg-accent hover:bg-accent-hover mt-4 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm"
+          className="bg-accent hover:bg-accent-hover mt-4 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-[background-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm"
         >
           {t('auth.login.backToLogin')}
         </button>

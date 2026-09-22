@@ -1,4 +1,4 @@
-import { createContext, forwardRef, useContext } from 'react';
+import { createContext, forwardRef, useContext, useMemo } from 'react';
 import { LuChevronDown } from 'react-icons/lu';
 import type { ComponentPropsWithRef, HTMLAttributes } from 'react';
 import type {
@@ -188,8 +188,13 @@ export const SelectRoot = forwardRef<HTMLDivElement, SelectRootProps>(function S
   },
   ref,
 ) {
+  const contextValue = useMemo(
+    () => ({ size, validationState, disabled }),
+    [size, validationState, disabled],
+  );
+
   return (
-    <SelectContext.Provider value={{ size, validationState, disabled }}>
+    <SelectContext.Provider value={contextValue}>
       <div
         {...props}
         ref={ref}

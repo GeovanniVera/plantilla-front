@@ -1,4 +1,4 @@
-import { createContext, forwardRef, useContext, useState } from 'react';
+import { createContext, forwardRef, useContext, useState, useMemo } from 'react';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
 import type { ComponentPropsWithRef, HTMLAttributes } from 'react';
 import type {
@@ -153,8 +153,13 @@ export const InputRoot = forwardRef<HTMLDivElement, InputRootProps>(function Inp
   },
   ref,
 ) {
+  const contextValue = useMemo(
+    () => ({ size, validationState, disabled, readOnly }),
+    [size, validationState, disabled, readOnly],
+  );
+
   return (
-    <InputContext.Provider value={{ size, validationState, disabled, readOnly }}>
+    <InputContext.Provider value={contextValue}>
       <div
         {...props}
         ref={ref}

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, type ReactNode } from 'react';
+import { useState, useCallback, useEffect, useMemo, type ReactNode } from 'react';
 import { AuthContext } from './context';
 import { authService } from '../lib/api/services/auth.service';
 import { tokenManager } from '../lib/api/client';
@@ -184,6 +184,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [state.user],
   );
 
+  // Set reutilizable para las consultas de privilegios: evita un `includes`
+  // O(n) por cada privilegio consultado.
+  const permissionSet = useMemo(() => new Set(state.user?.permissions ?? []), [state.user]);
+
   /**
    * Verifica si el usuario tiene al menos uno de los privilegios indicados.
    *
@@ -191,8 +195,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * @returns true si tiene al menos uno, false si no hay usuario
    */
   const hasAnyPrivilege = useCallback(
-    (privileges: string[]) => privileges.some((p) => state.user?.permissions.includes(p)) ?? false,
-    [state.user],
+    (privileges: string[]) => privileges.some((p) => permissionSet.has(p)),
+    [permissionSet],
   );
 
   /**
@@ -214,15 +218,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isVerified = useCallback(() => state.user?.isVerified ?? false, [state.user]);
 
   // ─── Valor del contexto ──────────────────────────────────
-  const value = {
-    ...state,
-    login,
-    logout,
-    hasPrivilege,
-    hasAnyPrivilege,
-    hasRole,
-    isVerified,
-  };
+  // `state` cambia solo cuando cambia la sesión y todos los callbacks son
+  // estables, así que el objeto solo se recrea cuando realmente cambia.
+  const value = useMemo(
+    () => ({
+      ...state,
+      login,
+      logout,
+      hasPrivilege,
+      hasAnyPrivilege,
+      hasRole,
+      isVerified,
+    }),
+    [state, login, logout, hasPrivilege, hasAnyPrivilege, hasRole, isVerified],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

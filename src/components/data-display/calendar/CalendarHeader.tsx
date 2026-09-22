@@ -18,11 +18,11 @@ const WEEK_BADGE_CLASSES =
 const HEADER_RIGHT_CLASSES = 'flex items-center gap-2';
 
 const NAV_BTN_CLASSES =
-  'flex items-center justify-center size-8 rounded-md border border-border-base bg-background text-foreground cursor-pointer transition-all duration-150 hover:bg-surface hover:border-accent-line';
+  'flex items-center justify-center size-8 rounded-md border border-border-base bg-background text-foreground cursor-pointer transition-colors duration-150 hover:bg-surface hover:border-accent-line';
 const NAV_BTN_TEXT_CLASSES =
-  'flex items-center gap-1 px-3 py-1.5 rounded-md border border-border-base bg-background text-foreground text-xs font-medium font-sans cursor-pointer transition-all duration-150 hover:bg-surface hover:border-accent-line';
+  'flex items-center gap-1 px-3 py-1.5 rounded-md border border-border-base bg-background text-foreground text-xs font-medium font-sans cursor-pointer transition-colors duration-150 hover:bg-surface hover:border-accent-line';
 const ADD_BTN_CLASSES =
-  'flex items-center gap-1.5 px-4 py-2 rounded-md bg-accent text-white text-[13px] font-semibold font-sans cursor-pointer transition-all duration-150 hover:opacity-90 hover:-translate-y-px';
+  'flex items-center gap-1.5 px-4 py-2 rounded-md bg-accent text-white text-[13px] font-semibold font-sans cursor-pointer transition-[opacity,transform] duration-150 hover:opacity-90 hover:-translate-y-px';
 
 interface CalendarHeaderProps {
   currentMonth: Date;

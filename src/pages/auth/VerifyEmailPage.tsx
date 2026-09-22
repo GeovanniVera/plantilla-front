@@ -144,7 +144,7 @@ export default function VerifyEmailPage() {
               type="button"
               onClick={handleResend}
               disabled={resendMutation.isPending}
-              className="bg-accent hover:bg-accent-hover flex w-full items-center justify-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
+              className="bg-accent hover:bg-accent-hover flex w-full items-center justify-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white shadow-md transition-[background-color,transform,box-shadow,opacity] duration-200 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
             >
               {resendMutation.isPending ? (
                 <>
@@ -160,7 +160,7 @@ export default function VerifyEmailPage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="border-border-base bg-background text-fg hover:border-fg-muted hover:bg-surface flex w-full items-center justify-center gap-2 rounded-md border px-6 py-3 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-sm"
+            className="border-border-base bg-background text-fg hover:border-fg-muted hover:bg-surface flex w-full items-center justify-center gap-2 rounded-md border px-6 py-3 text-sm font-medium transition-[border-color,background-color,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-sm"
           >
             <LuLogOut size={16} />
             Cerrar sesión

@@ -14,6 +14,29 @@ interface ToastDemoProps {
   count?: number;
 }
 
+interface ToastTriggerProps {
+  variant: ToastItem['variant'];
+  message: string;
+  count: number;
+}
+
+function ToastTrigger({ variant, message, count }: ToastTriggerProps) {
+  const toast = useToast();
+  return (
+    <button
+      className="cursor-pointer rounded-md border px-3 py-1.5"
+      onClick={() => {
+        for (let i = 0; i < count; i++) {
+          const suffix = count > 1 ? ` #${i + 1}` : '';
+          toast[variant](`${message}${suffix}`);
+        }
+      }}
+    >
+      Lanzar toast
+    </button>
+  );
+}
+
 function ToastDemo({
   variant = 'success',
   position = 'top-right',
@@ -21,27 +44,10 @@ function ToastDemo({
   duration = 5000,
   count = 1,
 }: ToastDemoProps) {
-  function Trigger() {
-    const toast = useToast();
-    return (
-      <button
-        className="cursor-pointer rounded-md border px-3 py-1.5"
-        onClick={() => {
-          for (let i = 0; i < count; i++) {
-            const suffix = count > 1 ? ` #${i + 1}` : '';
-            toast[variant](`${message}${suffix}`);
-          }
-        }}
-      >
-        Lanzar toast
-      </button>
-    );
-  }
-
   return (
     <ToastProvider position={position} defaultDuration={duration}>
       <div className="p-6">
-        <Trigger />
+        <ToastTrigger variant={variant} message={message} count={count} />
       </div>
     </ToastProvider>
   );
