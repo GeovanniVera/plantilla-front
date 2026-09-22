@@ -31,7 +31,7 @@ function CompoundDemo() {
   return (
     <MemoryRouter initialEntries={['/']}>
       <AuthProvider>
-        <div style={{ minHeight: '100vh', background: 'var(--code-bg)', paddingLeft: 96 }}>
+        <div style={{ height: '100vh', background: 'var(--code-bg)', paddingLeft: 96 }}>
           <Sidebar>
             <Sidebar.Header>
               <SidebarLogo src="/logo.svg" name="Semilla Tecnológica" />
@@ -111,7 +111,7 @@ function MobileDemo() {
   return (
     <MemoryRouter initialEntries={['/']}>
       <AuthProvider>
-        <div style={{ minHeight: '100vh', background: 'var(--code-bg)' }}>
+        <div style={{ height: '100vh', background: 'var(--code-bg)' }}>
           <Sidebar>
             <Sidebar.Header>
               <SidebarLogo src="/logo.svg" name="Semilla Tecnológica" />

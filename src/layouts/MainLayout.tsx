@@ -18,6 +18,8 @@ import UserAvatar from '@components/navigation/sidebar/UserAvatar';
 import UserClock from '@components/navigation/sidebar/UserClock';
 import NavItem from '@components/navigation/sidebar/NavItem';
 import NavGroup from '@components/navigation/sidebar/NavGroup';
+import { NotificationBell } from '../features/notifications/components/NotificationBell';
+import { NotificationPanel } from '../features/notifications/components/NotificationPanel';
 import { useAuth } from '../auth';
 import { Can } from '../auth/Can';
 import { formatDisplayName } from '../lib/utils';
@@ -212,31 +214,40 @@ export default function MainLayout() {
   const userPhoto = user?.photoUrl;
   const roles = user?.roles ?? [];
   const userRole = roles.length === 0 ? '' : roles.length === 1 ? roles[0] : 'Multi rol';
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <Sidebar>
-        <Sidebar.Header>
-          <SidebarLogo src="/logo.svg" name="Semilla Tecnológica" />
-          <UserAvatar name={userName} role={userRole} photoUrl={userPhoto} />
-          <UserClock />
-        </Sidebar.Header>
-
-        <Sidebar.Toggle />
-
-        <Sidebar.Nav>
-          <AppNavItems />
-        </Sidebar.Nav>
-
-        <Sidebar.Footer>
-          <AppFooter />
-        </Sidebar.Footer>
-      </Sidebar>
-
-      <main className={styles.main}>
+    <div className={styles.shell}>
+      <header className={styles.topbar}>
         <Breadcrumbs />
-        <Outlet />
-      </main>
+        <NotificationBell onClick={() => setNotificationsOpen(true)} />
+      </header>
+
+      <div className={styles.body}>
+        <Sidebar>
+          <Sidebar.Header>
+            <SidebarLogo src="/logo.svg" name="Semilla Tecnológica" />
+            <UserAvatar name={userName} role={userRole} photoUrl={userPhoto} />
+            <UserClock />
+          </Sidebar.Header>
+
+          <Sidebar.Toggle />
+
+          <Sidebar.Nav>
+            <AppNavItems />
+          </Sidebar.Nav>
+
+          <Sidebar.Footer>
+            <AppFooter />
+          </Sidebar.Footer>
+        </Sidebar>
+
+        <main className={styles.main}>
+          <Outlet />
+        </main>
+      </div>
+
+      <NotificationPanel isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
     </div>
   );
 }

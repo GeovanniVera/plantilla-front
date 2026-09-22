@@ -214,6 +214,33 @@
       }
     }
   },
+  "notifications": {
+    "title": "Notificaciones",
+    "bellLabel": "Notificaciones, {{count}} sin leer",
+    "unreadCount": "{{count}} sin leer",
+    "markAll": "Marcar todas como leídas",
+    "filterLabel": "Filtrar notificaciones",
+    "filter": {
+      "all": "Todas",
+      "unread": "No leídas"
+    },
+    "empty": {
+      "all": "No tenés notificaciones",
+      "unread": "No tenés notificaciones sin leer"
+    },
+    "error": "No se pudieron cargar las notificaciones",
+    "retry": "Reintentar",
+    "delete": "Eliminar notificación",
+    "open": "Abrir notificación: {{title}}",
+    "types": {
+      "SECURITY": "Seguridad",
+      "ACCOUNT": "Cuenta",
+      "WORKFLOW": "Flujo de trabajo",
+      "SYSTEM": "Sistema",
+      "SOCIAL": "Social",
+      "unknown": "Notificación"
+    }
+  },
   "errors": {
     "network": "Error de conexión con el servidor",
     "timeout": "La request tardó demasiado. Intentá de nuevo.",

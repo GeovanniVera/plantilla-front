@@ -2,11 +2,13 @@
  * Dashboard page - default landing after login.
  */
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
 import { Can } from '../auth/Can';
 import Badge from '@components/primitives/Badge';
 import Card from '@components/layout/Card';
 import { StatCard, StatCardGroup } from '@components/layout/StatCard';
+import { useUnreadCount } from '../features/notifications/hooks/useNotifications';
 import {
   LuBell,
   LuFolderOpen,
@@ -18,8 +20,10 @@ import {
 } from 'react-icons/lu';
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { data: unreadCount = 0 } = useUnreadCount();
 
   const quickActions = [
     {
@@ -71,7 +75,12 @@ export default function DashboardPage() {
 
         {/* Stats */}
         <StatCardGroup>
-          <StatCard value={0} label="Notificaciones" icon={LuBell} accent="#6366f1" />
+          <StatCard
+            value={unreadCount}
+            label={t('notifications.title')}
+            icon={LuBell}
+            accent="#6366f1"
+          />
           <StatCard value={0} label="Archivos" icon={LuFolderOpen} accent="#10b981" />
           <StatCard value={0} label="Pagos" icon={LuCreditCard} accent="#f59e0b" />
         </StatCardGroup>

@@ -214,6 +214,33 @@
       }
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "bellLabel": "Notifications, {{count}} unread",
+    "unreadCount": "{{count}} unread",
+    "markAll": "Mark all as read",
+    "filterLabel": "Filter notifications",
+    "filter": {
+      "all": "All",
+      "unread": "Unread"
+    },
+    "empty": {
+      "all": "You have no notifications",
+      "unread": "You have no unread notifications"
+    },
+    "error": "Could not load notifications",
+    "retry": "Retry",
+    "delete": "Delete notification",
+    "open": "Open notification: {{title}}",
+    "types": {
+      "SECURITY": "Security",
+      "ACCOUNT": "Account",
+      "WORKFLOW": "Workflow",
+      "SYSTEM": "System",
+      "SOCIAL": "Social",
+      "unknown": "Notification"
+    }
+  },
   "errors": {
     "network": "Connection error. Check your internet.",
     "timeout": "Request timed out. Try again.",
