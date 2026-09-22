@@ -4,7 +4,6 @@
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
-import { Can } from '../auth/Can';
 import Badge from '@components/primitives/Badge';
 import Card from '@components/layout/Card';
 import { StatCard, StatCardGroup } from '@components/layout/StatCard';
@@ -21,7 +20,7 @@ import {
 
 export default function DashboardPage() {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, hasPrivilege } = useAuth();
   const navigate = useNavigate();
   const { data: unreadCount = 0 } = useUnreadCount();
 
@@ -51,6 +50,10 @@ export default function DashboardPage() {
       accent: '#f59e0b',
     },
   ];
+
+  // Single source of truth for the permission check: filter before rendering so
+  // the section heading and grid share the exact same visibility rule.
+  const visibleActions = quickActions.filter((action) => hasPrivilege(action.privilege));
 
   return (
     <div style={{ padding: '32px 40px', maxWidth: 1440, width: '100%', margin: '0 auto' }}>
@@ -85,23 +88,28 @@ export default function DashboardPage() {
           <StatCard value={0} label="Pagos" icon={LuCreditCard} accent="#f59e0b" />
         </StatCardGroup>
 
-        {/* Acciones rápidas */}
-        <div>
-          <h3 className="text-fg mb-3 text-sm font-semibold tracking-wide uppercase">
-            Acciones rápidas
-          </h3>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: 16,
-            }}
-          >
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Can key={action.to} privilege={action.privilege}>
-                  <Card variant="default" className="h-full" onClick={() => navigate(action.to)}>
+        {/* Acciones rápidas: la sección entera desaparece si no hay acciones visibles. */}
+        {visibleActions.length > 0 && (
+          <div>
+            <h3 className="text-fg mb-3 text-sm font-semibold tracking-wide uppercase">
+              Acciones rápidas
+            </h3>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: 16,
+              }}
+            >
+              {visibleActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Card
+                    key={action.to}
+                    variant="default"
+                    className="h-full"
+                    onClick={() => navigate(action.to)}
+                  >
                     <Card.Body>
                       <div className="flex items-start justify-between gap-3">
                         <div
@@ -128,11 +136,11 @@ export default function DashboardPage() {
                       </div>
                     </Card.Body>
                   </Card>
-                </Can>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
