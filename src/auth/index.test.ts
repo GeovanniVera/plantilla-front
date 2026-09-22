@@ -42,7 +42,7 @@ describe('auth barrel exports', () => {
     expect(auth.RequireUnverified).toBeDefined();
   });
 
-  it('exports RequireVerification', () => {
-    expect(auth.RequireVerification).toBeDefined();
+  it('exports RequireUnverified', () => {
+    expect(auth.RequireUnverified).toBeDefined();
   });
 });

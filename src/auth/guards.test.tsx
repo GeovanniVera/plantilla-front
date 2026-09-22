@@ -10,7 +10,6 @@ import {
   RequirePrivilege,
   RequireRole,
   RequireUnverified,
-  RequireVerification,
 } from './guards';
 
 const admin: User = {
@@ -112,29 +111,6 @@ describe('GuestOnly', () => {
       authValue({ user: admin }),
     );
     expect(screen.getByText('Dashboard Page')).toBeInTheDocument();
-  });
-});
-
-describe('RequireVerification', () => {
-  it('redirects anonymous users to login', () => {
-    renderGuard(<RequireVerification>Verified Content</RequireVerification>);
-    expect(screen.getByText('Login Page')).toBeInTheDocument();
-  });
-
-  it('redirects unverified users', () => {
-    renderGuard(
-      <RequireVerification>Verified Content</RequireVerification>,
-      authValue({ user: { ...admin, isVerified: false } }),
-    );
-    expect(screen.getByText('Verify Email Page')).toBeInTheDocument();
-  });
-
-  it('renders verified users', () => {
-    renderGuard(
-      <RequireVerification>Verified Content</RequireVerification>,
-      authValue({ user: admin }),
-    );
-    expect(screen.getByText('Verified Content')).toBeInTheDocument();
   });
 });
 

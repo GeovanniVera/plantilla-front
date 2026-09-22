@@ -36,7 +36,6 @@ export {
   RequireRole,
   GuestOnly,
   RequireUnverified,
-  RequireVerification,
 } from './guards';
 
 // Control de acceso basado en permisos

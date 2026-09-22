@@ -239,31 +239,3 @@ export function RequireUnverified({ children, redirectTo = '/dashboard' }: Requi
 
   return <>{children}</>;
 }
-
-// ─── RequireVerification ──────────────────────────────────
-/**
- * Props de RequireVerification.
- */
-interface RequireVerificationProps {
-  /** Componentes hijos a renderizar si el email está verificado */
-  children: ReactNode;
-}
-
-/**
- * Guard que requiere email verificado.
- * Si el usuario no tiene el email verificado, muestra la pantalla de verificación.
- *
- * @example
- * ```tsx
- * <Route element={<RequireVerification><SomePage /></RequireVerification>} />
- * ```
- */
-export function RequireVerification({ children }: RequireVerificationProps) {
-  const { isAuthenticated, isLoading, isVerified } = useAuth();
-
-  if (isLoading) return <AuthLoading />;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!isVerified()) return <Navigate to="/verify-email" replace />;
-
-  return <>{children}</>;
-}
