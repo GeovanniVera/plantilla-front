@@ -1,7 +1,7 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useEffectEvent, useId, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { LuX, LuChevronLeft, LuChevronRight } from 'react-icons/lu';
-import { ModalContext } from './context';
+import { ModalContext, ModalTitleIdContext } from './context';
 
 // ─── Breadcrumb Item ──────────────────────────────────────
 export interface DrawerBreadcrumb {
@@ -26,6 +26,12 @@ export interface DrawerStackProps {
   width?: number | string;
   children: ReactNode;
   className?: string;
+  /**
+   * Accessible name for the dialog when no title is rendered (e.g. when
+   * breadcrumbs replace the title). When a title is rendered it names the
+   * dialog via `aria-labelledby` and this prop is ignored.
+   */
+  'aria-label'?: string;
 }
 
 // ─── Styling ──────────────────────────────────────────────
@@ -75,6 +81,12 @@ const SLIDE_ANIMATION_CLASSES = {
   back: 'animate-stack-slide-back',
 } as const;
 
+/* Transparent click-catcher rendered behind the dialog. A real button keeps
+ * the click-outside-to-close affordance while staying reachable by assistive
+ * tech; the negative z-index tucks it under the in-flow dialog so clicks on
+ * the panel keep working without touching the panel's layout classes. */
+const BACKDROP_BUTTON_CLASSES = 'absolute inset-0 -z-10 cursor-default border-0 bg-transparent p-0';
+
 // ─── Component ────────────────────────────────────────────
 export function DrawerStack({
   isOpen,
@@ -87,6 +99,7 @@ export function DrawerStack({
   width = 480,
   children,
   className,
+  'aria-label': ariaLabel,
 }: DrawerStackProps) {
   const prevLevelRef = useRef(level);
   const animDir = level > prevLevelRef.current ? 'forward' : 'back';
@@ -96,104 +109,121 @@ export function DrawerStack({
     prevLevelRef.current = level;
   }, [level]);
 
+  const titleId = useId();
+  // `useEffectEvent` keeps the Escape listener subscribed once per open while
+  // still seeing the latest level/onBack/onClose, instead of re-subscribing on
+  // every parent render when consumers pass inline arrows.
+  const handleEscape = useEffectEvent(() => {
+    if (level > 0 && onBack) onBack();
+    else onClose();
+  });
+
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (level > 0 && onBack) onBack();
-        else onClose();
-      }
+      if (e.key === 'Escape') handleEscape();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [isOpen, level, onBack, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const showBack = level > 0;
-  const showBreadcrumbs = breadcrumbs && breadcrumbs.length > 0;
+  const showBreadcrumbs = Boolean(breadcrumbs && breadcrumbs.length > 0);
+  // Name the dialog from the title span when one is rendered (no breadcrumbs);
+  // otherwise fall back to an explicit `aria-label` so consumers can name a
+  // breadcrumb-driven drawer without the component hardcoding copy.
+  const hasTitle = !showBreadcrumbs && Boolean(title);
 
   return createPortal(
     <ModalContext.Provider value={onClose}>
-      <div
-        className={OVERLAY_CLASSES}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
-      >
-        <div
-          role="dialog"
-          aria-modal="true"
-          className={`${WINDOW_CLASSES} ${className ?? ''}`}
-          style={{ width }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className={HEADER_CLASSES}>
-            {showBack ? (
-              <button className={BACK_BTN_CLASSES} onClick={onBack} title="Volver">
-                <LuChevronLeft size={18} />
+      <ModalTitleIdContext.Provider value={hasTitle ? titleId : null}>
+        <div className={OVERLAY_CLASSES}>
+          <button
+            type="button"
+            aria-label="Close"
+            tabIndex={-1}
+            className={BACKDROP_BUTTON_CLASSES}
+            onClick={onClose}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={hasTitle ? titleId : undefined}
+            aria-label={hasTitle ? undefined : ariaLabel}
+            className={`${WINDOW_CLASSES} ${className ?? ''}`}
+            style={{ width }}
+          >
+            {/* Header */}
+            <div className={HEADER_CLASSES}>
+              {showBack ? (
+                <button className={BACK_BTN_CLASSES} onClick={onBack} title="Volver">
+                  <LuChevronLeft size={18} />
+                </button>
+              ) : (
+                <div style={{ width: 32 }} />
+              )}
+
+              {/* Breadcrumbs or Title */}
+              {showBreadcrumbs ? (
+                <nav className={BREADCRUMBS_CLASSES}>
+                  {breadcrumbs!.map((crumb, i) => {
+                    const isLast = i === breadcrumbs!.length - 1;
+                    const canNavigate = !isLast && onNavigate;
+                    return (
+                      <span key={crumb.level} className={CRUMB_CLASSES}>
+                        {i > 0 && <LuChevronRight size={12} className={CRUMB_SEP_CLASSES} />}
+                        {canNavigate ? (
+                          <button
+                            className={CRUMB_LINK_CLASSES}
+                            onClick={() => onNavigate!(crumb.level)}
+                          >
+                            {crumb.label}
+                          </button>
+                        ) : (
+                          <span className={CRUMB_CURRENT_CLASSES}>{crumb.label}</span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </nav>
+              ) : (
+                <span id={titleId ?? undefined} className={TITLE_CLASSES}>
+                  {title}
+                </span>
+              )}
+
+              <button className={CLOSE_BTN_CLASSES} onClick={onClose} title="Cerrar">
+                <LuX size={18} />
               </button>
-            ) : (
-              <div style={{ width: 32 }} />
-            )}
-
-            {/* Breadcrumbs or Title */}
-            {showBreadcrumbs ? (
-              <nav className={BREADCRUMBS_CLASSES}>
-                {breadcrumbs!.map((crumb, i) => {
-                  const isLast = i === breadcrumbs!.length - 1;
-                  const canNavigate = !isLast && onNavigate;
-                  return (
-                    <span key={crumb.level} className={CRUMB_CLASSES}>
-                      {i > 0 && <LuChevronRight size={12} className={CRUMB_SEP_CLASSES} />}
-                      {canNavigate ? (
-                        <button
-                          className={CRUMB_LINK_CLASSES}
-                          onClick={() => onNavigate!(crumb.level)}
-                        >
-                          {crumb.label}
-                        </button>
-                      ) : (
-                        <span className={CRUMB_CURRENT_CLASSES}>{crumb.label}</span>
-                      )}
-                    </span>
-                  );
-                })}
-              </nav>
-            ) : (
-              <span className={TITLE_CLASSES}>{title}</span>
-            )}
-
-            <button className={CLOSE_BTN_CLASSES} onClick={onClose} title="Cerrar">
-              <LuX size={18} />
-            </button>
-          </div>
-
-          {/* Level dots */}
-          {level > 0 && !showBreadcrumbs && (
-            <div className={LEVEL_INDICATOR_CLASSES}>
-              {Array.from({ length: level + 1 }).map((_, i) => (
-                <span
-                  key={i}
-                  className={`${LEVEL_DOT_BASE_CLASSES} ${i === level ? LEVEL_DOT_ACTIVE_CLASSES : ''}`}
-                />
-              ))}
             </div>
-          )}
 
-          {/* Content */}
-          <div className={BODY_CLASSES}>
-            <div
-              className={`${CONTENT_INNER_CLASSES} ${SLIDE_ANIMATION_CLASSES[animDir]}`}
-              key={level}
-            >
-              {children}
+            {/* Level dots */}
+            {level > 0 && !showBreadcrumbs && (
+              <div className={LEVEL_INDICATOR_CLASSES}>
+                {Array.from({ length: level + 1 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={`${LEVEL_DOT_BASE_CLASSES} ${i === level ? LEVEL_DOT_ACTIVE_CLASSES : ''}`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Content */}
+            <div className={BODY_CLASSES}>
+              <div
+                className={`${CONTENT_INNER_CLASSES} ${SLIDE_ANIMATION_CLASSES[animDir]}`}
+                key={level}
+              >
+                {children}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ModalTitleIdContext.Provider>
     </ModalContext.Provider>,
     document.body,
   );

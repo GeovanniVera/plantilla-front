@@ -75,10 +75,15 @@ export const CloseViaEscape: StoryObj<typeof DrawerDemo> = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByText('Abrir drawer'));
     const body = within(document.body);
-    await expect(body.getByText('Panel lateral')).not.toBeNull();
+    // Precondition: the drawer must actually be open before we test closing it.
+    await expect(body.getByRole('dialog')).not.toBeNull();
+    // The paragraph text is interpolated across text nodes, so an exact string
+    // matcher never matched it; match on the stable fragment instead.
+    await expect(body.getByText(/Contenido 1 del panel lateral/)).not.toBeNull();
 
     fireEvent.keyDown(window, { key: 'Escape' });
-    await expect(body.queryByText('Contenido 1 del panel lateral')).toBeNull();
+    await expect(body.queryByRole('dialog')).toBeNull();
+    await expect(body.queryByText(/Contenido 1 del panel lateral/)).toBeNull();
   },
 };
 
@@ -89,9 +94,19 @@ export const CloseViaBackdrop: StoryObj<typeof DrawerDemo> = {
     await userEvent.click(canvas.getByText('Abrir drawer'));
 
     const body = within(document.body);
-    const overlays = document.querySelectorAll('.fixed.inset-0');
-    fireEvent.click(overlays[overlays.length - 1]!);
-    await expect(body.queryByText('Contenido 1 del panel lateral')).toBeNull();
+    // Precondition: the drawer must actually be open before we test closing it.
+    await expect(body.getByRole('dialog')).not.toBeNull();
+    // The paragraph text is interpolated across text nodes, so an exact string
+    // matcher never matched it; match on the stable fragment instead.
+    await expect(body.getByText(/Contenido 1 del panel lateral/)).not.toBeNull();
+
+    // The backdrop is a transparent sibling button behind the drawer panel; it
+    // is the click target that triggers onClose, not the overlay element itself.
+    const backdrop = body.getByRole('button', { name: 'Close' });
+    await userEvent.click(backdrop);
+
+    await expect(body.queryByRole('dialog')).toBeNull();
+    await expect(body.queryByText(/Contenido 1 del panel lateral/)).toBeNull();
   },
 };
 

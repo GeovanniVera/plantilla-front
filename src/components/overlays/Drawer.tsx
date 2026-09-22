@@ -1,8 +1,8 @@
-import { useEffect, useContext } from 'react';
+import { useEffect, useContext, useEffectEvent, useId, Children, isValidElement } from 'react';
 import { createPortal } from 'react-dom';
 import { LuX } from 'react-icons/lu';
 import type { DrawerProps, ModalHeaderProps, ModalBodyProps, ModalFooterProps } from './types';
-import { ModalContext } from './context';
+import { ModalContext, ModalTitleIdContext } from './context';
 
 // ─── Styling ──────────────────────────────────────────────
 // Fully Tailwind since 6F.3B. DrawerStack still consumes the legacy
@@ -32,38 +32,72 @@ const TITLE_CLASSES =
 const CLOSE_BTN_CLASSES =
   'flex items-center justify-center size-8 rounded-md border-none bg-transparent text-foreground cursor-pointer shrink-0 transition-[background-color,color] duration-150 hover:bg-danger-strong/10 hover:text-danger-strong';
 
+/* Transparent click-catcher rendered behind the dialog. A real button keeps
+ * the click-outside-to-close affordance while staying reachable by assistive
+ * tech; the negative z-index tucks it under the in-flow dialog so clicks on
+ * the panel keep working without touching the panel's layout classes. */
+const BACKDROP_BUTTON_CLASSES = 'absolute inset-0 -z-10 cursor-default border-0 bg-transparent p-0';
+
 // ─── Drawer Root ──────────────────────────────────────────
-export function Drawer({ isOpen, onClose, children, width = 480, className }: DrawerProps) {
-  // Close on Escape
+export function Drawer({
+  isOpen,
+  onClose,
+  children,
+  width = 480,
+  className,
+  'aria-label': ariaLabel,
+}: DrawerProps) {
+  const titleId = useId();
+  // `useEffectEvent` keeps the Escape listener subscribed once per open while
+  // still seeing the latest `onClose`, instead of re-subscribing on every
+  // parent render when consumers pass inline arrows.
+  const closeDrawer = useEffectEvent(() => onClose());
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') closeDrawer();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
+  // Name the dialog from the composed Header: point `aria-labelledby` at its
+  // title when one is rendered, otherwise fall back to an explicit
+  // `aria-label` so consumers can name a title-less drawer without the
+  // component hardcoding copy.
+  const hasTitledHeader = Children.toArray(children).some(
+    (child) =>
+      isValidElement<{ title?: string }>(child) &&
+      child.type === Drawer.Header &&
+      Boolean(child.props.title),
+  );
+
   return createPortal(
     <ModalContext.Provider value={onClose}>
-      <div
-        className={OVERLAY_CLASSES}
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
-      >
-        <div
-          role="dialog"
-          aria-modal="true"
-          className={`${WINDOW_CLASSES} ${className ?? ''}`}
-          style={{ width }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {children}
+      <ModalTitleIdContext.Provider value={hasTitledHeader ? titleId : null}>
+        <div className={OVERLAY_CLASSES}>
+          <button
+            type="button"
+            aria-label="Close"
+            tabIndex={-1}
+            className={BACKDROP_BUTTON_CLASSES}
+            onClick={onClose}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={hasTitledHeader ? titleId : undefined}
+            aria-label={hasTitledHeader ? undefined : ariaLabel}
+            className={`${WINDOW_CLASSES} ${className ?? ''}`}
+            style={{ width }}
+          >
+            {children}
+          </div>
         </div>
-      </div>
+      </ModalTitleIdContext.Provider>
     </ModalContext.Provider>,
     document.body,
   );
@@ -77,12 +111,15 @@ Drawer.Header = function DrawerHeader({
   className,
   children,
 }: ModalHeaderProps) {
+  const titleId = useContext(ModalTitleIdContext);
   return (
     <div className={`${HEADER_CLASSES} ${className ?? ''}`}>
       {children ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>{children}</div>
       ) : title ? (
-        <span className={TITLE_CLASSES}>{title}</span>
+        <span id={titleId ?? undefined} className={TITLE_CLASSES}>
+          {title}
+        </span>
       ) : (
         <div style={{ flex: 1 }} />
       )}

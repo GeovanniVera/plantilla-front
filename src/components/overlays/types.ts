@@ -10,6 +10,12 @@ export interface ModalProps {
   /** Max height. Default: 85vh */
   maxHeight?: string;
   className?: string;
+  /**
+   * Accessible name for the dialog when the composed Header renders no
+   * `title`. When a titled Header is used, its title names the dialog via
+   * `aria-labelledby` and this prop is ignored.
+   */
+  'aria-label'?: string;
 }
 
 // ─── Drawer Root ──────────────────────────────────────────
@@ -20,6 +26,12 @@ export interface DrawerProps {
   /** Width of the drawer. Default: 480px */
   width?: number | string;
   className?: string;
+  /**
+   * Accessible name for the dialog when the composed Header renders no
+   * `title`. When a titled Header is used, its title names the dialog via
+   * `aria-labelledby` and this prop is ignored.
+   */
+  'aria-label'?: string;
 }
 
 // ─── Shared Header/Body/Footer ────────────────────────────

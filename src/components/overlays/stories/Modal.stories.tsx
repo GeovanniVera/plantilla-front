@@ -115,13 +115,10 @@ export const CloseViaBackdrop: StoryObj<typeof ModalDemo> = {
     const body = within(document.body);
     await expect(body.getByRole('dialog')).not.toBeNull();
 
-    const overlays = document.querySelectorAll('.fixed.inset-0');
-    const overlay = overlays[overlays.length - 1];
-    await expect(overlay).toBeTruthy();
-
-    // A direct click on the overlay element itself triggers onClose;
-    // clicks on the window are stopped by design.
-    fireEvent.click(overlay!);
+    // The backdrop is a transparent sibling button behind the dialog; it is the
+    // click target that triggers onClose, not the overlay element itself.
+    const backdrop = body.getByRole('button', { name: 'Close' });
+    await userEvent.click(backdrop);
     await expect(body.queryByRole('dialog')).toBeNull();
   },
 };
