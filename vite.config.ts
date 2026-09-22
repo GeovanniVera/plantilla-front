@@ -5,11 +5,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://vite.dev/config/
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
-const dirname =
-  typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+const dirname = import.meta.dirname;
 
 // Internal path aliases (mirrored in tsconfig.app.json compilerOptions.paths).
 // Storybook's Vite builder reads this file automatically, so no viteFinal is needed.
@@ -31,7 +29,12 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.tsx', 'src/**/*.ts'],
-      exclude: ['src/**/*.test.{ts,tsx}', 'src/**/*.stories.{ts,tsx}', 'src/test/**', 'src/vite-env.d.ts'],
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/**/*.stories.{ts,tsx}',
+        'src/test/**',
+        'src/vite-env.d.ts',
+      ],
     },
     projects: [
       {
