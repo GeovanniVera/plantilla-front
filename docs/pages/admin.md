@@ -44,7 +44,13 @@ Catálogo de permisos **solo lectura**: `ResponsiveTable` con columnas `name` y 
 
 ## AuditLogsPage
 
-Tabla de eventos de auditoría global (read-only) con `ResponsiveTable`: columnas Acción (badge con variante danger para `FAILED`/`DENIED`), Actor (fallback `system`), Entidad, ID Entidad, IP y Fecha (`dd/MM/yyyy HH:mm`, locale español). Consume `useAuditLogs(0, 10)`.
+Tabla de eventos de auditoría global (read-only) con **paginación y filtros resueltos en el servidor**. Columnas: Acción, Actor (fallback `sistema`), Entidad, ID Entidad, IP y Fecha (`dd/MM/yyyy HH:mm`, locale español).
+
+- **Paginación server-side**: la página maneja `page`/`size` con el componente compartido `Pagination`; `ResponsiveTable` se renderiza con `pagination={false}` y `filters={false}` para que **no** vuelva a paginar ni filtrar en cliente la página ya recibida (doble paginación + filtros que solo verían 10 filas). Cualquier cambio de página, tamaño o filtro vuelve a la página 0.
+- **Filtros server-side** (los aplica el backend sobre toda la tabla): `action` (selector poblado con `getActionFilterOptions()`), `actorId`, `entityType` y `entityId`. Los textos se debouncean con `useDebouncedValue` (300 ms). No se exponen `from`/`to` (requerirían un control de rango de fechas) ni `ipAddress` (el backend no lo soporta).
+- **Badge de acción neutral**: muestra la etiqueta neutra del evento (`getActionLabel(action).filterKey`, p. ej. "Suspensión de cuenta"), **no** el enum crudo ni el título en perspectiva del actor (`getActionTitle`, que se reserva para `/ajustes/actividad`). El código crudo sigue disponible como `title` del badge (tooltip) y, para acciones sin mapeo, se muestra el código crudo en lugar de la etiqueta genérica. Variante: `danger` para `FAILED`/`DENIED`, `info` en el resto.
+- **Sin orden configurable**: el backend fija `createdAt DESC` en la query nativa e ignora el `sort` del `Pageable`; por eso no hay selector de orden y tampoco se envía `sort`.
+- Consume `useAuditLogs`, `getActionLabel`, `getActionFilterOptions`, `Pagination`, `useDebouncedValue`.
 
 ## Notas transversales
 

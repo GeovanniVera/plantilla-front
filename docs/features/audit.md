@@ -34,7 +34,7 @@ src/features/audit/
 | `useAuditLogs(page, size, filters)` | `['admin', 'audit', page, size, filters]` | Auditoría global. |
 | `useMyAuditLogs(page, size, filters)` | `['audit', 'mine', page, size, filters]` | Actividad propia. |
 
-Ambos lanzan error si `response.success` es falso y devuelven `response.data` en caso de éxito.
+Ambos lanzan error si `response.success` es falso y devuelven `response.data` en caso de éxito. Ambos usan `placeholderData: keepPreviousData` (React Query v5): al paginar o filtrar, la página anterior queda visible mientras llega la nueva y la tabla no parpadea a vacío.
 
 ## Componentes
 
@@ -70,10 +70,18 @@ Acciones mapeadas: `LOGIN_SUCCEEDED`, `LOGIN_FAILED`, `LOGOUT`, `ACCOUNT_SUSPEND
 
 ## Consumidores
 
-- `AuditLogsPage` (`/admin/auditoria`) → `useAuditLogs(0, 10)` en una `ResponsiveTable` de solo lectura.
+- `AuditLogsPage` (`/admin/auditoria`) → `useAuditLogs(page, size, filters)` con **paginación y filtros server-side**. Ver [docs/pages/admin.md](../pages/admin.md#auditlogspage).
 - `MiActividadPage` (`/ajustes/actividad`) → `useMyAuditLogs` con `PAGE_SIZE = 5`, filtro por acción y paginación.
+
+## Orden (importante)
+
+`AuditLogRepository.findWithFilters` es una query **nativa** con `ORDER BY al.created_at DESC` **fijo**: ignora el `Sort` del `Pageable`. Consecuencias:
+
+- El orden por defecto es determinista, así que la paginación por `page`/`size` es correcta.
+- **No se puede ordenar por otra columna** y **no debe agregarse un selector de orden** en la UI de auditoría: el backend lo ignoraría en silencio (un filtro que miente, el mismo defecto que este trabajo eliminó). Tampoco se envía un parámetro `sort` desde `AuditLogsPage`, justamente para no aparentar una capacidad inexistente.
+- Habilitar orden configurable exigiría reescribir la query nativa del repositorio.
 
 ## Deudas conocidas
 
-- No hay handlers MSW para auditoría en `src/test/mocks/handlers/` (solo existe `auth.ts`).
-- `AuditLogsPage` no expone filtros de rango de fechas ni de actor desde la UI (el servicio los soporta).
+- No hay handlers MSW para auditoría en `src/test/mocks/handlers/` (solo existe `auth.ts`); `AuditLogsPage.test.tsx` mockea `*/admin/audit-logs` inline, igual que `UsersPage.test.tsx`.
+- `AuditLogsPage` no expone filtros de rango de fechas (`from`/`to`) ni `ipAddress` desde la UI. `from`/`to` quedan fuera porque requerirían un control de rango y conversión a ISO date-time; `ipAddress` queda fuera porque el backend **no** lo soporta (exponerlo reintroduciría un filtro que miente).

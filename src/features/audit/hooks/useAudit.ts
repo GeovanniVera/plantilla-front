@@ -1,7 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { auditService, type AuditFilters } from '../services/audit.service';
 
-/** Auditoría completa (requiere audit.read). */
+/**
+ * Auditoría completa (requiere audit.read).
+ *
+ * `keepPreviousData` mantiene la página anterior visible mientras llega la
+ * nueva, evitando que la tabla parpadee a vacío al paginar o filtrar.
+ */
 export function useAuditLogs(page = 0, size = 10, filters?: AuditFilters) {
   return useQuery({
     queryKey: ['admin', 'audit', page, size, filters],
@@ -12,6 +17,7 @@ export function useAuditLogs(page = 0, size = 10, filters?: AuditFilters) {
       }
       return response.data;
     },
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -26,5 +32,6 @@ export function useMyAuditLogs(page = 0, size = 10, filters?: AuditFilters) {
       }
       return response.data;
     },
+    placeholderData: keepPreviousData,
   });
 }

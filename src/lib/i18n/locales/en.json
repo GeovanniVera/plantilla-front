@@ -183,6 +183,35 @@
         "reactivateMessage": "Reactivate {{name}}'s account? The user will be able to sign in again.",
         "reactivateLabel": "Reactivate"
       }
+    },
+    "audit": {
+      "title": "Audit",
+      "count": "{{total}} recorded events (read-only)",
+      "loading": "Loading audit log...",
+      "refreshing": "Refreshing...",
+      "actorSystem": "system",
+      "filter": {
+        "actionLabel": "Filter by action",
+        "allActions": "All actions",
+        "actorLabel": "Filter by actor",
+        "actorPlaceholder": "Actor ID",
+        "entityTypeLabel": "Filter by entity type",
+        "entityTypePlaceholder": "Entity type",
+        "entityIdLabel": "Filter by entity ID",
+        "entityIdPlaceholder": "Entity ID"
+      },
+      "columns": {
+        "action": "Action",
+        "actor": "Actor",
+        "entityType": "Entity",
+        "entityId": "Entity ID",
+        "ip": "IP",
+        "createdAt": "Date"
+      },
+      "empty": {
+        "title": "No events",
+        "description": "No audit events matched the applied filters."
+      }
     }
   },
   "errors": {

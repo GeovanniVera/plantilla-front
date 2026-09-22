@@ -183,6 +183,35 @@
         "reactivateMessage": "¿Reactivar la cuenta de {{name}}? El usuario podrá acceder nuevamente.",
         "reactivateLabel": "Reactivar"
       }
+    },
+    "audit": {
+      "title": "Auditoría",
+      "count": "{{total}} eventos registrados (solo lectura)",
+      "loading": "Cargando auditoría...",
+      "refreshing": "Actualizando...",
+      "actorSystem": "sistema",
+      "filter": {
+        "actionLabel": "Filtrar por acción",
+        "allActions": "Todas las acciones",
+        "actorLabel": "Filtrar por actor",
+        "actorPlaceholder": "ID del actor",
+        "entityTypeLabel": "Filtrar por tipo de entidad",
+        "entityTypePlaceholder": "Tipo de entidad",
+        "entityIdLabel": "Filtrar por ID de entidad",
+        "entityIdPlaceholder": "ID de la entidad"
+      },
+      "columns": {
+        "action": "Acción",
+        "actor": "Actor",
+        "entityType": "Entidad",
+        "entityId": "ID Entidad",
+        "ip": "IP",
+        "createdAt": "Fecha"
+      },
+      "empty": {
+        "title": "Sin eventos",
+        "description": "No se encontraron eventos de auditoría con los filtros aplicados."
+      }
     }
   },
   "errors": {
