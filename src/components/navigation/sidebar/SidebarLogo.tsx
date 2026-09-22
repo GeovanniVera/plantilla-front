@@ -7,7 +7,7 @@ interface SidebarLogoProps {
 }
 
 const LOGO_BASE_CLASSES =
-  'flex items-center justify-center w-full px-3 py-2.5 mb-4 rounded-lg border border-border-base transition-[justify-content,background-color,border-color] duration-200 ease-in-out no-underline hover:bg-accent-subtle hover:border-accent-line';
+  'flex items-center justify-center w-full px-3 py-2.5 mb-4 rounded-lg transition-[justify-content,background-color] duration-200 ease-in-out no-underline hover:bg-accent-subtle';
 const LOGO_EXPANDED_CLASSES = 'justify-start';
 
 const IMG_CLASSES = 'size-9 rounded-md object-contain shrink-0';

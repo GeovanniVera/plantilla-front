@@ -20,7 +20,7 @@ function getInitial(name: string) {
  * per state: applying `hidden` + `flex` together regresses, because TW
  * emits `.hidden` after `.flex` in the stylesheet (6F.1 hotfix). */
 const CARD_BASE_CLASSES =
-  'flex flex-col items-center justify-center w-full px-3 py-3.5 rounded-lg bg-surface border border-border-base mb-4 transition-[flex-direction,gap] duration-200';
+  'flex flex-col items-center justify-center w-full px-3 py-3.5 rounded-lg bg-surface mb-4 transition-[flex-direction,gap] duration-200';
 const CARD_EXPANDED_CLASSES = 'flex-row items-center gap-3';
 
 const AVATAR_CLASSES =
