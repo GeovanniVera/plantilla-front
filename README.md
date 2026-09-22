@@ -15,6 +15,8 @@ cp .env.example .env
 npm run dev
 ```
 
+> Los tests usan `.env.test` (versionado), que solo aporta valores de entorno para test.
+
 > Requiere el backend corriendo en `http://localhost:8080`.
 
 ## Stack
