@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useId } from 'react';
 import { Drawer } from '@components/overlays/Drawer';
 import Button from '@components/primitives/Button';
 import Input from '@components/primitives/Input';
@@ -16,31 +16,46 @@ interface RoleDrawerProps {
 }
 
 export function RoleDrawer({ isOpen, onClose, role }: RoleDrawerProps) {
+  return (
+    <Drawer isOpen={isOpen} onClose={onClose}>
+      {/* Header stays a direct child so Drawer can name the dialog from its title. */}
+      <Drawer.Header title={role ? 'Detalle del rol' : 'Crear rol'} />
+      {/*
+       * The form is keyed by role id: opening a different role remounts it
+       * with fresh initial state, while a refetch that returns a new object
+       * with the same id leaves the in-progress edits untouched. `Drawer`
+       * unmounts its children while closed, so reopening also starts clean.
+       */}
+      <RoleDrawerContent key={role?.id ?? 'create'} role={role} onClose={onClose} />
+    </Drawer>
+  );
+}
+
+interface RoleDrawerContentProps {
+  role: Role | null;
+  onClose: () => void;
+}
+
+function RoleDrawerContent({ role, onClose }: RoleDrawerContentProps) {
   const toast = useToast();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set());
+  // Initial state comes straight from the role; state never has to chase the
+  // prop, so a new object identity cannot wipe what the user is editing.
+  const [name, setName] = useState(role?.name ?? '');
+  const [description, setDescription] = useState(role?.description ?? '');
+  const [selectedPerms, setSelectedPerms] = useState<Set<string>>(
+    () => new Set(role?.permissions.map((p) => p.id) ?? []),
+  );
+  const nameId = useId();
+  const descriptionId = useId();
   const createRole = useCreateRole();
   const updateRole = useUpdateRole();
   // La ruta solo exige roles.read: /admin/permissions requiere permissions.read
   // y, sin él, el backend responde 403 y onForbidden redirige. Se gatea por
-  // privilegio y por drawer abierto.
+  // privilegio: este contenido solo se monta con el drawer abierto.
   const canReadPermissions = useHasPrivilege('permissions.read');
   const { data: permissions = [] } = usePermissions({
-    enabled: canReadPermissions && isOpen,
+    enabled: canReadPermissions,
   });
-
-  useEffect(() => {
-    if (role) {
-      setName(role.name);
-      setDescription(role.description ?? '');
-      setSelectedPerms(new Set(role.permissions.map((p) => p.id)));
-    } else {
-      setName('');
-      setDescription('');
-      setSelectedPerms(new Set());
-    }
-  }, [role, isOpen]);
 
   const togglePerm = (permId: string) => {
     setSelectedPerms((prev) => {
@@ -79,15 +94,15 @@ export function RoleDrawer({ isOpen, onClose, role }: RoleDrawerProps) {
   const readOnlyView = role ? (
     <div className="space-y-4">
       <div>
-        <label className="text-fg-muted text-sm">Nombre</label>
+        <div className="text-fg-muted text-sm">Nombre</div>
         <p className="text-fg text-sm font-medium">{role.name}</p>
       </div>
       <div>
-        <label className="text-fg-muted text-sm">Descripción</label>
+        <div className="text-fg-muted text-sm">Descripción</div>
         <p className="text-fg text-sm">{role.description || '—'}</p>
       </div>
       <div>
-        <label className="text-fg mb-2 block text-sm font-medium">Permisos</label>
+        <div className="text-fg mb-2 block text-sm font-medium">Permisos</div>
         <div className="flex flex-wrap gap-1">
           {role.permissions.length > 0 ? (
             role.permissions.map((p) => (
@@ -107,26 +122,37 @@ export function RoleDrawer({ isOpen, onClose, role }: RoleDrawerProps) {
   ) : null;
 
   return (
-    <Drawer isOpen={isOpen} onClose={onClose}>
-      <Drawer.Header title={role ? 'Detalle del rol' : 'Crear rol'} />
+    <>
       <Drawer.Body>
         <Can privilege="roles.write" fallback={readOnlyView}>
           <div className="space-y-4">
             <div>
-              <label className="text-fg mb-1.5 block text-sm font-medium">Nombre</label>
-              <Input type="text" value={name} onChange={setName} placeholder="ej: admin" required />
+              <label htmlFor={nameId} className="text-fg mb-1.5 block text-sm font-medium">
+                Nombre
+              </label>
+              <Input
+                id={nameId}
+                type="text"
+                value={name}
+                onChange={setName}
+                placeholder="ej: admin"
+                required
+              />
             </div>
             <div>
-              <label className="text-fg mb-1.5 block text-sm font-medium">Descripción</label>
+              <label htmlFor={descriptionId} className="text-fg mb-1.5 block text-sm font-medium">
+                Descripción
+              </label>
               <Input
+                id={descriptionId}
                 type="text"
                 value={description}
                 onChange={setDescription}
                 placeholder="Descripción del rol"
               />
             </div>
-            <div>
-              <label className="text-fg mb-2 block text-sm font-medium">Permisos</label>
+            <fieldset>
+              <legend className="text-fg mb-2 block text-sm font-medium">Permisos</legend>
               <CheckboxSearchList
                 options={permissions.map((perm: Permission) => ({
                   id: perm.id,
@@ -139,7 +165,7 @@ export function RoleDrawer({ isOpen, onClose, role }: RoleDrawerProps) {
                 emptyMessage="No hay permisos en el catálogo"
                 noResultsMessage="No se encontraron permisos"
               />
-            </div>
+            </fieldset>
           </div>
         </Can>
       </Drawer.Body>
@@ -157,6 +183,6 @@ export function RoleDrawer({ isOpen, onClose, role }: RoleDrawerProps) {
           </Button>
         </Can>
       </Drawer.Footer>
-    </Drawer>
+    </>
   );
 }
